@@ -1,0 +1,34 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Journal entries{% endblock %}
+{% block page_title %}Finance · Journal entries{% endblock %}
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'finance:finance_dashboard' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent"><i data-lucide="arrow-left" class="h-4 w-4"></i></a>
+        <h2 class="text-lg font-semibold text-foreground">Journal entries</h2>
+      </div>
+      <a href="{% url 'finance:journal_create' %}" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">New journal</a>
+    </div>
+    <div class="ui-table-wrap overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead><tr class="border-b border-border bg-muted/40"><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Entry</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Date</th><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Status</th><th class="px-4 py-3 text-right text-xs font-semibold uppercase text-muted-foreground">Actions</th></tr></thead>
+        <tbody class="divide-y divide-border">
+          {% for j in journals %}
+            <tr class="hover:bg-accent/40">
+              <td class="px-4 py-3">{{ j.entry_no }}<p class="text-xs text-muted-foreground">{{ j.memo|default:"" }}</p></td>
+              <td class="px-4 py-3">{{ j.posting_date }}</td>
+              <td class="px-4 py-3">{{ j.get_status_display }}</td>
+              <td class="px-4 py-3 text-right"><a href="{% url 'finance:journal_detail' j.pk %}" class="rounded-md border border-border px-2 py-1 text-xs hover:bg-accent">View</a></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="px-4 py-10 text-center text-muted-foreground">No journals.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

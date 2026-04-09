@@ -1,0 +1,16 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Balance Sheet{% endblock %}
+{% block page_title %}Finance · Balance Sheet{% endblock %}
+{% block content %}
+<div class="w-full px-1 md:px-2">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card p-5 space-y-4">
+    <form class="flex gap-3"><input type="date" name="date_to" value="{{ filter_date_to }}" class="rounded-lg border border-border bg-background px-3 py-2 text-sm"/><button class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Apply</button></form>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="ui-table-wrap overflow-x-auto"><table class="w-full text-sm"><thead><tr class="border-b border-border bg-muted/40"><th class="px-3 py-2">Assets</th><th class="px-3 py-2 text-right">Amount</th></tr></thead><tbody class="divide-y divide-border">{% for r in asset_rows %}<tr><td class="px-3 py-2">{{ r.label }}</td><td class="px-3 py-2 text-right">{{ r.amount }}</td></tr>{% endfor %}<tr class="font-semibold"><td class="px-3 py-2">Total assets</td><td class="px-3 py-2 text-right">{{ total_assets }}</td></tr></tbody></table></div>
+      <div class="ui-table-wrap overflow-x-auto"><table class="w-full text-sm"><thead><tr class="border-b border-border bg-muted/40"><th class="px-3 py-2">Liabilities</th><th class="px-3 py-2 text-right">Amount</th></tr></thead><tbody class="divide-y divide-border">{% for r in liability_rows %}<tr><td class="px-3 py-2">{{ r.label }}</td><td class="px-3 py-2 text-right">{{ r.amount }}</td></tr>{% endfor %}<tr class="font-semibold"><td class="px-3 py-2">Total liabilities</td><td class="px-3 py-2 text-right">{{ total_liabilities }}</td></tr></tbody></table></div>
+      <div class="ui-table-wrap overflow-x-auto"><table class="w-full text-sm"><thead><tr class="border-b border-border bg-muted/40"><th class="px-3 py-2">Equity</th><th class="px-3 py-2 text-right">Amount</th></tr></thead><tbody class="divide-y divide-border">{% for r in equity_rows %}<tr><td class="px-3 py-2">{{ r.label }}</td><td class="px-3 py-2 text-right">{{ r.amount }}</td></tr>{% endfor %}<tr class="font-semibold"><td class="px-3 py-2">Total equity</td><td class="px-3 py-2 text-right">{{ total_equity }}</td></tr></tbody></table></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

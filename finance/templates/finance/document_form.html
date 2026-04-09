@@ -1,0 +1,111 @@
+{% extends "auth_tenants/base.html" %}
+{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block page_title %}Finance · {{ page_title }}{% endblock %}
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div>
+        <h2 class="text-lg font-semibold text-foreground">{{ page_title }}</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">Document header and line items in one card.</p>
+      </div>
+      <a href="{{ list_url }}" class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent">Back</a>
+    </div>
+    <form method="post" action="{{ action_url }}" class="p-5 space-y-5">
+      {% csrf_token %}
+      <div class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Header</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% for field in form %}
+            {% if field.name != 'memo' and field.name != 'subtotal' and field.name != 'tax_amount' and field.name != 'shipping_charge' and field.name != 'total_amount' %}
+              <div class="{% if field.name == 'reason' or field.name == 'notes' %}md:col-span-2{% endif %}">
+                <label class="mb-1.5 block text-sm font-medium text-foreground" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for e in field.errors %}<p class="text-xs text-destructive mt-1">{{ e }}</p>{% endfor %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% if formset %}
+      {{ formset.management_form }}
+      <div class="rounded-xl border border-border bg-background p-4 space-y-3">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Line items</h3>
+        <div class="inv-formset-table-wrap scrollbar-thin overflow-x-auto overflow-y-auto rounded-lg border border-border max-h-[min(22rem,55vh)] min-h-[min(16rem,40vh)]">
+          <table class="w-full text-sm">
+            <thead class="sticky top-0 z-10 bg-muted/95 shadow-[0_1px_0_0_hsl(var(--border))]">
+              <tr class="border-b border-border bg-muted/40">
+                {% for ff in formset.forms.0.visible_fields %}{% if ff.name != 'DELETE' %}<th class="px-2 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{{ ff.label }}</th>{% endif %}{% endfor %}
+                <th class="px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Delete</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              {% for f in formset.forms %}
+              <tr class="hover:bg-accent/20">
+                {% for ff in f.visible_fields %}{% if ff.name != 'DELETE' %}<td class="px-2 py-2 align-top">{{ ff }}</td>{% endif %}{% endfor %}
+                <td class="px-2 py-2 text-center align-middle">{% if f.DELETE %}{{ f.DELETE }}{% endif %}{{ f.id }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+      {% if form.memo or form.subtotal or form.tax_amount or form.total_amount %}
+      <div class="grid gap-4 lg:grid-cols-12">
+        <div class="lg:col-span-7 rounded-lg border border-border bg-background p-3">
+          {% if form.memo %}
+            <label for="{{ form.memo.id_for_label }}" class="mb-1 block text-xs font-medium text-muted-foreground">{{ form.memo.label }}</label>
+            {{ form.memo }}
+            {% for e in form.memo.errors %}<p class="mt-1 text-xs text-destructive">{{ e }}</p>{% endfor %}
+          {% elif form.notes %}
+            <label for="{{ form.notes.id_for_label }}" class="mb-1 block text-xs font-medium text-muted-foreground">{{ form.notes.label }}</label>
+            {{ form.notes }}
+            {% for e in form.notes.errors %}<p class="mt-1 text-xs text-destructive">{{ e }}</p>{% endfor %}
+          {% endif %}
+        </div>
+        <div class="lg:col-span-5 rounded-lg border border-border bg-background p-0">
+          <table class="w-full border-collapse text-xs">
+            {% if form.subtotal %}
+            <tr class="border-b border-border">
+              <td class="px-3 py-2 font-medium bg-muted/30 text-muted-foreground">Subtotal</td>
+              <td class="px-3 py-2">{{ form.subtotal }}</td>
+            </tr>
+            {% endif %}
+            {% if form.tax_amount %}
+            <tr class="border-b border-border">
+              <td class="px-3 py-2 font-medium bg-muted/30 text-muted-foreground">VAT</td>
+              <td class="px-3 py-2">{{ form.tax_amount }}</td>
+            </tr>
+            {% endif %}
+            {% if form.shipping_charge %}
+            <tr class="border-b border-border">
+              <td class="px-3 py-2 font-medium bg-muted/30 text-muted-foreground">Shipping charge</td>
+              <td class="px-3 py-2">{{ form.shipping_charge }}</td>
+            </tr>
+            {% endif %}
+            {% if form.total_amount %}
+            <tr>
+              <td class="px-3 py-2 font-semibold bg-primary text-primary-foreground">Total</td>
+              <td class="px-3 py-2">{{ form.total_amount }}</td>
+            </tr>
+            {% endif %}
+          </table>
+        </div>
+      </div>
+      {% endif %}
+      <div class="border-t border-border pt-4 flex justify-end gap-2">
+        <a href="{{ list_url }}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
+        <button type="submit" class="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'finance/js/line_totals.js' %}"></script>
+{% endblock %}
+

@@ -1,0 +1,212 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}ফাইন্যান্স ব্যবহার গাইড{% endblock %}
+{% block page_title %}Finance · বাংলা গাইড{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div>
+        <h2 class="text-lg font-semibold text-foreground">একটি কোম্পানির Finance চালানোর সহজ গল্প</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">একজন কোম্পানি মালিক ও ডেমো অ্যাকাউন্ট্যান্টের বাস্তব উদাহরণ।</p>
+      </div>
+      <a href="{% url 'finance:finance_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        Back
+      </a>
+    </div>
+
+    <div class="p-5 space-y-6">
+      <section class="rounded-xl border border-border bg-background p-4">
+        <p class="text-xs font-semibold uppercase tracking-wide text-primary">এন্ড-টু-এন্ড গাইড</p>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          এই গাইড এমনভাবে লেখা যে একজন নতুন মালিক, নতুন অ্যাকাউন্ট্যান্ট, এমনকি একদম নতুন user-ও শুধুমাত্র এই পেজ দেখে পুরো
+          Finance সেটআপ ও চালু করতে পারে।
+        </p>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          গল্পে আমাদের company: <strong class="text-foreground">Demo Traders Ltd.</strong>, মালিক:
+          <strong class="text-foreground">রাহাত</strong>, অ্যাকাউন্ট্যান্ট:
+          <strong class="text-foreground">তানিয়া</strong>।
+        </p>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part A: প্রথম দিন কী করবেন (Owner checklist)</h3>
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">1) Tenant/Company ready</p>
+            <p class="mt-1">Owner signup করে company create করবে, admin user নিশ্চিত করবে।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">2) Team access</p>
+            <p class="mt-1">Tenant auth থেকে অ্যাকাউন্ট্যান্ট user add করে proper permission দিন।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">3) Foundation master data</p>
+            <p class="mt-1">Currency, exchange rate, tax, customer, supplier, payment method add করুন।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">4) Fiscal plan</p>
+            <p class="mt-1">কোন মাস থেকে হিসাব শুরু হবে ঠিক করুন (যেমন Jan-Dec fiscal year)।</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part B: Foundation setup details (Finance এর আগে বাধ্যতামূলক)</h3>
+        <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>- <strong class="text-foreground">Currencies</strong>: কমপক্ষে BDT active করুন</li>
+          <li>- <strong class="text-foreground">Exchange rates</strong>: foreign currency থাকলে daily/weekly rate দিন</li>
+          <li>- <strong class="text-foreground">Tax rates</strong>: VAT 0%, 5%, 15% (business অনুযায়ী)</li>
+          <li>- <strong class="text-foreground">Customers</strong>: AR invoice এর জন্য দরকার</li>
+          <li>- <strong class="text-foreground">Suppliers</strong>: AP invoice এর জন্য দরকার</li>
+          <li>- <strong class="text-foreground">Payment methods</strong>: Cash / Bank transfer / Mobile</li>
+        </ul>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part C: Finance setup details (zero to live)</h3>
+        <ol class="mt-3 space-y-3 text-sm text-muted-foreground">
+          <li>1) <strong class="text-foreground">Chart of Accounts তৈরি</strong></li>
+          <li>2) <strong class="text-foreground">Fiscal year</strong> create</li>
+          <li>3) <strong class="text-foreground">Fiscal periods</strong> (১২ মাস) create</li>
+          <li>4) দরকার হলে <strong class="text-foreground">Opening balance</strong> journal entry দিন</li>
+          <li>5) প্রথম transaction draft করে test post দিন</li>
+          <li>6) Trial Balance দেখে debit-credit match নিশ্চিত করুন</li>
+        </ol>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Chart of Accounts: type, side, code format</h3>
+        <p class="mt-2 text-sm text-muted-foreground">
+          Recommended code block: <strong class="text-foreground">1xxx Asset</strong>, <strong class="text-foreground">2xxx Liability</strong>,
+          <strong class="text-foreground">3xxx Equity</strong>, <strong class="text-foreground">4xxx Revenue</strong>,
+          <strong class="text-foreground">5xxx Expense</strong>।
+        </p>
+        <div class="ui-table-wrap overflow-x-auto rounded-lg border border-border mt-3">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-border bg-muted/40">
+                <th class="px-3 py-2 text-left">Code</th>
+                <th class="px-3 py-2 text-left">Account</th>
+                <th class="px-3 py-2 text-left">Type</th>
+                <th class="px-3 py-2 text-left">Natural side</th>
+                <th class="px-3 py-2 text-left">Use</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <tr><td class="px-3 py-2">1010</td><td class="px-3 py-2">Cash on Hand</td><td class="px-3 py-2">Asset</td><td class="px-3 py-2">Debit</td><td class="px-3 py-2 text-muted-foreground">হাতে নগদ</td></tr>
+              <tr><td class="px-3 py-2">1020</td><td class="px-3 py-2">Bank Account</td><td class="px-3 py-2">Asset</td><td class="px-3 py-2">Debit</td><td class="px-3 py-2 text-muted-foreground">ব্যাংক ব্যালেন্স</td></tr>
+              <tr><td class="px-3 py-2">1100</td><td class="px-3 py-2">Accounts Receivable</td><td class="px-3 py-2">Asset</td><td class="px-3 py-2">Debit</td><td class="px-3 py-2 text-muted-foreground">Customer পাওনা</td></tr>
+              <tr><td class="px-3 py-2">1200</td><td class="px-3 py-2">Input VAT</td><td class="px-3 py-2">Asset</td><td class="px-3 py-2">Debit</td><td class="px-3 py-2 text-muted-foreground">ক্রয়ের VAT</td></tr>
+              <tr><td class="px-3 py-2">1300</td><td class="px-3 py-2">Inventory</td><td class="px-3 py-2">Asset</td><td class="px-3 py-2">Debit</td><td class="px-3 py-2 text-muted-foreground">স্টক</td></tr>
+              <tr><td class="px-3 py-2">2010</td><td class="px-3 py-2">Accounts Payable</td><td class="px-3 py-2">Liability</td><td class="px-3 py-2">Credit</td><td class="px-3 py-2 text-muted-foreground">Supplier দেনা</td></tr>
+              <tr><td class="px-3 py-2">2020</td><td class="px-3 py-2">Output VAT</td><td class="px-3 py-2">Liability</td><td class="px-3 py-2">Credit</td><td class="px-3 py-2 text-muted-foreground">বিক্রয়ের VAT</td></tr>
+              <tr><td class="px-3 py-2">3010</td><td class="px-3 py-2">Owner Capital</td><td class="px-3 py-2">Equity</td><td class="px-3 py-2">Credit</td><td class="px-3 py-2 text-muted-foreground">মালিক বিনিয়োগ</td></tr>
+              <tr><td class="px-3 py-2">3020</td><td class="px-3 py-2">Retained Earnings</td><td class="px-3 py-2">Equity</td><td class="px-3 py-2">Credit</td><td class="px-3 py-2 text-muted-foreground">জমা লাভ</td></tr>
+              <tr><td class="px-3 py-2">4010</td><td class="px-3 py-2">Sales Revenue</td><td class="px-3 py-2">Revenue</td><td class="px-3 py-2">Credit</td><td class="px-3 py-2 text-muted-foreground">পণ্য বিক্রয়</td></tr>
+              <tr><td class="px-3 py-2">4020</td><td class="px-3 py-2">Service Revenue</td><td class="px-3 py-2">Revenue</td><td class="px-3 py-2">Credit</td><td class="px-3 py-2 text-muted-foreground">সেবা আয়</td></tr>
+              <tr><td class="px-3 py-2">5010</td><td class="px-3 py-2">COGS/Purchase Expense</td><td class="px-3 py-2">Expense</td><td class="px-3 py-2">Debit</td><td class="px-3 py-2 text-muted-foreground">ক্রয়/কস্ট</td></tr>
+              <tr><td class="px-3 py-2">5020</td><td class="px-3 py-2">Salary Expense</td><td class="px-3 py-2">Expense</td><td class="px-3 py-2">Debit</td><td class="px-3 py-2 text-muted-foreground">বেতন</td></tr>
+              <tr><td class="px-3 py-2">5030</td><td class="px-3 py-2">Rent Expense</td><td class="px-3 py-2">Expense</td><td class="px-3 py-2">Debit</td><td class="px-3 py-2 text-muted-foreground">ভাড়া</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part D: Opening balance সেট করা</h3>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          আগের সিস্টেম থেকে balance আনতে চাইলে <strong class="text-foreground">Journal entries</strong> ব্যবহার করুন।
+          উদাহরণ: Cash 500,000 debit, Owner Capital 500,000 credit। Save draft করে <strong class="text-foreground">Post</strong> করুন।
+        </p>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part E: দৈনন্দিন operation flow (প্রতিদিন)</h3>
+        <p class="mt-2 text-sm text-muted-foreground">
+          Menu shortcut: <strong class="text-foreground">Finance sidebar-এ এখন আলাদা</strong> `AP invoices`, `AP payments`, `AR invoices`, `AR receipts` link আছে।
+        </p>
+        <div class="mt-3 space-y-3 text-sm text-muted-foreground">
+          <p><strong class="text-foreground">১) Supplier purchase:</strong> Finance → AP Invoices → Add → lines দিন → Save → Post</p>
+          <p><strong class="text-foreground">২) Supplier payment:</strong> Finance → AP Payments → Add → Save → Post</p>
+          <p><strong class="text-foreground">৩) Customer sale:</strong> Finance → AR Invoices → Add → lines দিন → Save → Post</p>
+          <p><strong class="text-foreground">৪) Customer receipt:</strong> Finance → AR Receipts → Add → Save → Post</p>
+          <p><strong class="text-foreground">৫) Cash/Bank transfer:</strong> Finance → Cash transactions → Add → Save → Post</p>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part F: সপ্তাহ/মাস ভিত্তিক কাজ</h3>
+        <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>- <strong class="text-foreground">সপ্তাহে ১ বার</strong>: GL report দেখে unusual entry check করুন</li>
+          <li>- <strong class="text-foreground">মাস শেষে</strong>: Trial Balance মিলান</li>
+          <li>- Profit &amp; Loss দেখে expense বেশি কিনা দেখুন</li>
+          <li>- Balance Sheet দেখে cash, receivable, payable health check করুন</li>
+          <li>- Budget vs Actual দেখে plan vs actual gap বের করুন</li>
+        </ul>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part G: Document status কিভাবে কাজ করে</h3>
+        <div class="ui-table-wrap overflow-x-auto rounded-lg border border-border mt-3">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-border bg-muted/40">
+                <th class="px-3 py-2 text-left">Status</th>
+                <th class="px-3 py-2 text-left">মানে</th>
+                <th class="px-3 py-2 text-left">কি করবেন</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <tr><td class="px-3 py-2">Draft</td><td class="px-3 py-2 text-muted-foreground">এখনও ledger-এ যায়নি</td><td class="px-3 py-2 text-muted-foreground">Edit করতে পারবেন</td></tr>
+              <tr><td class="px-3 py-2">Posted</td><td class="px-3 py-2 text-muted-foreground">Ledger entry তৈরি হয়েছে</td><td class="px-3 py-2 text-muted-foreground">Report-এ প্রভাব পড়ে</td></tr>
+              <tr><td class="px-3 py-2">Reversed (যেখানে প্রযোজ্য)</td><td class="px-3 py-2 text-muted-foreground">পূর্বের posting উল্টো এন্ট্রি</td><td class="px-3 py-2 text-muted-foreground">Audit trail safe থাকে</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part H: Complete demo scenario (এক মাসে কী হলো)</h3>
+        <ol class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>1) রাহাত 500,000 টাকা capital দিলেন (Journal)</li>
+          <li>2) Supplier থেকে পণ্য কিনলেন 120,000 + VAT (AP Invoice Posted)</li>
+          <li>3) Supplier-কে 60,000 payment দিলেন (AP Payment Posted)</li>
+          <li>4) Customer-কে বিক্রি 200,000 + VAT (AR Invoice Posted)</li>
+          <li>5) Customer 150,000 receive হলো (AR Receipt Posted)</li>
+          <li>6) মাস শেষে Profit &amp; Loss এ লাভ, Balance Sheet এ cash/receivable/payable সব দেখা গেল</li>
+        </ol>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part I: Troubleshooting (common ভুল)</h3>
+        <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>- <strong class="text-foreground">Trial balance mismatch:</strong> কোনো draft/posting অসম্পূর্ণ কিনা দেখুন</li>
+          <li>- <strong class="text-foreground">AP/AR post error:</strong> expense/ap/ar/tax account mapping ফর্মে দেওয়া আছে কিনা দেখুন</li>
+          <li>- <strong class="text-foreground">Currency issue:</strong> exchange rate আছে কিনা check করুন</li>
+          <li>- <strong class="text-foreground">Line total ভুল:</strong> qty ও unit price ঠিক আছে কিনা, deleted row tick আছে কিনা check করুন</li>
+          <li>- <strong class="text-foreground">Wrong period:</strong> posting date সঠিক fiscal period এর মধ্যে কিনা দেখুন</li>
+        </ul>
+      </section>
+
+      <section class="rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <h3 class="text-base font-semibold text-foreground">“বাচ্চাও বুঝবে” short version</h3>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          Finance মানে হিসাবের খাতা। যা কিনবেন লিখবেন, যা বিক্রি করবেন লিখবেন, টাকা দিবেন/নিবেন সেটাও লিখবেন।
+          শেষে রিপোর্ট দেখে বুঝবেন ব্যবসা লাভে নাকি ক্ষতিতে।
+        </p>
+      </section>
+
+      <section class="flex flex-wrap gap-3 pt-1">
+        <a href="{% url 'finance:account_list' %}" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Step 1: Chart of Accounts</a>
+        <a href="{% url 'finance:fiscal_year_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Step 2: Fiscal Year</a>
+        <a href="{% url 'finance:journal_create' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Step 3: Opening Journal</a>
+        <a href="{% url 'finance:ap_invoice_create' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Step 4: AP Invoice</a>
+        <a href="{% url 'finance:ar_invoice_create' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Step 5: AR Invoice</a>
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

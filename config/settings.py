@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "recruitment",
     "foundation",
     "inventory",
+    "finance",
 ]
 
 MIDDLEWARE = [

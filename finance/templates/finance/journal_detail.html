@@ -1,0 +1,44 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Journal details{% endblock %}
+{% block page_title %}Finance · Journal details{% endblock %}
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div>
+        <h2 class="text-lg font-semibold text-foreground">{{ journal.entry_no }}</h2>
+        <p class="text-xs text-muted-foreground">{{ journal.posting_date }} · {{ journal.get_status_display }}</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="{% url 'finance:journal_list' %}" class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent">Back</a>
+        {% if journal.status == 'draft' %}
+          <a href="{% url 'finance:journal_edit' journal.pk %}" class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent">Edit</a>
+          <form method="post" action="{% url 'finance:journal_post' journal.pk %}">{% csrf_token %}<button type="submit" class="rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">Post</button></form>
+        {% elif journal.status == 'posted' %}
+          <form method="post" action="{% url 'finance:journal_reverse' journal.pk %}">{% csrf_token %}<button type="submit" class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent">Reverse</button></form>
+        {% endif %}
+      </div>
+    </div>
+    <div class="p-5 space-y-4">
+      <p class="text-sm text-muted-foreground">{{ journal.memo }}</p>
+      <div class="ui-table-wrap overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-border bg-muted/40"><th class="px-3 py-2">Line</th><th class="px-3 py-2">Account</th><th class="px-3 py-2">Description</th><th class="px-3 py-2 text-right">Debit</th><th class="px-3 py-2 text-right">Credit</th></tr></thead>
+          <tbody class="divide-y divide-border">
+            {% for line in journal.lines.all %}
+              <tr>
+                <td class="px-3 py-2">{{ line.line_no }}</td>
+                <td class="px-3 py-2">{{ line.account }}</td>
+                <td class="px-3 py-2">{{ line.description }}</td>
+                <td class="px-3 py-2 text-right">{{ line.debit }}</td>
+                <td class="px-3 py-2 text-right">{{ line.credit }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,27 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}General Ledger{% endblock %}
+{% block page_title %}Finance · General Ledger{% endblock %}
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div class="flex items-center gap-2"><a href="{% url 'finance:finance_dashboard' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent"><i data-lucide="arrow-left" class="h-4 w-4"></i></a><h2 class="text-lg font-semibold">General Ledger</h2></div>
+    </div>
+    <div class="p-5 space-y-4">
+      <form class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <select name="account_id" class="rounded-lg border border-border bg-background px-3 py-2 text-sm"><option value="">All accounts</option>{% for a in accounts %}<option value="{{ a.id }}" {% if filter_account_id == a.id|stringformat:"s" %}selected{% endif %}>{{ a.code }} - {{ a.name }}</option>{% endfor %}</select>
+        <input type="date" name="date_from" value="{{ filter_date_from }}" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+        <input type="date" name="date_to" value="{{ filter_date_to }}" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+        <button class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Apply</button>
+      </form>
+      <div class="ui-table-wrap overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-border bg-muted/40"><th class="px-3 py-2">Date</th><th class="px-3 py-2">Journal</th><th class="px-3 py-2">Account</th><th class="px-3 py-2 text-right">Debit</th><th class="px-3 py-2 text-right">Credit</th></tr></thead>
+          <tbody class="divide-y divide-border">{% for r in rows %}<tr><td class="px-3 py-2">{{ r.posting_date }}</td><td class="px-3 py-2">{{ r.journal_entry.entry_no }}</td><td class="px-3 py-2">{{ r.account }}</td><td class="px-3 py-2 text-right">{{ r.debit }}</td><td class="px-3 py-2 text-right">{{ r.credit }}</td></tr>{% empty %}<tr><td colspan="5" class="px-3 py-8 text-center text-muted-foreground">No ledger rows.</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

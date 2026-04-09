@@ -11,6 +11,7 @@ urlpatterns = [
     path('dashboard/hrm/', include('hrm.urls')),
     path('dashboard/foundation/', include('foundation.urls')),
     path('dashboard/inventory/', include('inventory.urls')),
+    path('dashboard/finance/', include('finance.urls')),
     path('api/hrm/', include('hrm.api.urls')),
     path('api/auth/', include('auth_tenants.api.urls')),
     path('api/foundation/', include(('foundation.api.urls', 'foundation_api'), namespace='foundation_api')),

@@ -1,0 +1,16 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Profit & Loss{% endblock %}
+{% block page_title %}Finance · Profit & Loss{% endblock %}
+{% block content %}
+<div class="w-full px-1 md:px-2">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card p-5 space-y-4">
+    <form class="grid grid-cols-1 sm:grid-cols-3 gap-3"><input type="date" name="date_from" value="{{ filter_date_from }}" class="rounded-lg border border-border bg-background px-3 py-2 text-sm"/><input type="date" name="date_to" value="{{ filter_date_to }}" class="rounded-lg border border-border bg-background px-3 py-2 text-sm"/><button class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Apply</button></form>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="ui-table-wrap overflow-x-auto"><table class="w-full text-sm"><thead><tr class="border-b border-border bg-muted/40"><th class="px-3 py-2">Income account</th><th class="px-3 py-2 text-right">Amount</th></tr></thead><tbody class="divide-y divide-border">{% for r in income_rows %}<tr><td class="px-3 py-2">{{ r.label }}</td><td class="px-3 py-2 text-right">{{ r.amount }}</td></tr>{% endfor %}<tr class="font-semibold"><td class="px-3 py-2">Total income</td><td class="px-3 py-2 text-right">{{ total_income }}</td></tr></tbody></table></div>
+      <div class="ui-table-wrap overflow-x-auto"><table class="w-full text-sm"><thead><tr class="border-b border-border bg-muted/40"><th class="px-3 py-2">Expense account</th><th class="px-3 py-2 text-right">Amount</th></tr></thead><tbody class="divide-y divide-border">{% for r in expense_rows %}<tr><td class="px-3 py-2">{{ r.label }}</td><td class="px-3 py-2 text-right">{{ r.amount }}</td></tr>{% endfor %}<tr class="font-semibold"><td class="px-3 py-2">Total expense</td><td class="px-3 py-2 text-right">{{ total_expense }}</td></tr></tbody></table></div>
+    </div>
+    <div class="rounded-lg border border-border bg-muted/20 p-3"><p class="text-sm font-semibold">Net profit: {{ net_profit }}</p></div>
+  </div>
+</div>
+{% endblock %}
+
