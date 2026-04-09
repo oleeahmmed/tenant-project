@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth theme-transition">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Dashboard{% endblock %} | WhatsApp Automation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            border: 'hsl(var(--border) / <alpha-value>)',
+            input: 'hsl(var(--input) / <alpha-value>)',
+            ring: 'hsl(var(--ring) / <alpha-value>)',
+            background: 'hsl(var(--background) / <alpha-value>)',
+            foreground: 'hsl(var(--foreground) / <alpha-value>)',
+            primary: { DEFAULT: 'hsl(var(--primary) / <alpha-value>)', foreground: 'hsl(var(--primary-foreground) / <alpha-value>)' },
+            secondary: { DEFAULT: 'hsl(var(--secondary) / <alpha-value>)', foreground: 'hsl(var(--secondary-foreground) / <alpha-value>)' },
+            muted: { DEFAULT: 'hsl(var(--muted) / <alpha-value>)', foreground: 'hsl(var(--muted-foreground) / <alpha-value>)' },
+            accent: { DEFAULT: 'hsl(var(--accent) / <alpha-value>)', foreground: 'hsl(var(--accent-foreground) / <alpha-value>)' },
+            destructive: { DEFAULT: 'hsl(var(--destructive) / <alpha-value>)', foreground: 'hsl(var(--destructive-foreground) / <alpha-value>)' },
+            card: { DEFAULT: 'hsl(var(--card) / <alpha-value>)', foreground: 'hsl(var(--card-foreground) / <alpha-value>)' },
+          },
+          borderRadius: { lg: 'var(--radius)', md: 'calc(var(--radius) - 2px)', sm: 'calc(var(--radius) - 4px)' },
+          boxShadow: { card: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)', header: '0 1px 0 0 hsl(var(--border) / 1)' },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --background: 0 0% 100%; --foreground: 222.2 84% 4.9%;
+      --card: 0 0% 100%; --card-foreground: 222.2 84% 4.9%;
+      --primary: 222.2 47.4% 11.2%; --primary-foreground: 210 40% 98%;
+      --secondary: 210 40% 96.1%; --secondary-foreground: 222.2 47.4% 11.2%;
+      --muted: 210 40% 96.1%; --muted-foreground: 215.4 16.3% 46.9%;
+      --accent: 210 40% 96.1%; --accent-foreground: 222.2 47.4% 11.2%;
+      --destructive: 0 84.2% 60.2%; --destructive-foreground: 210 40% 98%;
+      --border: 214.3 31.8% 91.4%; --input: 214.3 31.8% 91.4%;
+      --ring: 222.2 84% 4.9%; --radius: 0.5rem;
+    }
+    .dark {
+      color-scheme: dark;
+      --background: 240 6% 3.9%; --foreground: 0 0% 98%;
+      --card: 240 5.9% 10%; --card-foreground: 0 0% 98%;
+      --primary: 0 0% 98%; --primary-foreground: 240 5.9% 10%;
+      --secondary: 240 5% 8%; --secondary-foreground: 0 0% 98%;
+      --muted: 240 4.8% 12%; --muted-foreground: 240 4.9% 65.9%;
+      --accent: 240 5.3% 15.9%; --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 50%; --destructive-foreground: 0 0% 98%;
+      --border: 240 5.3% 15.9%; --input: 240 5.3% 15.9%; --ring: 240 4.9% 65.9%;
+    }
+    .theme-transition,
+    .theme-transition aside,
+    .theme-transition header,
+    .theme-transition main,
+    .theme-transition .shadow-card,
+    .theme-transition .rounded-xl,
+    .theme-transition .rounded-lg {
+      transition-property: background-color, border-color, color, fill, stroke;
+      transition-duration: 300ms;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .scrollbar-thin::-webkit-scrollbar { width: 5px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { border-radius: 9999px; background: hsl(var(--muted-foreground) / 0.25); }
+    .dark .shadow-card { box-shadow: none; }
+    .simple-shell { background: hsl(var(--background)); }
+    .simple-topbar { background: hsl(var(--card)); }
+    .simple-sidebar { background: hsl(var(--background)); }
+    /* Cards — match ui/index.html + Coderthemes Simple */
+    .simple-card { background: hsl(var(--card)); border-color: hsl(var(--border)); }
+    .ui-table-wrap { overflow: hidden; border-radius: var(--radius); border: 1px solid hsl(var(--border)); background: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06); }
+    .dark .ui-table-wrap { box-shadow: none; }
+    /* Active nav — primary/10 pill like Simple */
+    .nav-active { background: hsl(var(--primary) / 0.1); font-weight: 500; color: hsl(var(--primary)); }
+    .dark .nav-active { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+    #sidebar[data-collapsed="true"] { width: 64px !important; }
+    #sidebar[data-collapsed="true"] .sidebar-text { display: none; }
+    #sidebar[data-collapsed="true"] nav { overflow-x: hidden; }
+    #sidebar[data-collapsed="true"] .submenu-toggle + ul { display: none !important; }
+    /* Profile avatar stays visible when sidebar is collapsed */
+    #sidebar[data-collapsed="true"] #profile-box-inner { justify-content: center; }
+    /* Premium pill actions on directory-style cards (roles, members, …) */
+    .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .card-actions--flush {
+      margin-top: 0;
+    }
+    .card-act {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.2rem 0.85rem 0.2rem 0.2rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      line-height: 1.2;
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, transform 0.12s ease, color 0.15s ease;
+      box-shadow: 0 1px 2px hsl(0 0% 0% / 0.05);
+    }
+    .dark .card-act {
+      box-shadow: none;
+      background: hsl(var(--secondary) / 0.45);
+    }
+    .card-act:hover {
+      border-color: hsl(var(--ring) / 0.4);
+      box-shadow: 0 4px 12px hsl(0 0% 0% / 0.07);
+    }
+    .dark .card-act:hover {
+      border-color: hsl(var(--primary) / 0.35);
+      background: hsl(var(--accent));
+      box-shadow: 0 2px 12px hsl(0 0% 0% / 0.35);
+    }
+    .card-act:active {
+      transform: scale(0.98);
+    }
+    .card-act__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.875rem;
+      height: 1.875rem;
+      border-radius: 9999px;
+      flex-shrink: 0;
+    }
+    .card-act--primary {
+      border-color: hsl(var(--primary) / 0.22);
+    }
+    .card-act--primary .card-act__icon {
+      background: hsl(var(--primary) / 0.12);
+      color: hsl(var(--primary));
+    }
+    .dark .card-act--primary .card-act__icon {
+      background: hsl(var(--primary) / 0.18);
+      color: hsl(var(--primary-foreground));
+    }
+    .card-act--primary:hover {
+      border-color: hsl(var(--primary) / 0.45);
+      color: hsl(var(--foreground));
+    }
+    .card-act--muted .card-act__icon {
+      background: hsl(var(--muted));
+      color: hsl(var(--muted-foreground));
+    }
+    .card-act--muted:hover {
+      border-color: hsl(var(--muted-foreground) / 0.25);
+    }
+    .card-act--danger {
+      border-color: hsl(var(--destructive) / 0.2);
+      color: hsl(var(--destructive));
+    }
+    .card-act--danger .card-act__icon {
+      background: hsl(var(--destructive) / 0.1);
+      color: hsl(var(--destructive));
+    }
+    .card-act--danger:hover {
+      border-color: hsl(var(--destructive) / 0.45);
+      background: hsl(var(--destructive) / 0.06);
+      box-shadow: 0 4px 12px hsl(var(--destructive) / 0.12);
+    }
+    .dark .card-act--danger:hover {
+      background: hsl(var(--destructive) / 0.12);
+    }
+    .card-act-cta {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding: 0.65rem 1rem;
+      border-radius: 0.75rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      border: 1px solid hsl(var(--primary) / 0.35);
+      background: linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.92) 100%);
+      color: hsl(var(--primary-foreground));
+      box-shadow: 0 2px 8px hsl(var(--primary) / 0.22);
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease;
+    }
+    .card-act-cta:hover {
+      opacity: 0.96;
+      box-shadow: 0 6px 20px hsl(var(--primary) / 0.32);
+    }
+    .card-act-cta:active {
+      transform: scale(0.992);
+    }
+    .dark .card-act-cta {
+      box-shadow: 0 2px 16px hsl(0 0% 0% / 0.45);
+    }
+    .card-act--lg {
+      padding: 0.45rem 1rem 0.45rem 0.35rem;
+      font-size: 0.8125rem;
+    }
+    .card-act--lg .card-act__icon {
+      width: 2.125rem;
+      height: 2.125rem;
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-screen bg-background font-sans text-foreground antialiased simple-shell transition-colors duration-300 ease-in-out">
+<div class="flex min-h-screen">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <aside id="sidebar" class="simple-sidebar fixed inset-y-0 left-0 z-40 flex w-[240px] flex-col border-r border-border bg-background transition-all duration-300 ease-in-out lg:static lg:shrink-0 -translate-x-full lg:translate-x-0" data-collapsed="false">
+
+    <!-- Brand — Coderthemes Simple: slim bar + version -->
+    <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
+      <a href="{% url 'dashboard' %}" class="flex min-w-0 items-center gap-2.5">
+        <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+          <i data-lucide="sparkles" class="h-[18px] w-[18px]"></i>
+        </span>
+        <span class="sidebar-text truncate text-base font-bold tracking-tight text-foreground">Simple</span>
+      </a>
+      <span class="sidebar-text shrink-0 text-xs font-medium text-muted-foreground">v1.0.0</span>
+    </div>
+
+    <!-- Profile — dashed box like Simple; avatar always visible (text hides when collapsed) -->
+    <div class="border-b border-border px-3 py-3">
+      <a href="{% url 'profile' %}" class="block rounded-lg border border-dashed border-border p-2.5 transition-colors hover:bg-accent/40">
+        <div id="profile-box-inner" class="flex items-center gap-2.5">
+          {% if request.user.avatar.name %}
+            <img src="{{ request.user.avatar.url }}" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-border" />
+          {% else %}
+            <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm ring-1 ring-border">
+              {{ request.user.name|first|upper }}
+            </span>
+          {% endif %}
+          <div class="sidebar-text min-w-0 flex-1">
+            <p class="truncate text-sm font-semibold leading-tight text-foreground">{{ request.user.name }}</p>
+            <p class="text-[11px] leading-tight text-muted-foreground">
+              {% if request.user.role == 'super_admin' %}Super Admin
+              {% elif request.user.role == 'tenant_admin' %}Tenant Admin
+              {% else %}{{ request.user.custom_role.name|default:"Staff" }}{% endif %}
+            </p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Nav -->
+    <nav class="scrollbar-thin flex-1 overflow-y-auto px-2 py-2">
+      <ul class="space-y-0.5 text-[13px] leading-snug">
+
+        <li>
+          <a href="{% url 'dashboard' %}" class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors duration-200 {% if active_page == 'dashboard' %}nav-active{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">
+            <i data-lucide="layout-dashboard" class="h-4 w-4 shrink-0"></i>
+            <span class="sidebar-text">Dashboard</span>
+          </a>
+        </li>
+
+        {% if request.user.hrm_employee_profile or request.user.role == 'tenant_admin' or request.user.role == 'super_admin' %}
+        <li>
+          <a href="{% url 'hrm:employee_home' %}" class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors duration-200 {% if request.resolver_match and request.resolver_match.url_name == 'employee_home' %}nav-active{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">
+            <i data-lucide="user-circle-2" class="h-4 w-4 shrink-0"></i>
+            <span class="sidebar-text">My HRM</span>
+          </a>
+        </li>
+        {% endif %}
+
+        {% if request.user.role == 'super_admin' or request.user.role == 'tenant_admin' %}
+          <p class="sidebar-text mb-1.5 mt-4 px-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Tenant</p>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if active_page == 'members' or active_page == 'roles' or active_page == 'invitations' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-tenant-auth">
+              <i data-lucide="users-round" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                Tenant auth
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-tenant-auth" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if active_page != 'members' and active_page != 'roles' and active_page != 'invitations' %}hidden{% endif %}">
+              <li>
+                <a href="{% url 'members' %}" class="block rounded-lg px-2 py-1.5 {% if active_page == 'members' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Members</a>
+              </li>
+              <li>
+                <a href="{% url 'roles' %}" class="block rounded-lg px-2 py-1.5 {% if active_page == 'roles' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Roles</a>
+              </li>
+              <li>
+                <a href="{% url 'invitations' %}" class="block rounded-lg px-2 py-1.5 {% if active_page == 'invitations' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Invitations</a>
+              </li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if request.resolver_match and request.resolver_match.namespace == 'foundation' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-foundation">
+              <i data-lucide="layers" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                Foundation
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-foundation" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'foundation' %}hidden{% endif %}">
+              <li>
+                <a href="{% url 'foundation:foundation_dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'foundation_dashboard' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a>
+              </li>
+              <li>
+                <button type="button" class="submenu-toggle flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left {% if request.resolver_match and request.resolver_match.url_name == 'warehouse_list' or request.resolver_match and request.resolver_match.url_name == 'category_list' or request.resolver_match and request.resolver_match.url_name == 'product_list' or request.resolver_match and request.resolver_match.url_name == 'uom_list' or request.resolver_match and request.resolver_match.url_name == 'uom_conversion_list' or request.resolver_match and request.resolver_match.url_name == 'customer_list' or request.resolver_match and request.resolver_match.url_name == 'supplier_list' or request.resolver_match and request.resolver_match.url_name == 'sales_person_list' or request.resolver_match and request.resolver_match.url_name == 'payment_method_list' %}font-medium text-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-foundation-master">
+                  Master data
+                  <i data-lucide="chevron-down" class="h-3 w-3 opacity-60"></i>
+                </button>
+                <ul id="sub-foundation-master" class="mt-0.5 space-y-0.5 border-l border-border/70 pl-3 ml-2 {% if not request.resolver_match %}hidden{% elif request.resolver_match.url_name != 'warehouse_list' and request.resolver_match.url_name != 'category_list' and request.resolver_match.url_name != 'product_list' and request.resolver_match.url_name != 'uom_list' and request.resolver_match.url_name != 'uom_conversion_list' and request.resolver_match.url_name != 'customer_list' and request.resolver_match.url_name != 'supplier_list' and request.resolver_match.url_name != 'sales_person_list' and request.resolver_match.url_name != 'payment_method_list' %}hidden{% endif %}">
+                  <li><a href="{% url 'foundation:warehouse_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'warehouse_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Warehouses</a></li>
+                  <li><a href="{% url 'foundation:category_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'category_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Categories</a></li>
+                  <li><a href="{% url 'foundation:product_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'product_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Products</a></li>
+                  <li><a href="{% url 'foundation:uom_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'uom_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Units of measure</a></li>
+                  <li><a href="{% url 'foundation:uom_conversion_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'uom_conversion_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">UOM conversions</a></li>
+                  <li><a href="{% url 'foundation:customer_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'customer_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Customers</a></li>
+                  <li><a href="{% url 'foundation:supplier_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'supplier_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Suppliers</a></li>
+                  <li><a href="{% url 'foundation:sales_person_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'sales_person_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Sales persons</a></li>
+                  <li><a href="{% url 'foundation:payment_method_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'payment_method_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Payment methods</a></li>
+                </ul>
+              </li>
+              <li>
+                <button type="button" class="submenu-toggle flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left {% if request.resolver_match and request.resolver_match.url_name == 'currency_list' or request.resolver_match and request.resolver_match.url_name == 'exchange_rate_list' or request.resolver_match and request.resolver_match.url_name == 'tax_type_list' or request.resolver_match and request.resolver_match.url_name == 'tax_rate_list' or request.resolver_match and request.resolver_match.url_name == 'payment_term_list' %}font-medium text-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-foundation-financial">
+                  Financial
+                  <i data-lucide="chevron-down" class="h-3 w-3 opacity-60"></i>
+                </button>
+                <ul id="sub-foundation-financial" class="mt-0.5 space-y-0.5 border-l border-border/70 pl-3 ml-2 {% if not request.resolver_match %}hidden{% elif request.resolver_match.url_name != 'currency_list' and request.resolver_match.url_name != 'exchange_rate_list' and request.resolver_match.url_name != 'tax_type_list' and request.resolver_match.url_name != 'tax_rate_list' and request.resolver_match.url_name != 'payment_term_list' %}hidden{% endif %}">
+                  <li><a href="{% url 'foundation:currency_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'currency_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Currencies</a></li>
+                  <li><a href="{% url 'foundation:exchange_rate_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'exchange_rate_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Exchange rates</a></li>
+                  <li><a href="{% url 'foundation:tax_type_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'tax_type_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Tax types</a></li>
+                  <li><a href="{% url 'foundation:tax_rate_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'tax_rate_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Tax rates</a></li>
+                  <li><a href="{% url 'foundation:payment_term_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'payment_term_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Payment terms</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if request.resolver_match and request.resolver_match.namespace == 'inventory' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-inventory">
+              <i data-lucide="package-search" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                Inventory
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-inventory" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'inventory' %}hidden{% endif %}">
+              <li><a href="{% url 'inventory:inventory_dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'inventory_dashboard' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a></li>
+              <li><a href="{% url 'inventory:stock_adjustment_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'stock_adjustment_list' or request.resolver_match and request.resolver_match.url_name == 'stock_adjustment_detail' or request.resolver_match and request.resolver_match.url_name == 'stock_adjustment_create' or request.resolver_match and request.resolver_match.url_name == 'stock_adjustment_update' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Stock adjustments</a></li>
+              <li><a href="{% url 'inventory:goods_issue_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'goods_issue' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Goods issues</a></li>
+              <li><a href="{% url 'inventory:inventory_transfer_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'inventory_transfer' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Inventory transfers</a></li>
+              <li><a href="{% url 'inventory:warehouse_stock_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'warehouse_stock_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Warehouse stock</a></li>
+              <li><a href="{% url 'inventory:stock_transaction_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'stock_transaction_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Stock transactions</a></li>
+            </ul>
+          </li>
+          <li>
+            <a href="{% url 'hrm:recruitment_job_list' %}" class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors duration-200 {% if request.resolver_match and request.resolver_match.namespace == 'hrm' and request.resolver_match.url_name == 'recruitment_job_list' or request.resolver_match and request.resolver_match.namespace == 'hrm' and request.resolver_match.url_name == 'recruitment_job_edit' or request.resolver_match and request.resolver_match.namespace == 'hrm' and request.resolver_match.url_name == 'recruitment_application_list' or request.resolver_match and request.resolver_match.namespace == 'hrm' and request.resolver_match.url_name == 'recruitment_application_edit' or request.resolver_match and request.resolver_match.namespace == 'hrm' and request.resolver_match.url_name == 'recruitment_application_delete' %}nav-active{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">
+              <i data-lucide="briefcase" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Recruitment</span>
+            </a>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if request.resolver_match and request.resolver_match.namespace == 'hrm' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-hrm">
+              <i data-lucide="id-card" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                HRM
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-hrm" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'hrm' %}hidden{% endif %}">
+              <li>
+                <a href="{% url 'hrm:hrm_dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'hrm_dashboard' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a>
+              </li>
+              {% if request.user.hrm_employee_profile or request.user.role == 'tenant_admin' or request.user.role == 'super_admin' %}
+              <li>
+                <a href="{% url 'hrm:employee_home' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'employee_home' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Map check-in &amp; leave</a>
+              </li>
+              {% endif %}
+              <li>
+                <button type="button" class="submenu-toggle flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left {% if request.resolver_match and request.resolver_match.url_name == 'department_list' or request.resolver_match and request.resolver_match.url_name == 'job_title_list' or request.resolver_match and request.resolver_match.url_name == 'department_edit' or request.resolver_match and request.resolver_match.url_name == 'job_title_edit' %}font-medium text-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-hrm-org">
+                  Organization
+                  <i data-lucide="chevron-down" class="h-3 w-3 opacity-60"></i>
+                </button>
+                <ul id="sub-hrm-org" class="mt-0.5 space-y-0.5 border-l border-border/70 pl-3 ml-2 {% if not request.resolver_match %}hidden{% elif request.resolver_match.url_name != 'department_list' and request.resolver_match.url_name != 'job_title_list' and request.resolver_match.url_name != 'department_edit' and request.resolver_match.url_name != 'job_title_edit' %}hidden{% endif %}">
+                  <li><a href="{% url 'hrm:department_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'department_list' or request.resolver_match and request.resolver_match.url_name == 'department_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Departments</a></li>
+                  <li><a href="{% url 'hrm:job_title_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'job_title_list' or request.resolver_match and request.resolver_match.url_name == 'job_title_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Job titles</a></li>
+                </ul>
+              </li>
+              <li>
+                <a href="{% url 'hrm:employee_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'employee_list' or request.resolver_match and request.resolver_match.url_name == 'employee_create' or request.resolver_match and request.resolver_match.url_name == 'employee_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Employees</a>
+              </li>
+              <li>
+                <button type="button" class="submenu-toggle flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left {% if request.resolver_match and request.resolver_match.url_name == 'shift_list' or request.resolver_match and request.resolver_match.url_name == 'shift_edit' or request.resolver_match and request.resolver_match.url_name == 'shift_delete' or request.resolver_match and request.resolver_match.url_name == 'roster_bulk' or request.resolver_match and request.resolver_match.url_name == 'roster_weekday_list' or request.resolver_match and request.resolver_match.url_name == 'roster_weekday_edit' or request.resolver_match and request.resolver_match.url_name == 'roster_weekday_delete' or request.resolver_match and request.resolver_match.url_name == 'roster_range_list' or request.resolver_match and request.resolver_match.url_name == 'roster_range_edit' or request.resolver_match and request.resolver_match.url_name == 'roster_range_delete' or request.resolver_match and request.resolver_match.url_name == 'roster_exception_list' or request.resolver_match and request.resolver_match.url_name == 'roster_exception_edit' or request.resolver_match and request.resolver_match.url_name == 'roster_exception_delete' or request.resolver_match and request.resolver_match.url_name == 'roster_preview' or request.resolver_match and request.resolver_match.url_name == 'shift_management_guide' %}font-medium text-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-hrm-shifts">
+                  Shifts &amp; roster
+                  <i data-lucide="chevron-down" class="h-3 w-3 opacity-60"></i>
+                </button>
+                <ul id="sub-hrm-shifts" class="mt-0.5 space-y-0.5 border-l border-border/70 pl-3 ml-2 {% if not request.resolver_match %}hidden{% elif request.resolver_match.url_name != 'shift_list' and request.resolver_match.url_name != 'shift_edit' and request.resolver_match.url_name != 'shift_delete' and request.resolver_match.url_name != 'shift_management_guide' and request.resolver_match.url_name != 'roster_bulk' and request.resolver_match.url_name != 'roster_weekday_list' and request.resolver_match.url_name != 'roster_weekday_edit' and request.resolver_match.url_name != 'roster_weekday_delete' and request.resolver_match.url_name != 'roster_range_list' and request.resolver_match.url_name != 'roster_range_edit' and request.resolver_match.url_name != 'roster_range_delete' and request.resolver_match.url_name != 'roster_exception_list' and request.resolver_match.url_name != 'roster_exception_edit' and request.resolver_match.url_name != 'roster_exception_delete' and request.resolver_match.url_name != 'roster_preview' %}hidden{% endif %}">
+                  <li><a href="{% url 'hrm:shift_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'shift_list' or request.resolver_match and request.resolver_match.url_name == 'shift_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Shift definitions</a></li>
+                  <li><a href="{% url 'hrm:shift_management_guide' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'shift_management_guide' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">শিফট গাইড</a></li>
+                  <li><a href="{% url 'hrm:roster_bulk' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'roster_bulk' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Bulk apply</a></li>
+                  <li><a href="{% url 'hrm:roster_weekday_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'roster_weekday_list' or request.resolver_match and request.resolver_match.url_name == 'roster_weekday_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Weekly patterns</a></li>
+                  <li><a href="{% url 'hrm:roster_range_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'roster_range_list' or request.resolver_match and request.resolver_match.url_name == 'roster_range_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Date ranges</a></li>
+                  <li><a href="{% url 'hrm:roster_exception_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'roster_exception_list' or request.resolver_match and request.resolver_match.url_name == 'roster_exception_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">One-day overrides</a></li>
+                  <li><a href="{% url 'hrm:roster_preview' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'roster_preview' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Roster preview</a></li>
+                </ul>
+              </li>
+              <li>
+                <button type="button" class="submenu-toggle flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left {% if request.resolver_match and request.resolver_match.url_name == 'leave_type_list' or request.resolver_match and request.resolver_match.url_name == 'leave_request_list' or request.resolver_match and request.resolver_match.url_name == 'leave_type_edit' %}font-medium text-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-hrm-leave">
+                  Time off
+                  <i data-lucide="chevron-down" class="h-3 w-3 opacity-60"></i>
+                </button>
+                <ul id="sub-hrm-leave" class="mt-0.5 space-y-0.5 border-l border-border/70 pl-3 ml-2 {% if not request.resolver_match %}hidden{% elif request.resolver_match.url_name != 'leave_type_list' and request.resolver_match.url_name != 'leave_request_list' and request.resolver_match.url_name != 'leave_type_edit' %}hidden{% endif %}">
+                  <li><a href="{% url 'hrm:leave_type_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'leave_type_list' or request.resolver_match and request.resolver_match.url_name == 'leave_type_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Leave types</a></li>
+                  <li><a href="{% url 'hrm:leave_request_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'leave_request_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Leave requests</a></li>
+                </ul>
+              </li>
+              <li>
+                <a href="{% url 'hrm:holiday_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'holiday_list' or request.resolver_match and request.resolver_match.url_name == 'holiday_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Holidays</a>
+              </li>
+              <li>
+                <a href="{% url 'hrm:notice_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'notice_list' or request.resolver_match and request.resolver_match.url_name == 'notice_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Notices</a>
+              </li>
+              <li>
+                <a href="{% url 'hrm:attendance_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'attendance_list' or request.resolver_match and request.resolver_match.url_name == 'attendance_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Attendance</a>
+              </li>
+              <li>
+                <a href="{% url 'hrm:overtime_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'overtime_list' or request.resolver_match and request.resolver_match.url_name == 'overtime_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overtime</a>
+              </li>
+              <li>
+                <button type="button" class="submenu-toggle flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left {% if request.resolver_match and request.resolver_match.url_name == 'zk_device_list' or request.resolver_match and request.resolver_match.url_name == 'zk_device_create' or request.resolver_match and request.resolver_match.url_name == 'zk_device_edit' or request.resolver_match and request.resolver_match.url_name == 'zk_device_delete' or request.resolver_match and request.resolver_match.url_name == 'zk_sync_users' or request.resolver_match and request.resolver_match.url_name == 'zk_sync_attendance' or request.resolver_match and request.resolver_match.url_name == 'zk_attendance_log_list' or request.resolver_match and request.resolver_match.url_name == 'attendance_location_list' or request.resolver_match and request.resolver_match.url_name == 'attendance_location_create' or request.resolver_match and request.resolver_match.url_name == 'attendance_location_edit' or request.resolver_match and request.resolver_match.url_name == 'attendance_location_delete' or request.resolver_match and request.resolver_match.url_name == 'location_policy' or request.resolver_match and request.resolver_match.url_name == 'location_attendance_report' or request.resolver_match and request.resolver_match.url_name == 'attendance_review_list' or request.resolver_match and request.resolver_match.url_name == 'attendance_review_action' %}font-medium text-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-hrm-zk">
+                  ZKTeco &amp; logs
+                  <i data-lucide="chevron-down" class="h-3 w-3 opacity-60"></i>
+                </button>
+                <ul id="sub-hrm-zk" class="mt-0.5 space-y-0.5 border-l border-border/70 pl-3 ml-2 {% if not request.resolver_match %}hidden{% elif request.resolver_match.url_name != 'zk_device_list' and request.resolver_match.url_name != 'zk_device_create' and request.resolver_match.url_name != 'zk_device_edit' and request.resolver_match.url_name != 'zk_device_delete' and request.resolver_match.url_name != 'zk_sync_users' and request.resolver_match.url_name != 'zk_sync_attendance' and request.resolver_match.url_name != 'zk_attendance_log_list' and request.resolver_match.url_name != 'attendance_location_list' and request.resolver_match.url_name != 'attendance_location_create' and request.resolver_match.url_name != 'attendance_location_edit' and request.resolver_match.url_name != 'attendance_location_delete' and request.resolver_match.url_name != 'location_policy' and request.resolver_match.url_name != 'location_attendance_report' and request.resolver_match.url_name != 'attendance_review_list' and request.resolver_match.url_name != 'attendance_review_action' %}hidden{% endif %}">
+                  <li><a href="{% url 'hrm:zk_device_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'zk_device_list' or request.resolver_match and request.resolver_match.url_name == 'zk_device_create' or request.resolver_match and request.resolver_match.url_name == 'zk_device_edit' or request.resolver_match and request.resolver_match.url_name == 'zk_device_delete' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">ZKTeco devices</a></li>
+                  <li><a href="{% url 'hrm:zk_attendance_log_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'zk_attendance_log_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Raw punch logs</a></li>
+                  <li><a href="{% url 'hrm:attendance_location_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'attendance_location_list' or request.resolver_match and request.resolver_match.url_name == 'attendance_location_create' or request.resolver_match and request.resolver_match.url_name == 'attendance_location_edit' or request.resolver_match and request.resolver_match.url_name == 'attendance_location_delete' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Geo locations</a></li>
+                  <li><a href="{% url 'hrm:location_policy' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'location_policy' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">GPS policy</a></li>
+                  <li><a href="{% url 'hrm:location_attendance_report' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'location_attendance_report' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Location report</a></li>
+                  <li><a href="{% url 'hrm:attendance_review_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'attendance_review_list' or request.resolver_match and request.resolver_match.url_name == 'attendance_review_action' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Review queue</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        {% endif %}
+
+        {% if request.user.role == 'super_admin' %}
+          <p class="sidebar-text mb-1.5 mt-4 px-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Super Admin</p>
+          <li>
+            <a href="{% url 'tenant_list' %}" class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors duration-200 {% if active_page == 'tenants' %}nav-active{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">
+              <i data-lucide="building-2" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Tenants</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'permission_list' %}" class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors duration-200 {% if active_page == 'permissions' %}nav-active{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">
+              <i data-lucide="key-round" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Permissions</span>
+            </a>
+          </li>
+        {% endif %}
+
+        <p class="sidebar-text mb-1.5 mt-4 px-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Demo</p>
+        <li>
+          <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-workspace">
+            <i data-lucide="briefcase" class="h-4 w-4 shrink-0"></i>
+            <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+              Workspace
+              <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+            </span>
+          </button>
+          <ul id="sub-workspace" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+            <li><a href="#" class="block rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground">Overview</a></li>
+            <li>
+              <button type="button" class="submenu-toggle flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-workspace-crm">
+                CRM
+                <i data-lucide="chevron-down" class="h-3 w-3 opacity-60"></i>
+              </button>
+              <ul id="sub-workspace-crm" class="mt-0.5 hidden space-y-0.5 border-l border-border/70 pl-3 ml-2">
+                <li><a href="#" class="block rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground">Leads</a></li>
+                <li><a href="#" class="block rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground">Pipeline</a></li>
+                <li><a href="#" class="block rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground">Deals</a></li>
+              </ul>
+            </li>
+            <li>
+              <button type="button" class="submenu-toggle flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-workspace-support">
+                Support
+                <i data-lucide="chevron-down" class="h-3 w-3 opacity-60"></i>
+              </button>
+              <ul id="sub-workspace-support" class="mt-0.5 hidden space-y-0.5 border-l border-border/70 pl-3 ml-2">
+                <li><a href="#" class="block rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground">Tickets</a></li>
+                <li><a href="#" class="block rounded-lg px-2 py-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground">SLA Rules</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+      </ul>
+    </nav>
+
+    <!-- Collapse + Logout -->
+    <div class="border-t border-border bg-transparent p-2 space-y-1">
+      <a href="{% url 'logout' %}" class="flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10">
+        <i data-lucide="log-out" class="h-4 w-4 shrink-0"></i>
+        <span class="sidebar-text">Logout</span>
+      </a>
+      <button type="button" id="btn-collapse" class="flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent">
+        <i data-lucide="panel-left-close" class="h-4 w-4 shrink-0"></i>
+        <span class="sidebar-text">Collapse Menu</span>
+      </button>
+    </div>
+  </aside>
+
+  <div id="sidebar-overlay" class="fixed inset-0 z-30 hidden bg-black/60 lg:hidden"></div>
+
+  <!-- ── Main ────────────────────────────────────────────────────────────── -->
+  <div class="flex min-w-0 flex-1 flex-col">
+
+    <!-- Topbar -->
+    <header class="simple-topbar sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-border bg-card px-2 shadow-header sm:gap-3 sm:px-4 lg:h-16 lg:gap-4 lg:px-6">
+      <button type="button" id="btn-menu" class="rounded-md p-2 text-muted-foreground hover:bg-accent lg:hidden">
+        <i data-lucide="menu" class="h-5 w-5"></i>
+      </button>
+
+      <div class="hidden items-center gap-2 text-sm md:flex lg:gap-3">
+        <a href="{% url 'dashboard' %}" class="font-semibold text-foreground">Simple</a>
+        <span class="text-xs text-muted-foreground">v1.0.0</span>
+        <span class="hidden h-4 w-px bg-border lg:inline" aria-hidden="true"></span>
+        <span class="hidden font-medium text-muted-foreground lg:inline">{% block page_title %}Dashboard{% endblock %}</span>
+      </div>
+
+      <div class="flex flex-1 items-center justify-end gap-1.5 md:justify-between">
+        <label class="relative hidden w-full max-w-md md:block">
+          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
+          <input type="search" placeholder="Search for something…" class="h-10 w-full rounded-lg border border-border bg-background py-2 pl-10 pr-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition focus:ring-2 focus:ring-ring">
+        </label>
+        <div class="flex items-center gap-1.5">
+
+        <!-- Theme dropdown -->
+        <div class="relative">
+          <button type="button" class="dropdown-btn flex items-center gap-2 rounded-md border border-border bg-background px-2 py-1.5 text-xs font-medium text-foreground hover:bg-accent sm:px-3" data-dropdown="dd-theme">
+            <span class="hidden sm:inline text-muted-foreground">Theme:</span>
+            <span id="theme-active-label">Shadcn</span>
+            <i data-lucide="chevron-down" class="h-3.5 w-3.5 text-muted-foreground"></i>
+          </button>
+          <div id="dd-theme" class="dropdown-panel absolute right-0 z-50 mt-2 hidden w-[min(100vw-1rem,32rem)] rounded-xl border border-border bg-card p-3 shadow-lg">
+            <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Color scheme</p>
+            <div class="max-h-[min(52vh,20rem)] overflow-y-auto overflow-x-hidden pr-1 scrollbar-thin">
+              <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Default</p>
+              <div class="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                <button type="button" data-theme-item="shadcn" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium text-foreground hover:bg-accent">
+                  <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#0f172a]"></span><span class="bg-[#64748b]"></span><span class="bg-[#e2e8f0]"></span><span class="bg-[#f8fafc]"></span></span>Shadcn
+                </button>
+              </div>
+              <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Colors</p>
+              <div class="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                <button type="button" data-theme-item="rose" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent"><span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#e11d48]"></span><span class="bg-[#fb7185]"></span><span class="bg-[#ffe4e6]"></span><span class="bg-[#fff1f2]"></span></span>Rose</button>
+                <button type="button" data-theme-item="blue" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent"><span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#2563eb]"></span><span class="bg-[#60a5fa]"></span><span class="bg-[#dbeafe]"></span><span class="bg-[#eff6ff]"></span></span>Blue</button>
+                <button type="button" data-theme-item="green" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent"><span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#16a34a]"></span><span class="bg-[#4ade80]"></span><span class="bg-[#dcfce7]"></span><span class="bg-[#f0fdf4]"></span></span>Green</button>
+                <button type="button" data-theme-item="orange" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent"><span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#ea580c]"></span><span class="bg-[#fb923c]"></span><span class="bg-[#ffedd5]"></span><span class="bg-[#fff7ed]"></span></span>Orange</button>
+                <button type="button" data-theme-item="violet" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent"><span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#7c3aed]"></span><span class="bg-[#a78bfa]"></span><span class="bg-[#ede9fe]"></span><span class="bg-[#f5f3ff]"></span></span>Violet</button>
+                <button type="button" data-theme-item="amber" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent"><span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#d97706]"></span><span class="bg-[#fbbf24]"></span><span class="bg-[#fef3c7]"></span><span class="bg-[#fffbeb]"></span></span>Amber</button>
+                <button type="button" data-theme-item="red" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent"><span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#dc2626]"></span><span class="bg-[#f87171]"></span><span class="bg-[#fee2e2]"></span><span class="bg-[#fef2f2]"></span></span>Red</button>
+                <button type="button" data-theme-item="cyan" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent"><span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#0891b2]"></span><span class="bg-[#22d3ee]"></span><span class="bg-[#cffafe]"></span><span class="bg-[#ecfeff]"></span></span>Cyan</button>
+                <button type="button" data-theme-item="pink" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent"><span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#db2777]"></span><span class="bg-[#f472b6]"></span><span class="bg-[#fce7f3]"></span><span class="bg-[#fdf2f8]"></span></span>Pink</button>
+                <button type="button" data-theme-item="indigo" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent"><span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#4f46e5]"></span><span class="bg-[#818cf8]"></span><span class="bg-[#e0e7ff]"></span><span class="bg-[#eef2ff]"></span></span>Indigo</button>
+                <button type="button" data-theme-item="saas" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent"><span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#8b5cf6]"></span><span class="bg-[#a78bfa]"></span><span class="bg-[#ede9fe]"></span><span class="bg-[#f5f3ff]"></span></span>SaaS</button>
+                <button type="button" data-theme-item="corporate" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent"><span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border"><span class="bg-[#3b82f6]"></span><span class="bg-[#93c5fd]"></span><span class="bg-[#dbeafe]"></span><span class="bg-[#eff6ff]"></span></span>Corporate</button>
+              </div>
+            </div>
+            <div class="mt-3 flex items-center gap-2 border-t border-border pt-3">
+              <label for="primary-color" class="text-xs text-muted-foreground shrink-0">Custom</label>
+              <input id="primary-color" type="color" value="#0f172a" class="h-9 w-full cursor-pointer rounded border border-border bg-background" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="relative">
+          <button type="button" class="dropdown-btn relative rounded-md p-2 text-muted-foreground hover:bg-accent" data-dropdown="dd-notify">
+            <i data-lucide="bell" class="h-5 w-5"></i>
+            <span class="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary ring-2 ring-card"></span>
+          </button>
+          <div id="dd-notify" class="dropdown-panel absolute right-0 z-50 mt-2 hidden w-80 max-h-96 overflow-y-auto rounded-xl border border-border bg-card shadow-lg">
+            <div class="flex items-center justify-between border-b border-border p-3">
+              <h3 class="text-sm font-semibold text-foreground">Notifications</h3>
+              <span class="text-xs text-muted-foreground">New</span>
+            </div>
+            <ul class="divide-y divide-border text-sm">
+              <li class="p-3 hover:bg-accent transition-colors">
+                <p class="font-medium text-foreground">Welcome to WA Automation</p>
+                <p class="text-xs text-muted-foreground mt-0.5">Just now</p>
+              </li>
+            </ul>
+            <a class="block border-t border-border p-3 text-center text-sm font-medium text-primary hover:bg-accent" href="#">View All</a>
+          </div>
+        </div>
+
+        <!-- Customizer toggle -->
+        <button type="button" id="btn-customizer" class="hidden rounded-md p-2 text-muted-foreground hover:bg-accent sm:flex" title="Admin Customizer">
+          <i data-lucide="settings" class="h-5 w-5"></i>
+        </button>
+
+        <!-- Dark mode toggle -->
+        <button type="button" id="btn-theme-toggle" class="rounded-md p-2 text-muted-foreground hover:bg-accent">
+          <i id="icon-theme-moon" data-lucide="moon" class="h-5 w-5"></i>
+          <i id="icon-theme-sun" data-lucide="sun" class="h-5 w-5 hidden"></i>
+        </button>
+
+        <!-- Profile dropdown -->
+        <div class="relative">
+          <button type="button" class="dropdown-btn flex items-center gap-2 rounded-md py-1 pl-1 pr-2 hover:bg-accent" data-dropdown="dd-user" aria-label="Account menu">
+            {% if request.user.avatar.name %}
+              <img src="{{ request.user.avatar.url }}" alt="" width="32" height="32" class="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-border" />
+            {% else %}
+              <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold ring-1 ring-border">{{ request.user.name|first|upper }}</span>
+            {% endif %}
+            <span class="hidden text-sm font-medium sm:inline">{{ request.user.name }}</span>
+            <i data-lucide="chevron-down" class="hidden h-4 w-4 text-muted-foreground sm:inline"></i>
+          </button>
+          <div id="dd-user" class="dropdown-panel absolute right-0 z-50 mt-2 hidden min-w-[220px] rounded-xl border border-border bg-card py-1 shadow-lg">
+            <div class="border-b border-border px-4 py-3">
+              <div class="flex items-center gap-3">
+                {% if request.user.avatar.name %}
+                  <img src="{{ request.user.avatar.url }}" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-border" />
+                {% else %}
+                  <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary ring-1 ring-border">{{ request.user.name|first|upper }}</span>
+                {% endif %}
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-sm font-semibold text-foreground">{{ request.user.name }}</p>
+                  <p class="truncate text-xs text-muted-foreground">{{ request.user.email }}</p>
+                  <p class="text-xs text-muted-foreground mt-0.5">{{ request.user.get_role_display }}</p>
+                </div>
+              </div>
+            </div>
+            <a class="block px-4 py-2 text-sm text-foreground hover:bg-accent" href="{% url 'profile' %}">Profile</a>
+            <hr class="border-border my-1" />
+            <a class="block px-4 py-2 text-sm text-destructive hover:bg-accent" href="{% url 'logout' %}">Log Out</a>
+          </div>
+        </div>
+
+        </div>
+      </div>
+    </header>
+
+    <!-- Customizer panel -->
+    <aside id="customizer" class="fixed inset-y-0 right-0 z-50 w-[300px] max-w-full translate-x-full border-l border-border bg-card shadow-2xl transition-transform duration-200" aria-hidden="true">
+      <div class="flex h-14 items-center justify-between border-b border-border px-4">
+        <h2 class="font-semibold text-foreground">Admin Customizer</h2>
+        <button type="button" id="btn-close-customizer" class="rounded-md p-2 text-muted-foreground hover:bg-accent">✕</button>
+      </div>
+      <div class="h-[calc(100vh-3.5rem)] space-y-6 overflow-y-auto p-4 text-sm">
+        <p class="text-muted-foreground">Configure layout, styles, and preferences.</p>
+        <div>
+          <h3 class="mb-3 font-semibold text-foreground">Color scheme</h3>
+          <div class="flex gap-3">
+            <button type="button" id="customizer-light" class="flex-1 rounded-lg border-2 border-primary p-3 text-xs font-medium text-foreground">Light</button>
+            <button type="button" id="customizer-dark" class="flex-1 rounded-lg border border-border p-3 text-xs text-foreground">Dark</button>
+          </div>
+        </div>
+        <div>
+          <h3 class="mb-3 font-semibold text-foreground">Primary color</h3>
+          <input id="primary-color-panel" type="color" value="#0f172a" class="h-12 w-full cursor-pointer rounded border border-border bg-background" />
+          <p class="mt-2 text-xs text-muted-foreground">Synced with header theme picker.</p>
+        </div>
+      </div>
+    </aside>
+    <div id="customizer-backdrop" class="fixed inset-0 z-40 hidden bg-black/50"></div>
+
+    <!-- Page content -->
+    <main class="flex-1 overflow-x-auto bg-muted/40 p-4 transition-colors duration-300 ease-in-out lg:p-6">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="mb-4 rounded-lg border px-4 py-3 text-sm
+            {% if message.tags == 'error' %}border-destructive/30 bg-destructive/10 text-destructive
+            {% else %}border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+(function() {
+  // ── Theme presets (from app.js) ───────────────────────────────────────────
+  var PRESETS = {
+    shadcn:    { label:'Shadcn',    primary:'222.2 47.4% 11.2%', pf:'210 40% 98%', ring:'222.2 84% 4.9%', dp:'0 0% 98%', dpf:'240 5.9% 10%', dr:'240 4.9% 65.9%' },
+    rose:      { label:'Rose',      primary:'346.8 77.2% 49.8%', pf:'355.7 100% 97.3%', ring:'346.8 77.2% 49.8%' },
+    blue:      { label:'Blue',      primary:'221.2 83.2% 53.3%', pf:'210 40% 98%',       ring:'221.2 83.2% 53.3%' },
+    green:     { label:'Green',     primary:'142.1 76.2% 36.3%', pf:'355.7 100% 97.3%',  ring:'142.1 76.2% 36.3%' },
+    orange:    { label:'Orange',    primary:'24.6 95% 53.1%',    pf:'0 0% 100%',          ring:'24.6 95% 53.1%' },
+    violet:    { label:'Violet',    primary:'262.1 83.3% 57.8%', pf:'210 40% 98%',        ring:'262.1 83.3% 57.8%' },
+    amber:     { label:'Amber',     primary:'32.1 94.6% 43.7%',  pf:'26 100% 10%',        ring:'32.1 94.6% 43.7%' },
+    red:       { label:'Red',       primary:'0 72.2% 50.6%',     pf:'0 0% 100%',          ring:'0 72.2% 50.6%' },
+    cyan:      { label:'Cyan',      primary:'188.7 94.5% 42.7%', pf:'196 100% 97%',       ring:'188.7 94.5% 42.7%' },
+    pink:      { label:'Pink',      primary:'330.4 81.2% 60.4%', pf:'0 0% 100%',          ring:'330.4 81.2% 60.4%' },
+    indigo:    { label:'Indigo',    primary:'238.7 83.5% 66.7%', pf:'210 40% 98%',        ring:'238.7 83.5% 66.7%' },
+    corporate: { label:'Corporate', primary:'221.2 83.2% 53.3%', pf:'210 40% 98%',        ring:'221.2 83.2% 53.3%' },
+    saas:      { label:'SaaS',      primary:'262.1 83.3% 57.8%', pf:'210 40% 98%',        ring:'262.1 83.3% 57.8%' },
+  };
+
+  function parseHue(primary) {
+    var p = String(primary).trim().split(/\s+/);
+    var h = parseFloat(p[0]), s = parseFloat(p[1]);
+    return (isNaN(h) || isNaN(s) || s < 6) ? 222 : h;
+  }
+
+  function applySurfaces(hue, isDark, r) {
+    if (isDark) {
+      r.style.setProperty('--background', hue+' 14% 8%');
+      r.style.setProperty('--card', hue+' 11% 10.5%');
+      r.style.setProperty('--muted', hue+' 9% 14%');
+      r.style.setProperty('--muted-foreground', hue+' 6% 63%');
+      r.style.setProperty('--accent', hue+' 10% 16%');
+      r.style.setProperty('--border', hue+' 8% 17%');
+      r.style.setProperty('--input', hue+' 8% 17%');
+      r.style.setProperty('--secondary', hue+' 9% 15%');
+    } else {
+      r.style.setProperty('--background', hue+' 30% 99%');
+      r.style.setProperty('--card', '0 0% 100%');
+      r.style.setProperty('--muted', hue+' 22% 96%');
+      r.style.setProperty('--muted-foreground', '215.4 16.3% 46.9%');
+      r.style.setProperty('--accent', hue+' 25% 95%');
+      r.style.setProperty('--border', hue+' 16% 90%');
+      r.style.setProperty('--input', hue+' 16% 90%');
+      r.style.setProperty('--secondary', hue+' 20% 96%');
+    }
+  }
+
+  function applyPreset(name) {
+    var p = PRESETS[name]; if (!p) return;
+    var r = document.documentElement;
+    var isDark = r.classList.contains('dark');
+    var hue = parseHue(p.primary);
+    if (isDark && p.dp) {
+      r.style.setProperty('--primary', p.dp);
+      r.style.setProperty('--primary-foreground', p.dpf || '240 5.9% 10%');
+      r.style.setProperty('--ring', p.dr || '240 4.9% 65.9%');
+      hue = 240;
+    } else {
+      r.style.setProperty('--primary', p.primary);
+      r.style.setProperty('--primary-foreground', p.pf);
+      r.style.setProperty('--ring', p.ring);
+    }
+    applySurfaces(hue, isDark, r);
+    r.setAttribute('data-theme', name);
+    try { localStorage.setItem('admin-theme', name); } catch(e){}
+    document.querySelectorAll('[data-theme-item]').forEach(function(el) {
+      var active = el.getAttribute('data-theme-item') === name;
+      el.setAttribute('aria-pressed', active ? 'true' : 'false');
+      el.classList.toggle('ring-2', active);
+      el.classList.toggle('ring-primary', active);
+    });
+    var lbl = document.getElementById('theme-active-label');
+    if (lbl) lbl.textContent = p.label;
+  }
+
+  function hexToHsl(hex) {
+    hex = hex.replace(/^#/,'');
+    if (hex.length===3) hex=hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+    var r=parseInt(hex.slice(0,2),16)/255, g=parseInt(hex.slice(2,4),16)/255, b=parseInt(hex.slice(4,6),16)/255;
+    var max=Math.max(r,g,b), min=Math.min(r,g,b), h=0, s=0, l=(max+min)/2;
+    if (max!==min) { var d=max-min; s=l>0.5?d/(2-max-min):d/(max+min);
+      switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;default:h=(r-g)/d+4;} h/=6; }
+    return Math.round(h*3600)/10+' '+Math.round(s*1000)/10+'% '+Math.round(l*1000)/10+'%';
+  }
+
+  function applyCustom(hex) {
+    var hsl=hexToHsl(hex), r=document.documentElement, isDark=r.classList.contains('dark');
+    r.style.setProperty('--primary', hsl);
+    r.style.setProperty('--ring', hsl);
+    var l=parseFloat(String(hsl.split(' ')[2]).replace('%',''));
+    r.style.setProperty('--primary-foreground', l>55?'222.2 47.4% 11.2%':'210 40% 98%');
+    applySurfaces(parseHue(hsl), isDark, r);
+    r.setAttribute('data-theme','custom');
+    try { localStorage.setItem('admin-custom-primary',hex); localStorage.removeItem('admin-theme'); } catch(e){}
+    var lbl=document.getElementById('theme-active-label'); if(lbl) lbl.textContent='Custom';
+    var p=document.getElementById('primary-color'), pp=document.getElementById('primary-color-panel');
+    if(p) p.value=hex; if(pp) pp.value=hex;
+  }
+
+  function setDark(on) {
+    document.documentElement.classList.toggle('dark', on);
+    try { localStorage.setItem('admin-dark', on?'1':'0'); } catch(e){}
+    var sun=document.getElementById('icon-theme-sun'), moon=document.getElementById('icon-theme-moon');
+    if(sun&&moon){ sun.classList.toggle('hidden',!on); moon.classList.toggle('hidden',on); }
+    var customHex=null, savedTheme=null;
+    try { customHex=localStorage.getItem('admin-custom-primary'); savedTheme=localStorage.getItem('admin-theme'); } catch(e){}
+    if(customHex&&!savedTheme) applyCustom(customHex);
+    else applyPreset(savedTheme&&PRESETS[savedTheme]?savedTheme:'shadcn');
+    if(window.lucide) lucide.createIcons();
+    // update customizer buttons
+    var cl=document.getElementById('customizer-light'), cd=document.getElementById('customizer-dark');
+    if(cl&&cd){ cl.classList.toggle('border-primary',!on); cl.classList.toggle('border-border',on); cd.classList.toggle('border-primary',on); cd.classList.toggle('border-border',!on); }
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  var dark = false;
+  try {
+    var savedDark = localStorage.getItem('admin-dark');
+    dark = savedDark === null ? false : savedDark === '1';
+  } catch(e){}
+  document.documentElement.classList.toggle('dark', dark);
+  var sun=document.getElementById('icon-theme-sun'), moon=document.getElementById('icon-theme-moon');
+  if(sun&&moon){ sun.classList.toggle('hidden',!dark); moon.classList.toggle('hidden',dark); }
+
+  var customHex=null, savedTheme=null;
+  try { customHex=localStorage.getItem('admin-custom-primary'); savedTheme=localStorage.getItem('admin-theme'); } catch(e){}
+  if(customHex&&!savedTheme) applyCustom(customHex);
+  else applyPreset(savedTheme&&PRESETS[savedTheme]?savedTheme:'shadcn');
+
+  // ── Sidebar ───────────────────────────────────────────────────────────────
+  var sidebar=document.getElementById('sidebar'), overlay=document.getElementById('sidebar-overlay');
+  document.getElementById('btn-menu')?.addEventListener('click',function(){
+    sidebar.classList.toggle('-translate-x-full'); overlay.classList.toggle('hidden');
+  });
+  overlay?.addEventListener('click',function(){ sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); });
+  document.getElementById('btn-collapse')?.addEventListener('click',function(){
+    var c=sidebar.getAttribute('data-collapsed')==='true';
+    sidebar.setAttribute('data-collapsed',c?'false':'true');
+  });
+  document.querySelectorAll('.submenu-toggle').forEach(function(toggle){
+    toggle.addEventListener('click',function(e){
+      e.preventDefault();
+      var id=toggle.getAttribute('data-target');
+      var panel=id?document.getElementById(id):null;
+      if(!panel) return;
+      panel.classList.toggle('hidden');
+    });
+  });
+
+  // ── Dropdowns ─────────────────────────────────────────────────────────────
+  document.querySelectorAll('.dropdown-btn').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var id=btn.getAttribute('data-dropdown'), panel=id?document.getElementById(id):null;
+      if(!panel) return;
+      var hidden=panel.classList.contains('hidden');
+      document.querySelectorAll('.dropdown-panel').forEach(function(p){p.classList.add('hidden');});
+      if(hidden) panel.classList.remove('hidden');
+    });
+  });
+  document.addEventListener('click',function(){
+    document.querySelectorAll('.dropdown-panel').forEach(function(p){p.classList.add('hidden');});
+  });
+  document.querySelectorAll('.dropdown-panel').forEach(function(p){
+    p.addEventListener('click',function(e){e.stopPropagation();});
+  });
+
+  // ── Theme toggle ──────────────────────────────────────────────────────────
+  document.getElementById('btn-theme-toggle')?.addEventListener('click',function(e){
+    e.stopPropagation();
+    setDark(!document.documentElement.classList.contains('dark'));
+  });
+
+  // ── Theme swatches ────────────────────────────────────────────────────────
+  document.querySelectorAll('[data-theme-item]').forEach(function(btn){
+    btn.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation();
+      applyPreset(btn.getAttribute('data-theme-item'));
+      try{localStorage.removeItem('admin-custom-primary');}catch(err){}
+    });
+  });
+
+  // ── Custom color picker ───────────────────────────────────────────────────
+  document.getElementById('primary-color')?.addEventListener('input',function(){ applyCustom(this.value); });
+  document.getElementById('primary-color-panel')?.addEventListener('input',function(){ applyCustom(this.value); });
+
+  // ── Customizer panel ──────────────────────────────────────────────────────
+  var customizer=document.getElementById('customizer'), backdrop=document.getElementById('customizer-backdrop');
+  document.getElementById('btn-customizer')?.addEventListener('click',function(){
+    customizer.classList.remove('translate-x-full'); customizer.setAttribute('aria-hidden','false');
+    backdrop.classList.remove('hidden');
+  });
+  document.getElementById('btn-close-customizer')?.addEventListener('click',function(){
+    customizer.classList.add('translate-x-full'); customizer.setAttribute('aria-hidden','true');
+    backdrop.classList.add('hidden');
+  });
+  backdrop?.addEventListener('click',function(){
+    customizer.classList.add('translate-x-full'); customizer.setAttribute('aria-hidden','true');
+    backdrop.classList.add('hidden');
+  });
+  document.getElementById('customizer-light')?.addEventListener('click',function(){ setDark(false); });
+  document.getElementById('customizer-dark')?.addEventListener('click',function(){ setDark(true); });
+
+  if(window.lucide) lucide.createIcons();
+})();
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,53 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Geo locations{% endblock %}
+{% block page_title %}HRM · Attendance locations{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex flex-col gap-3 border-b border-border bg-muted/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'hrm:hrm_dashboard' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent" aria-label="Back">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        </a>
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">Geo locations</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">Geofences for mobile / GPS punches (latitude, longitude, radius in meters).</p>
+        </div>
+      </div>
+      <a href="{% url 'hrm:attendance_location_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+        <i data-lucide="plus" class="h-4 w-4"></i> Add location
+      </a>
+    </div>
+    <div class="p-5">
+  <div class="ui-table-wrap overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Name</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground hidden sm:table-cell">Coords</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Radius (m)</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-muted-foreground">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for loc in locations %}
+        <tr class="hover:bg-accent/40">
+          <td class="px-4 py-3 font-medium">{{ loc.name }}</td>
+          <td class="px-4 py-3 hidden sm:table-cell text-xs text-muted-foreground font-mono">{{ loc.latitude }}, {{ loc.longitude }}</td>
+          <td class="px-4 py-3">{{ loc.radius_m }}</td>
+          <td class="px-4 py-3 text-right">
+            <a href="{% url 'hrm:attendance_location_edit' loc.pk %}" class="rounded-md p-1.5 inline-block text-muted-foreground hover:bg-accent"><i data-lucide="pencil" class="h-4 w-4"></i></a>
+            <a href="{% url 'hrm:attendance_location_delete' loc.pk %}" class="rounded-md p-1.5 inline-block text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><i data-lucide="trash-2" class="h-4 w-4"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="px-4 py-12 text-center text-muted-foreground">No locations. Add one to validate GPS punches against a geofence.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

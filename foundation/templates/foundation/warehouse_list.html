@@ -1,0 +1,76 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Warehouses{% endblock %}
+{% block page_title %}Foundation · Warehouses{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2 class="text-xl font-bold text-foreground">Warehouses</h2>
+      <p class="text-sm text-muted-foreground mt-0.5">Storage and fulfillment locations for inventory</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="{% url 'foundation:foundation_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        Overview
+      </a>
+      <a href="{% url 'foundation:warehouse_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+        <i data-lucide="plus" class="h-4 w-4"></i>
+        Add warehouse
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+  <ul class="rounded-lg border border-border bg-card p-3 text-sm text-foreground">
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <div class="ui-table-wrap overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Code</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Name</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden md:table-cell">City</th>
+          <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Active</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for w in warehouses %}
+        <tr class="hover:bg-accent/40 transition-colors">
+          <td class="px-4 py-3 font-mono text-xs text-foreground">{{ w.code }}</td>
+          <td class="px-4 py-3 font-medium text-foreground">{{ w.name }}</td>
+          <td class="px-4 py-3 text-muted-foreground hidden md:table-cell">{{ w.city|default:"—" }}</td>
+          <td class="px-4 py-3 text-center">
+            {% if w.is_active %}
+            <span class="inline-flex rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">Yes</span>
+            {% else %}
+            <span class="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">No</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <a href="{% url 'foundation:warehouse_edit' w.pk %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" title="Edit">
+                <i data-lucide="pencil" class="h-4 w-4"></i>
+              </a>
+              <a href="{% url 'foundation:warehouse_delete' w.pk %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" title="Delete">
+                <i data-lucide="trash-2" class="h-4 w-4"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-4 py-12 text-center text-sm text-muted-foreground">No warehouses yet. Create one to get started.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

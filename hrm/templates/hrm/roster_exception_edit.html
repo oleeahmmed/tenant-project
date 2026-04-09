@@ -1,0 +1,25 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Edit override{% endblock %}
+{% block page_title %}HRM · Edit one-day override{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="flex items-center gap-3">
+    <a href="{% url 'hrm:roster_exception_list' %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent"><i data-lucide="arrow-left" class="h-4 w-4"></i></a>
+    <h2 class="text-xl font-bold text-foreground">Edit override</h2>
+  </div>
+  <div class="simple-card max-w-md rounded-xl border border-border p-6 shadow-card">
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div><label class="mb-1.5 block text-sm font-medium">Employee</label>{{ form.employee }}</div>
+      <div><label class="mb-1.5 block text-sm font-medium">Date</label>{{ form.date }}</div>
+      <div><label class="mb-1.5 block text-sm font-medium">Shift</label>{{ form.shift }}</div>
+      <div><label class="mb-1.5 block text-sm font-medium">Note</label>{{ form.note }}</div>
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Save</button>
+        <a href="{% url 'hrm:roster_exception_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

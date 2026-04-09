@@ -1,0 +1,135 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Permissions{% endblock %}
+{% block page_title %}Permission Master List{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-foreground">Permissions</h2>
+      <p class="text-sm text-muted-foreground mt-0.5">Master list — tenant admins assign these to roles</p>
+    </div>
+    <button type="button" onclick="document.getElementById('create-modal').classList.remove('hidden'); document.getElementById('create-modal').classList.add('flex');"
+      class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+      <i data-lucide="plus" class="h-4 w-4"></i>
+      <span class="hidden sm:inline">New Permission</span>
+    </button>
+  </div>
+
+  {% if error %}
+    <div class="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{{ error }}</div>
+  {% endif %}
+
+  <div class="ui-table-wrap overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-border bg-muted/40">
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Codename</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Label</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Category</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          {% for perm in permissions %}
+          <tr class="hover:bg-accent/40 transition-colors {% if not perm.is_active %}opacity-50{% endif %}">
+            <td class="px-4 py-3 font-mono text-xs text-foreground">{{ perm.codename }}</td>
+            <td class="px-4 py-3 text-foreground">{{ perm.label }}</td>
+            <td class="px-4 py-3">
+              <span class="inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{{ perm.category }}</span>
+            </td>
+            <td class="px-4 py-3">
+              {% if perm.is_active %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">Active</span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-right">
+              {% if perm.is_active %}
+                <button type="button" onclick="openStatusModal('deactivate', '{{ perm.id }}', 'Deactivate {{ perm.codename|escapejs }}?')" class="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">Deactivate</button>
+              {% else %}
+                <button type="button" onclick="openStatusModal('activate', '{{ perm.id }}', 'Activate {{ perm.codename|escapejs }}?')" class="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent transition-colors">Activate</button>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="px-4 py-12 text-center text-sm text-muted-foreground">No permissions yet. Add some to get started.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+  </div>
+</div>
+
+<!-- Status modal -->
+<div id="status-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-1">Confirm Action</h3>
+    <p id="status-modal-text" class="text-sm text-muted-foreground mb-4">Are you sure?</p>
+    <form method="post" id="status-form" action="{% url 'permission_list' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" id="status-action" value="" />
+      <input type="hidden" name="pk" id="status-pk" value="" />
+      <div class="flex gap-2 justify-end">
+        <button type="button" onclick="closeStatusModal()" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Confirm</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div id="create-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-4">New Permission</h3>
+    <form method="post" action="{% url 'permission_list' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create" />
+      <div class="space-y-4">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Codename</label>
+          <input type="text" name="codename" required placeholder="contacts.view"
+            class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring" />
+          <p class="mt-1 text-xs text-muted-foreground">Format: module.action</p>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Label</label>
+          <input type="text" name="label" required placeholder="View Contacts"
+            class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Category</label>
+          <select name="category" required class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+            <option value="">— Select —</option>
+            {% for value, label in categories %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-2 justify-end mt-5">
+        <button type="button" onclick="document.getElementById('create-modal').classList.add('hidden'); document.getElementById('create-modal').classList.remove('flex');"
+          class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Create</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openStatusModal(action, pk, text) {
+  document.getElementById('status-action').value = action;
+  document.getElementById('status-pk').value = pk;
+  document.getElementById('status-modal-text').textContent = text;
+  document.getElementById('status-modal').classList.remove('hidden');
+  document.getElementById('status-modal').classList.add('flex');
+}
+function closeStatusModal() {
+  document.getElementById('status-modal').classList.add('hidden');
+  document.getElementById('status-modal').classList.remove('flex');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}All Tenants{% endblock %}
+{% block page_title %}All Tenants{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div>
+    <h2 class="text-xl font-bold text-foreground">All Tenants</h2>
+    <p class="text-sm text-muted-foreground mt-0.5">{{ tenants.count }} tenant{{ tenants.count|pluralize }} registered</p>
+  </div>
+
+  <div class="ui-table-wrap overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-border bg-muted/40">
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tenant</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Slug</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Created</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          {% for tenant in tenants %}
+          <tr class="hover:bg-accent/40 transition-colors">
+            <td class="px-4 py-3 font-medium text-foreground">{{ tenant.name }}</td>
+            <td class="px-4 py-3 text-xs text-muted-foreground font-mono">{{ tenant.slug }}</td>
+            <td class="px-4 py-3">
+              {% if tenant.is_active %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
+                  <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span> Active
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">Inactive</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-xs text-muted-foreground">{{ tenant.created_at|date:"M d, Y" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="px-4 py-12 text-center text-sm text-muted-foreground">No tenants yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+  </div>
+</div>
+{% endblock %}

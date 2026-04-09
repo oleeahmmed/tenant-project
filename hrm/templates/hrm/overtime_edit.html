@@ -1,0 +1,50 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Edit overtime{% endblock %}
+{% block page_title %}HRM · Edit overtime{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div>
+        <h2 class="text-lg font-semibold text-foreground">Edit overtime</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">{{ overtime.employee.full_name }} · {{ overtime.work_date|date:"M j, Y" }}</p>
+      </div>
+      <a href="{% url 'hrm:overtime_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+      </a>
+    </div>
+    <div class="p-6">
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Employee</label>
+        {{ form.employee }}
+        {{ form.employee.errors }}
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Work date</label>
+          {{ form.work_date }}
+          {{ form.work_date.errors }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Hours</label>
+          {{ form.hours }}
+          {{ form.hours.errors }}
+        </div>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Reason</label>
+        {{ form.reason }}
+      </div>
+      <p class="text-xs text-muted-foreground">Status: <strong class="text-foreground">{{ overtime.get_status_display }}</strong>{% if overtime.reviewed_by %} · {{ overtime.reviewed_by.name }}{% endif %}</p>
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save changes</button>
+        <a href="{% url 'hrm:overtime_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
+      </div>
+    </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

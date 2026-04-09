@@ -1,0 +1,545 @@
+{# prefix: "attendance" | "overtime" — premium multi-select + dept filter + API search #}
+<style>
+  .emp-picker-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
+  }
+  .emp-picker-scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .emp-picker-scroll::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: hsl(var(--muted-foreground) / 0.28);
+  }
+  .emp-dept-tabs-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
+    -webkit-overflow-scrolling: touch;
+  }
+  .emp-dept-tabs-scroll::-webkit-scrollbar {
+    height: 5px;
+  }
+  .emp-dept-tabs-scroll::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: hsl(var(--muted-foreground) / 0.25);
+  }
+</style>
+<div
+  class="employee-bulk-picker {% if prefix == 'shiftbulk' %}space-y-3{% else %}space-y-4{% endif %}"
+  id="{{ prefix }}-bulk-picker-root"
+  data-search-url="{% url 'hrm:api_employee_search' %}"
+  data-picker-url="{% url 'hrm:api_employee_picker' %}"
+  data-prefix="{{ prefix }}"
+>
+  {# Search #}
+  <div class="rounded-xl border border-border bg-gradient-to-b from-card to-muted/20 {% if prefix == 'shiftbulk' %}p-3{% else %}p-4{% endif %} shadow-card">
+    <label class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground" for="{{ prefix }}-emp-ac">
+      <i data-lucide="search" class="h-3.5 w-3.5 opacity-70"></i>
+      Quick search
+    </label>
+    <div class="relative">
+      <i data-lucide="user-round-search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/80"></i>
+      <input
+        type="text"
+        id="{{ prefix }}-emp-ac"
+        autocomplete="off"
+        placeholder="Type name or employee code…"
+        class="w-full rounded-lg border border-border bg-background py-2.5 pl-10 pr-3 text-sm shadow-sm transition-shadow focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/40"
+      />
+      <div
+        id="{{ prefix }}-ac-dd"
+        class="emp-picker-scroll absolute left-0 right-0 z-30 mt-1.5 hidden max-h-52 overflow-y-auto rounded-xl border border-border bg-card py-1 text-sm shadow-xl ring-1 ring-black/5 dark:ring-white/10"
+      ></div>
+    </div>
+    <p class="mt-2 text-[11px] text-muted-foreground {% if prefix == 'shiftbulk' %}hidden sm:block{% endif %}">
+      Tip: results respect the department filter below when a team is selected.
+    </p>
+  </div>
+
+  {# Selected (optional) #}
+  {% if not hide_selected %}
+  <div class="rounded-xl border border-border bg-card {% if prefix == 'shiftbulk' %}p-3{% else %}p-4{% endif %} shadow-card">
+    <div class="mb-2 flex items-center justify-between gap-2">
+      <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Selected employees</span>
+      <div class="flex items-center gap-2">
+        <button type="button" id="{{ prefix }}-clear-all"
+          class="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-accent hover:text-foreground">
+          <i data-lucide="x-circle" class="h-3.5 w-3.5"></i> Clear
+        </button>
+        <span
+          id="{{ prefix }}-sel-count"
+          class="inline-flex min-w-[1.75rem] items-center justify-center rounded-full bg-primary/12 px-2 py-0.5 text-xs font-bold tabular-nums text-primary"
+          >0</span
+        >
+      </div>
+    </div>
+    <div
+      id="{{ prefix }}-chips"
+      class="emp-picker-scroll flex min-h-[2.5rem] {% if prefix == 'shiftbulk' %}max-h-24{% else %}max-h-32{% endif %} flex-wrap content-start gap-2 overflow-y-auto rounded-lg border border-dashed border-border/80 bg-muted/15 p-2.5"
+    ></div>
+    <p class="mt-2 text-[11px] text-muted-foreground">Remove someone using × on the tag, or uncheck in the list.</p>
+  </div>
+  {% endif %}
+
+  {# Departments — horizontal scroll for many teams #}
+  <div>
+    <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Department</p>
+    <div class="emp-dept-tabs-scroll -mx-1 overflow-x-auto px-1 pb-1">
+      <div id="{{ prefix }}-dept-tabs" class="flex w-max min-w-full flex-nowrap gap-2 pb-0.5"></div>
+    </div>
+  </div>
+
+  {# Directory — fixed-height scroll (handles 100+ rows) #}
+  <div class="overflow-hidden rounded-xl border border-border bg-card shadow-card ring-1 ring-border/50 dark:ring-border/80">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/40 px-4 py-3">
+      <div class="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
+        <span class="text-sm font-semibold text-foreground">Employee list</span>
+        <span id="{{ prefix }}-dir-meta" class="truncate text-xs text-muted-foreground">Loading…</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          id="{{ prefix }}-select-visible"
+          class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/8 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/15"
+        >
+          <i data-lucide="check-square" class="h-3.5 w-3.5"></i>
+          Select visible
+        </button>
+        <button
+          type="button"
+          id="{{ prefix }}-deselect-visible"
+          class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        >
+          <i data-lucide="square" class="h-3.5 w-3.5"></i>
+          Deselect visible
+        </button>
+      </div>
+    </div>
+    <div class="relative bg-background/50">
+      <div
+        id="{{ prefix }}-emp-list"
+        class="emp-picker-scroll {% if prefix == 'shiftbulk' %}h-[min(18rem,42vh)]{% else %}h-[min(26rem,52vh)]{% endif %} min-h-[12rem] divide-y divide-border/70 overflow-y-auto overscroll-y-contain px-1 py-1 sm:px-2"
+        role="list"
+      ></div>
+      <p
+        id="{{ prefix }}-emp-empty"
+        class="hidden min-h-[12rem] flex-col items-center justify-center gap-2 px-6 py-12 text-center text-sm text-muted-foreground sm:min-h-[min(26rem,52vh)]"
+      >
+        <i data-lucide="users" class="h-10 w-10 opacity-30"></i>
+        <span class="max-w-xs">No employees in this view. Pick another department or use search.</span>
+      </p>
+    </div>
+  </div>
+
+  <div id="{{ prefix }}-hidden-ids" class="hidden" aria-hidden="true"></div>
+</div>
+
+<script>
+(function () {
+  var root = document.getElementById("{{ prefix }}-bulk-picker-root");
+  if (!root || root.dataset.initialized === "1") return;
+  root.dataset.initialized = "1";
+
+  var prefix = root.getAttribute("data-prefix");
+  var searchUrl = root.getAttribute("data-search-url");
+  var pickerUrl = root.getAttribute("data-picker-url");
+
+  var tree = null;
+  var selected = new Map();
+  var filterKey = "all";
+  var acTimer = null;
+
+  function esc(s) {
+    var d = document.createElement("div");
+    d.textContent = s == null ? "" : String(s);
+    return d.innerHTML;
+  }
+
+  function refreshLucide() {
+    if (typeof lucide !== "undefined" && lucide.createIcons) {
+      try {
+        lucide.createIcons();
+      } catch (e) {}
+    }
+  }
+
+  function syncHidden() {
+    var box = document.getElementById(prefix + "-hidden-ids");
+    if (!box) return;
+    box.innerHTML = "";
+    selected.forEach(function (_meta, id) {
+      var inp = document.createElement("input");
+      inp.type = "hidden";
+      inp.name = "employee_ids";
+      inp.value = String(id);
+      box.appendChild(inp);
+    });
+    var c = document.getElementById(prefix + "-sel-count");
+    if (c) c.textContent = String(selected.size);
+  }
+
+  function renderChips() {
+    var wrap = document.getElementById(prefix + "-chips");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    selected.forEach(function (meta, id) {
+      var span = document.createElement("span");
+      span.className =
+        "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-border/90 bg-background px-2.5 py-1 text-xs font-medium text-foreground shadow-sm";
+      span.innerHTML =
+        '<span class="min-w-0 truncate">' +
+        esc(meta.name) +
+        '<span class="ml-1.5 font-mono text-[10px] font-normal text-muted-foreground">' +
+        esc(meta.code) +
+        "</span></span>" +
+        '<button type="button" class="shrink-0 rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-destructive/12 hover:text-destructive" data-rid="' +
+        id +
+        '" aria-label="Remove">&times;</button>';
+      wrap.appendChild(span);
+    });
+    wrap.querySelectorAll("button[data-rid]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = parseInt(btn.getAttribute("data-rid"), 10);
+        selected.delete(id);
+        syncHidden();
+        renderChips();
+        syncCheckboxes();
+      });
+    });
+    refreshLucide();
+  }
+
+  function syncCheckboxes() {
+    var list = document.getElementById(prefix + "-emp-list");
+    if (!list) return;
+    list.querySelectorAll('input[type="checkbox"][data-eid]').forEach(function (cb) {
+      var id = parseInt(cb.getAttribute("data-eid"), 10);
+      cb.checked = selected.has(id);
+    });
+  }
+
+  function addSelected(id, name, code) {
+    if (!id) return;
+    selected.set(id, { name: name || "", code: code || "" });
+    syncHidden();
+    renderChips();
+    syncCheckboxes();
+  }
+
+  function removeSelected(id) {
+    selected.delete(id);
+    syncHidden();
+    renderChips();
+    syncCheckboxes();
+  }
+
+  function setDirMeta(text) {
+    var el = document.getElementById(prefix + "-dir-meta");
+    if (el) el.textContent = text;
+  }
+
+  function renderEmpList() {
+    var list = document.getElementById(prefix + "-emp-list");
+    var empty = document.getElementById(prefix + "-emp-empty");
+    if (!list || !tree) return;
+    list.innerHTML = "";
+    var items = [];
+
+    if (filterKey === "all") {
+      tree.departments.forEach(function (d) {
+        d.employees.forEach(function (e) {
+          items.push({ e: e, deptLabel: d.name });
+        });
+      });
+      tree.unassigned.forEach(function (e) {
+        items.push({ e: e, deptLabel: "Unassigned" });
+      });
+    } else if (filterKey === "none") {
+      tree.unassigned.forEach(function (e) {
+        items.push({ e: e, deptLabel: "" });
+      });
+    } else {
+      var d = tree.departments.find(function (x) {
+        return String(x.id) === String(filterKey);
+      });
+      if (d) {
+        d.employees.forEach(function (e) {
+          items.push({ e: e, deptLabel: d.name });
+        });
+      }
+    }
+
+    var n = items.length;
+    if (empty) {
+      empty.classList.toggle("hidden", n > 0);
+      empty.classList.toggle("flex", n === 0);
+      list.classList.toggle("hidden", n === 0);
+    }
+
+    var deptName = "";
+    if (filterKey === "all") deptName = "All departments";
+    else if (filterKey === "none") deptName = "Unassigned";
+    else {
+      var dx = tree.departments.find(function (x) {
+        return String(x.id) === String(filterKey);
+      });
+      deptName = dx ? dx.name : "";
+    }
+    setDirMeta(
+      n === 0
+        ? deptName + " · 0 people in this view"
+        : deptName + " · " + n + " in list — scroll to see all"
+    );
+
+    items.forEach(function (row, idx) {
+      var e = row.e;
+      var label = document.createElement("label");
+      label.className =
+        "flex cursor-pointer items-start gap-3 px-3 py-2.5 transition-colors hover:bg-accent/35";
+      label.setAttribute("role", "listitem");
+      var sub =
+        filterKey === "all" && row.deptLabel
+          ? '<span class="mt-1 block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">' +
+            esc(row.deptLabel) +
+            "</span>"
+          : "";
+      label.innerHTML =
+        '<input type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 rounded border-border text-primary focus:ring-ring" data-eid="' +
+        e.id +
+        '" />' +
+        '<span class="min-w-0 flex-1">' +
+        '<span class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">' +
+        '<span class="font-medium leading-snug text-foreground">' +
+        esc(e.name) +
+        '</span><span class="font-mono text-[11px] text-muted-foreground">' +
+        esc(e.code) +
+        "</span></span>" +
+        sub +
+        "</span>";
+      var cb = label.querySelector("input");
+      cb.checked = selected.has(e.id);
+      cb.addEventListener("change", function () {
+        if (cb.checked) {
+          addSelected(e.id, e.name, e.code);
+        } else {
+          removeSelected(e.id);
+        }
+      });
+      list.appendChild(label);
+    });
+    refreshLucide();
+  }
+
+  function renderDeptTabs() {
+    var tabs = document.getElementById(prefix + "-dept-tabs");
+    if (!tabs || !tree) return;
+    tabs.innerHTML = "";
+
+    function addTab(key, label) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("data-filter", key);
+      b.className =
+        "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all " +
+        (filterKey === key
+          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+          : "border-border bg-background text-muted-foreground hover:border-primary/35 hover:bg-accent hover:text-foreground");
+      b.textContent = label;
+      b.addEventListener("click", function () {
+        filterKey = key;
+        renderDeptTabs();
+        renderEmpList();
+      });
+      tabs.appendChild(b);
+    }
+
+    addTab("all", "All");
+    tree.departments.forEach(function (d) {
+      if (d.employees.length) addTab(String(d.id), d.name);
+    });
+    if (tree.unassigned.length) addTab("none", "Unassigned");
+    refreshLucide();
+  }
+
+  function loadTree() {
+    setDirMeta("Loading directory…");
+    return fetch(pickerUrl, { headers: { Accept: "application/json" } })
+      .then(function (r) {
+        if (!r.ok) throw new Error("load");
+        return r.json();
+      })
+      .then(function (data) {
+        tree = data;
+        filterKey = "all";
+        renderDeptTabs();
+        renderEmpList();
+      })
+      .catch(function () {
+        var list = document.getElementById(prefix + "-emp-list");
+        var empty = document.getElementById(prefix + "-emp-empty");
+        if (empty) {
+          empty.classList.add("hidden");
+          empty.classList.remove("flex");
+        }
+        if (list) {
+          list.classList.remove("hidden");
+          list.innerHTML =
+            '<div class="flex flex-col items-center justify-center gap-2 px-4 py-16 text-center"><p class="text-sm font-medium text-destructive">Could not load employees.</p><p class="max-w-xs text-xs text-muted-foreground">Refresh the page and try again.</p></div>';
+        }
+        setDirMeta("Could not load");
+      });
+  }
+
+  function deptParamForSearch() {
+    if (filterKey === "none") return "none";
+    if (filterKey === "all" || !filterKey) return "";
+    if (/^\d+$/.test(String(filterKey))) return String(filterKey);
+    return "";
+  }
+
+  var acInput = document.getElementById(prefix + "-emp-ac");
+  var acDd = document.getElementById(prefix + "-ac-dd");
+
+  function closeAc() {
+    if (acDd) {
+      acDd.classList.add("hidden");
+      acDd.innerHTML = "";
+    }
+  }
+
+  if (acInput && acDd) {
+    acInput.addEventListener("input", function () {
+      var q = acInput.value.trim();
+      if (acTimer) clearTimeout(acTimer);
+      if (q.length < 1) {
+        closeAc();
+        return;
+      }
+      acTimer = setTimeout(function () {
+        var u = new URL(searchUrl, window.location.origin);
+        u.searchParams.set("q", q);
+        var dp = deptParamForSearch();
+        if (dp !== "") u.searchParams.set("department", dp);
+        fetch(u.toString(), { headers: { Accept: "application/json" } })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (data) {
+            var results = data.results || [];
+            acDd.innerHTML = "";
+            if (!results.length) {
+              acDd.innerHTML =
+                '<div class="px-4 py-6 text-center text-xs text-muted-foreground">No matches — try another spelling.</div>';
+            } else {
+              results.forEach(function (item) {
+                var row = document.createElement("button");
+                row.type = "button";
+                row.className =
+                  "flex w-full flex-col items-start gap-0.5 border-b border-border/60 px-4 py-2.5 text-left last:border-b-0 hover:bg-accent/60";
+                row.innerHTML =
+                  '<span class="text-sm font-medium text-foreground">' +
+                  esc(item.label) +
+                  "</span>" +
+                  (item.department_name
+                    ? '<span class="text-[11px] text-muted-foreground">' +
+                      esc(item.department_name) +
+                      "</span>"
+                    : "");
+                row.addEventListener("mousedown", function (e) {
+                  e.preventDefault();
+                });
+                row.addEventListener("click", function () {
+                  var m = item.label.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+                  var nm = m ? m[1].trim() : item.label;
+                  var cd = m ? m[2].trim() : "";
+                  addSelected(item.id, nm, cd);
+                  acInput.value = "";
+                  closeAc();
+                });
+                acDd.appendChild(row);
+              });
+            }
+            acDd.classList.remove("hidden");
+            refreshLucide();
+          })
+          .catch(function () {
+            closeAc();
+          });
+      }, 250);
+    });
+
+    acInput.addEventListener("blur", function () {
+      setTimeout(closeAc, 200);
+    });
+  }
+
+  var btnVis = document.getElementById(prefix + "-select-visible");
+  var btnDeselectVis = document.getElementById(prefix + "-deselect-visible");
+  var btnClearAll = document.getElementById(prefix + "-clear-all");
+  if (btnVis) {
+    btnVis.addEventListener("click", function () {
+      var list = document.getElementById(prefix + "-emp-list");
+      if (!list) return;
+      list.querySelectorAll('input[type="checkbox"][data-eid]').forEach(function (cb) {
+        cb.checked = true;
+        var id = parseInt(cb.getAttribute("data-eid"), 10);
+        var lab = cb.closest("label");
+        var nameEl = lab ? lab.querySelector(".font-medium") : null;
+        var codeEl = lab ? lab.querySelector(".font-mono") : null;
+        var name = nameEl ? nameEl.textContent.trim() : "";
+        var code = codeEl ? codeEl.textContent.trim() : "";
+        addSelected(id, name, code);
+      });
+    });
+  }
+
+  if (btnDeselectVis) {
+    btnDeselectVis.addEventListener("click", function () {
+      var list = document.getElementById(prefix + "-emp-list");
+      if (!list) return;
+      list.querySelectorAll('input[type="checkbox"][data-eid]').forEach(function (cb) {
+        cb.checked = false;
+        var id = parseInt(cb.getAttribute("data-eid"), 10);
+        removeSelected(id);
+      });
+    });
+  }
+
+  if (btnClearAll) {
+    btnClearAll.addEventListener("click", function () {
+      selected.clear();
+      syncHidden();
+      renderChips();
+      syncCheckboxes();
+    });
+  }
+
+  root._bulkPickerReset = function () {
+    selected.clear();
+    filterKey = "all";
+    syncHidden();
+    renderChips();
+    if (acInput) acInput.value = "";
+    closeAc();
+    if (tree) {
+      renderDeptTabs();
+      renderEmpList();
+    } else {
+      setDirMeta("Loading directory…");
+    }
+  };
+
+  loadTree();
+
+  window["initBulkPicker_" + prefix] = function (formEl) {
+    if (!formEl) return;
+    formEl.addEventListener("submit", function (ev) {
+      if (selected.size === 0) {
+        ev.preventDefault();
+        alert("Select at least one employee.");
+      }
+    });
+  };
+})();
+</script>

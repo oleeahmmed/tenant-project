@@ -1,0 +1,110 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}{% if is_edit %}Edit employee{% else %}Add employee{% endif %}{% endblock %}
+{% block page_title %}HRM · {% if is_edit %}Edit employee{% else %}Add employee{% endif %}{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div>
+        <h2 class="text-lg font-semibold text-foreground">{% if is_edit %}Edit employee{% else %}New employee{% endif %}</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">Link to a workspace user if they have an account</p>
+      </div>
+      <a href="{% url 'hrm:employee_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+      </a>
+    </div>
+    <div class="p-6">
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ form.non_field_errors }}</div>
+      {% endif %}
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Employee code</label>
+          {{ form.employee_code }}
+          {{ form.employee_code.errors }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Full name</label>
+          {{ form.full_name }}
+          {{ form.full_name.errors }}
+        </div>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Email</label>
+          {{ form.email }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Phone</label>
+          {{ form.phone }}
+        </div>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Department</label>
+          {{ form.department }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Job title</label>
+          {{ form.job_title }}
+        </div>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Default shift</label>
+        {{ form.default_shift }}
+        <p class="mt-1 text-xs text-muted-foreground">Fallback when no weekly rule or date rule applies.</p>
+        {{ form.default_shift.errors }}
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Reports to</label>
+        {{ form.reports_to }}
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Work location (GPS)</label>
+          {{ form.work_location_mode }}
+          <p class="mt-1 text-xs text-muted-foreground">Used for mobile map check-in rules.</p>
+          {{ form.work_location_mode.errors }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Device user ID (ZKTeco)</label>
+          {{ form.zk_user_id }}
+          {{ form.zk_user_id.errors }}
+        </div>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Linked user</label>
+        {{ form.user }}
+        <p class="mt-1 text-xs text-muted-foreground">Choose a member whose <strong>User → Tenant</strong> is this workspace (or unset). If save fails, this account may already be linked to another employee.</p>
+        {{ form.user.errors }}
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Hire date</label>
+          {{ form.hire_date }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Termination date</label>
+          {{ form.termination_date }}
+        </div>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Status</label>
+        {{ form.status }}
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Notes</label>
+        {{ form.notes }}
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+        <a href="{% url 'hrm:employee_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
+      </div>
+    </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}ZKTeco devices{% endblock %}
+{% block page_title %}HRM · ZKTeco devices{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex flex-col gap-3 border-b border-border bg-muted/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'hrm:hrm_dashboard' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent" aria-label="Back">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        </a>
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">ZKTeco devices</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">Per-tenant devices. Use TCP (PyZK) to pull users and punches. Set <strong>Connection type</strong> to TCP or Both.</p>
+        </div>
+      </div>
+      <a href="{% url 'hrm:zk_device_create' %}" class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+        <i data-lucide="plus" class="h-4 w-4"></i> Add device
+      </a>
+    </div>
+    <div class="space-y-4 p-5">
+  <div class="ui-table-wrap overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Serial / name</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden sm:table-cell">Connection</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden md:table-cell">IP:port</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for d in devices %}
+        <tr class="hover:bg-accent/40 transition-colors">
+          <td class="px-4 py-3">
+            <span class="font-medium text-foreground">{{ d.serial_number }}</span>
+            {% if d.device_name %}<span class="block text-xs text-muted-foreground">{{ d.device_name }}</span>{% endif %}
+          </td>
+          <td class="px-4 py-3 hidden sm:table-cell text-muted-foreground">{{ d.get_connection_type_display }}</td>
+          <td class="px-4 py-3 hidden md:table-cell text-muted-foreground">{% if d.ip_address %}{{ d.ip_address }}:{{ d.port }}{% else %}—{% endif %}</td>
+          <td class="px-4 py-3">
+            {% if d.is_online %}<span class="text-xs font-medium text-emerald-600 dark:text-emerald-400">Online</span>{% else %}<span class="text-xs text-muted-foreground">Offline</span>{% endif %}
+          </td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex flex-wrap items-center justify-end gap-1">
+              {% if d.supports_tcp %}
+              <form method="post" action="{% url 'hrm:zk_sync_users' d.pk %}" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="auto_employees" value="1" />
+                <button type="submit" class="rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-accent" title="Pull users from device">Users</button>
+              </form>
+              <form method="post" action="{% url 'hrm:zk_sync_attendance' d.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="rounded-md border border-border px-2 py-1 text-xs text-foreground hover:bg-accent" title="Pull attendance from device">Punches</button>
+              </form>
+              {% endif %}
+              <a href="{% url 'hrm:zk_device_edit' d.pk %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent" title="Edit"><i data-lucide="pencil" class="h-4 w-4"></i></a>
+              <a href="{% url 'hrm:zk_device_delete' d.pk %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" title="Delete"><i data-lucide="trash-2" class="h-4 w-4"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="px-4 py-12 text-center text-sm text-muted-foreground">No devices yet. Register serial/IP and set connection to TCP for PyZK sync.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="text-xs text-muted-foreground">REST (JWT): <code class="rounded bg-muted px-1">POST /api/hrm/pyzk/devices/&lt;id&gt;/import-attendance/</code></p>
+    </div>
+  </div>
+</div>
+{% endblock %}

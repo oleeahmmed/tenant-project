@@ -1,0 +1,402 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}My HRM{% endblock %}
+{% block page_title %}My HRM{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+  .emp-map-wrap { min-height: 14rem; border-radius: var(--radius); border: 1px solid hsl(var(--border)); background: hsl(var(--muted) / 0.35); }
+  .emp-map-inner { height: 14rem; min-height: 14rem; border-radius: calc(var(--radius) - 1px); overflow: hidden; }
+  .leave-bar { display: flex; height: 2rem; border-radius: 0.375rem; overflow: hidden; font-size: 0.65rem; font-weight: 600; }
+  .leave-bar span { display: flex; align-items: center; justify-content: center; color: #fff; min-width: 0; padding: 0 2px; }
+  .lb-total { background: hsl(217 91% 45%); }
+  .lb-taken { background: hsl(350 80% 72%); color: hsl(222 47% 11%) !important; }
+  .lb-due { background: hsl(142 55% 45%); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  {% if messages %}
+  <ul class="rounded-lg border border-border bg-card p-3 text-sm">
+    {% for message in messages %}
+    <li class="{% if message.tags == 'error' %}text-destructive{% elif message.tags == 'success' %}text-emerald-600 dark:text-emerald-400{% else %}text-foreground{% endif %}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if portal_preview %}
+  <div class="simple-card overflow-hidden rounded-xl border border-amber-500/40 bg-amber-500/5 p-4 shadow-card">
+    <p class="text-sm text-foreground">
+      <strong>Preview / no employee linked to this login.</strong>
+      Check-in, checkout, and leave apply only work when an admin links this user to an <strong>Employee</strong> (HRM → Employees → edit → User field).
+      Tenant Admin দেখতে পারছেন — কর্মী হিসেবে ব্যবহার করতে ওই লিংক করতে হবে।
+    </p>
+  </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 gap-5 xl:grid-cols-12">
+    <!-- Attendance + map -->
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card xl:col-span-5">
+      <h2 class="text-lg font-bold text-primary">Give attendance</h2>
+      <p class="mt-1 text-xs text-muted-foreground">
+        GPS: max {{ location_policy.max_accuracy_meters|default:"—" }} m accuracy
+        {% if location_policy.allow_remote_clock_without_gps %}· Remote no-GPS allowed{% endif %}
+      </p>
+      <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-stretch">
+        <div id="att-punch-wrap" class="{% if not portal_preview %}hidden{% endif %} flex flex-1 flex-col gap-2">
+          {% if not portal_preview %}
+          <form id="form-checkin" method="post" action="{% url 'hrm:employee_checkin' %}">
+            {% csrf_token %}
+            <input type="hidden" name="punch_type" value="0" />
+            <input type="hidden" name="latitude" class="js-lat" />
+            <input type="hidden" name="longitude" class="js-lng" />
+            <input type="hidden" name="accuracy" class="js-acc" />
+            <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90">
+              <i data-lucide="map-pin" class="h-4 w-4"></i>
+              Check-in
+            </button>
+          </form>
+          <form id="form-checkout" method="post" action="{% url 'hrm:employee_checkin' %}">
+            {% csrf_token %}
+            <input type="hidden" name="punch_type" value="1" />
+            <input type="hidden" name="latitude" class="js-lat" />
+            <input type="hidden" name="longitude" class="js-lng" />
+            <input type="hidden" name="accuracy" class="js-acc" />
+            <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-primary bg-background px-4 py-2.5 text-sm font-medium text-primary hover:bg-accent">
+              <i data-lucide="map-pin-off" class="h-4 w-4"></i>
+              Check-out
+            </button>
+          </form>
+          {% else %}
+          <p class="text-sm text-muted-foreground">Link an Employee to this account to enable check-in / check-out.</p>
+          {% endif %}
+        </div>
+        <div class="emp-map-wrap flex-1 min-w-0 flex flex-col">
+          <div id="map-load-panel" class="flex min-h-[14rem] flex-1 flex-col items-center justify-center gap-3 p-4 text-center">
+            <i data-lucide="map" class="h-10 w-10 text-muted-foreground opacity-80"></i>
+            <p class="text-sm text-muted-foreground max-w-xs">
+              {% if portal_preview %}
+              Load the map (preview — no attendance punch).
+              {% else %}
+              Tap the button — your browser will ask for location; choose <strong>Allow</strong>. Use <strong>HTTPS</strong> (or localhost); plain HTTP on an IP address is blocked by browsers. If it fails, we try network-based location automatically.
+              {% endif %}
+            </p>
+            <button type="button" id="btn-load-map-location" class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90">
+              <i data-lucide="navigation" class="h-4 w-4"></i>
+              <span>{% if portal_preview %}Load map{% else %}Load location &amp; map{% endif %}</span>
+            </button>
+            <p id="map-load-status" class="text-xs text-muted-foreground min-h-[1rem]" aria-live="polite"></p>
+          </div>
+          <div id="emp-map" class="emp-map-inner hidden w-full"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leave status -->
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card xl:col-span-7">
+      <h2 class="text-lg font-bold text-primary">Leave status</h2>
+      <div class="mt-4 space-y-4">
+        <div>
+          <p class="text-xs font-medium text-muted-foreground mb-1">Summary</p>
+          <div class="leave-bar" role="img" aria-label="Leave summary bar">
+            <span class="lb-total" style="width: {{ leave_overall.pct_total }}%">T {{ leave_overall.total }}</span>
+            <span class="lb-taken" style="width: {{ leave_overall.pct_taken }}%">Taken {{ leave_overall.taken }}</span>
+            <span class="lb-due" style="width: {{ leave_overall.pct_due }}%">Due {{ leave_overall.due }}</span>
+          </div>
+        </div>
+        {% for row in leave_rows %}
+        <div>
+          <p class="text-xs font-medium text-muted-foreground mb-1">{{ row.name }}</p>
+          <div class="leave-bar" role="img" aria-label="{{ row.name }} leave">
+            <span class="lb-total" style="width: {{ row.pct_total }}%">T {{ row.total }}</span>
+            <span class="lb-taken" style="width: {{ row.pct_taken }}%">Taken {{ row.taken }}</span>
+            <span class="lb-due" style="width: {{ row.pct_due }}%">Due {{ row.due }}</span>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-sm text-muted-foreground">No leave types configured for this workspace yet.</p>
+        {% endfor %}
+      </div>
+
+      {% if not portal_preview and leave_form %}
+      <div class="mt-6 border-t border-border pt-5">
+        <h3 class="text-sm font-semibold text-foreground">Apply for leave</h3>
+        <form method="post" action="{% url 'hrm:employee_leave_submit' %}" class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {% csrf_token %}
+          <div class="sm:col-span-2">
+            <label class="text-xs text-muted-foreground">Leave type</label>
+            {{ leave_form.leave_type }}
+          </div>
+          <div>
+            <label class="text-xs text-muted-foreground">Start</label>
+            {{ leave_form.start_date }}
+          </div>
+          <div>
+            <label class="text-xs text-muted-foreground">End</label>
+            {{ leave_form.end_date }}
+          </div>
+          <div class="sm:col-span-2">
+            <label class="text-xs text-muted-foreground">Reason</label>
+            {{ leave_form.reason }}
+          </div>
+          <div class="sm:col-span-2">
+            <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+              Submit request
+            </button>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent history -->
+  <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+    <h2 class="text-lg font-bold text-primary" id="history">Attendance history</h2>
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-border text-muted-foreground">
+            <th class="pb-2 pr-2 font-medium">Time</th>
+            <th class="pb-2 pr-2 font-medium">Type</th>
+            <th class="pb-2 pr-2 font-medium">Status</th>
+            <th class="pb-2 font-medium">Location</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in recent_logs %}
+          <tr class="border-b border-border/60">
+            <td class="py-2 pr-2 whitespace-nowrap">{{ log.punch_time|date:"Y-m-d H:i" }}</td>
+            <td class="py-2 pr-2">{{ log.get_punch_type_display }}</td>
+            <td class="py-2 pr-2">{{ log.get_validation_status_display }}</td>
+            <td class="py-2">{% if log.matched_location %}{{ log.matched_location.name }}{% else %}—{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="py-4 text-muted-foreground">No punches yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+    <h2 class="text-lg font-bold text-primary">Recent leave requests</h2>
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-border text-muted-foreground">
+            <th class="pb-2 pr-2 font-medium">Submitted</th>
+            <th class="pb-2 pr-2 font-medium">Type</th>
+            <th class="pb-2 pr-2 font-medium">Dates</th>
+            <th class="pb-2 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lr in recent_leave_requests %}
+          <tr class="border-b border-border/60">
+            <td class="py-2 pr-2 whitespace-nowrap">{{ lr.created_at|date:"Y-m-d" }}</td>
+            <td class="py-2 pr-2">{{ lr.leave_type.name }}</td>
+            <td class="py-2 pr-2">{{ lr.start_date }} → {{ lr.end_date }}</td>
+            <td class="py-2">{{ lr.get_status_display }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="py-4 text-muted-foreground">No requests yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Quick links (layout like mockup) -->
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <a href="#history" class="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm font-medium text-foreground hover:bg-accent">
+      <span class="h-2 w-2 shrink-0 rounded-full bg-destructive"></span>
+      See attendance history
+    </a>
+    <a href="{% url 'hrm:hrm_dashboard' %}" class="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm font-medium text-foreground hover:bg-accent">
+      <span class="h-2 w-2 shrink-0 rounded-full bg-destructive"></span>
+      HRM workspace
+    </a>
+    <a href="{% url 'dashboard' %}" class="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm font-medium text-foreground hover:bg-accent">
+      <span class="h-2 w-2 shrink-0 rounded-full bg-destructive"></span>
+      Main dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(function () {
+  var lat0 = {{ map_default_lat }};
+  var lng0 = {{ map_default_lng }};
+  var portalPreview = {{ portal_preview|yesno:"true,false" }};
+  var map = null;
+  var marker = null;
+
+  var panel = document.getElementById('map-load-panel');
+  var mapEl = document.getElementById('emp-map');
+  var btnLoad = document.getElementById('btn-load-map-location');
+  var statusEl = document.getElementById('map-load-status');
+  var punchWrap = document.getElementById('att-punch-wrap');
+
+  function setStatus(t) {
+    if (statusEl) statusEl.textContent = t || '';
+  }
+
+  /** Geolocation works only on HTTPS or localhost (secure context). */
+  function geolocationAllowedByBrowser() {
+    if (typeof window.isSecureContext !== 'undefined' && window.isSecureContext) return true;
+    var h = location.hostname;
+    return h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
+  }
+
+  function formatGeoError(err) {
+    if (!err) return 'Location could not be read. Try again.';
+    if (err.code === 1) {
+      return 'Location access was blocked. Click the lock/site icon in the address bar → Site settings → Location → Allow, then reload and try again.';
+    }
+    if (err.code === 2) return 'Position unavailable (GPS/network). Move near a window or try another network.';
+    if (err.code === 3) return 'Location request timed out. Try again or disable battery saver.';
+    return 'Location error: ' + (err.message || 'unknown');
+  }
+
+  /**
+   * Try GPS/high accuracy first; if that fails (except user denial), retry with Wi‑Fi/cell coarse location.
+   * Many laptops fail with enableHighAccuracy:true but succeed with false.
+   */
+  function getCurrentPositionRobust(onOk, onFail) {
+    if (!navigator.geolocation) {
+      onFail(null);
+      return;
+    }
+    var optsHigh = { enableHighAccuracy: true, timeout: 28000, maximumAge: 120000 };
+    var optsLow = { enableHighAccuracy: false, timeout: 60000, maximumAge: 300000 };
+
+    navigator.geolocation.getCurrentPosition(
+      onOk,
+      function (err) {
+        if (err && err.code === 1) {
+          onFail(err);
+          return;
+        }
+        setStatus('Trying approximate location (Wi‑Fi / network)…');
+        navigator.geolocation.getCurrentPosition(
+          onOk,
+          function (err2) {
+            onFail(err2 || err);
+          },
+          optsLow
+        );
+      },
+      optsHigh
+    );
+  }
+
+  function revealMapAndPunch() {
+    if (panel) panel.classList.add('hidden');
+    if (mapEl) mapEl.classList.remove('hidden');
+    if (!portalPreview && punchWrap) punchWrap.classList.remove('hidden');
+    if (map) setTimeout(function () { map.invalidateSize(); }, 150);
+    if (window.lucide && lucide.createIcons) lucide.createIcons();
+  }
+
+  function initLeafletAt(lat, lng) {
+    if (!mapEl || map) return;
+    map = L.map(mapEl, { zoomControl: true, scrollWheelZoom: false }).setView([lat, lng], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+    marker = L.marker([lat, lng]).addTo(map);
+  }
+
+  function fillAndSubmit(form, coords) {
+    var lat = coords.coords.latitude;
+    var lng = coords.coords.longitude;
+    var acc = coords.coords.accuracy;
+    form.querySelectorAll('.js-lat').forEach(function (el) { el.value = lat; });
+    form.querySelectorAll('.js-lng').forEach(function (el) { el.value = lng; });
+    form.querySelectorAll('.js-acc').forEach(function (el) { el.value = acc != null ? String(acc) : ''; });
+    if (marker && map) {
+      marker.setLatLng([lat, lng]);
+      map.panTo([lat, lng]);
+    }
+    form.submit();
+  }
+
+  function attachPunchHandlers() {
+    ['form-checkin', 'form-checkout'].forEach(function (id) {
+      var form = document.getElementById(id);
+      if (!form) return;
+      form.addEventListener('submit', function (e) {
+        if (form.querySelector('.js-lat').value) return;
+        e.preventDefault();
+        if (!navigator.geolocation) {
+          alert('Geolocation is not supported by this browser.');
+          return;
+        }
+        if (!geolocationAllowedByBrowser()) {
+          alert('Open this page with HTTPS (or use localhost). Browsers block location on plain HTTP except localhost.');
+          return;
+        }
+        setStatus('Getting location for punch…');
+        getCurrentPositionRobust(
+          function (pos) {
+            setStatus('');
+            fillAndSubmit(form, pos);
+          },
+          function (err) {
+            setStatus('');
+            alert(formatGeoError(err));
+          }
+        );
+      });
+    });
+  }
+
+  if (btnLoad) {
+    btnLoad.addEventListener('click', function () {
+      if (portalPreview) {
+        setStatus('Loading map…');
+        initLeafletAt(lat0, lng0);
+        revealMapAndPunch();
+        setStatus('');
+        return;
+      }
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported in this browser.');
+        return;
+      }
+      if (!geolocationAllowedByBrowser()) {
+        alert(
+          'Location needs a secure page. Use HTTPS in production, or open the app at http://127.0.0.1 for testing. ' +
+          '(Plain http:// on LAN IP is blocked by browsers.)'
+        );
+        return;
+      }
+      setStatus('Asking browser for location… Allow when prompted.');
+      getCurrentPositionRobust(
+        function (pos) {
+          var la = pos.coords.latitude;
+          var ln = pos.coords.longitude;
+          setStatus('Loading map…');
+          initLeafletAt(la, ln);
+          revealMapAndPunch();
+          attachPunchHandlers();
+          setStatus('');
+        },
+        function (err) {
+          setStatus('');
+          alert(formatGeoError(err));
+        }
+      );
+    });
+  }
+
+  if (window.lucide && lucide.createIcons) lucide.createIcons();
+})();
+</script>
+{% endblock %}

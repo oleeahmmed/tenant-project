@@ -1,0 +1,56 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Edit shift{% endblock %}
+{% block page_title %}HRM · Edit shift{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="flex items-center gap-3">
+    <a href="{% url 'hrm:shift_list' %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent transition-colors" aria-label="Back">
+      <i data-lucide="arrow-left" class="h-4 w-4"></i>
+    </a>
+    <div>
+      <h2 class="text-xl font-bold text-foreground">Edit shift</h2>
+      <p class="text-sm text-muted-foreground mt-0.5">{{ shift.code }}</p>
+    </div>
+  </div>
+
+  <div class="simple-card max-w-lg rounded-xl border border-border p-6 shadow-card">
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Code</label>
+          {{ form.code }}
+          {{ form.code.errors }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Name</label>
+          {{ form.name }}
+        </div>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Start</label>
+          {{ form.start_time }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">End</label>
+          {{ form.end_time }}
+        </div>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Break (minutes)</label>
+        {{ form.break_minutes }}
+      </div>
+      <div class="flex flex-wrap gap-4">
+        <label class="flex items-center gap-2 text-sm text-foreground">{{ form.is_night_shift }} Night shift</label>
+        <label class="flex items-center gap-2 text-sm text-foreground">{{ form.is_active }} Active</label>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+        <a href="{% url 'hrm:shift_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

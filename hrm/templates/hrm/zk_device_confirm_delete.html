@@ -1,0 +1,16 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Delete device{% endblock %}
+{% block page_title %}HRM · Delete device{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-md space-y-6">
+  <form method="post" class="simple-card rounded-xl border border-border p-6 shadow-card">
+    {% csrf_token %}
+    <p class="text-sm text-foreground">Delete device <strong>{{ object.serial_number }}</strong>? Raw logs for this device will be removed (cascade).</p>
+    <div class="mt-4 flex gap-2">
+      <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Delete</button>
+      <a href="{% url 'hrm:zk_device_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

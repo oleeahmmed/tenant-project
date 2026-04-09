@@ -1,0 +1,108 @@
+/* Premium Tom Select look — matches dashboard tokens, smooth focus/dropdown */
+
+.inv-ts-premium {
+  min-width: 10rem;
+  max-width: 100%;
+}
+
+.inv-ts-premium .ts-control {
+  border-radius: var(--radius, 0.5rem);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  min-height: 2.25rem;
+  padding: 0.25rem 0.5rem;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.inv-ts-premium.focus .ts-control,
+.inv-ts-premium.dropdown-active .ts-control {
+  border-color: hsl(var(--ring) / 0.55);
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.18);
+}
+
+.inv-ts-premium .ts-control input::placeholder {
+  color: hsl(var(--muted-foreground));
+  opacity: 0.85;
+}
+
+.inv-ts-premium .ts-dropdown {
+  border-radius: var(--radius, 0.5rem);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  box-shadow:
+    0 10px 38px -12px rgb(0 0 0 / 0.22),
+    0 4px 16px -6px rgb(0 0 0 / 0.12);
+  margin-top: 0.25rem;
+  overflow: hidden;
+  animation: inv-ts-dd-in 0.16s ease-out;
+}
+
+/* dropdownParent: "body" — menu is direct child of body, not under .inv-ts-premium */
+body > .ts-dropdown {
+  z-index: 1050;
+  position: absolute;
+  border-radius: var(--radius, 0.5rem);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  box-shadow:
+    0 10px 38px -12px rgb(0 0 0 / 0.22),
+    0 4px 16px -6px rgb(0 0 0 / 0.12);
+  overflow: hidden;
+}
+
+@keyframes inv-ts-dd-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.inv-ts-premium .ts-dropdown .dropdown-input {
+  border: none;
+  border-bottom: 1px solid hsl(var(--border));
+  border-radius: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  background: hsl(var(--muted) / 0.35);
+  outline: none;
+}
+
+.inv-ts-premium .ts-dropdown .dropdown-input:focus {
+  box-shadow: inset 0 0 0 1px hsl(var(--ring) / 0.25);
+}
+
+.inv-ts-premium .option {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.8125rem;
+  border-radius: 0.25rem;
+  margin: 0.1rem 0.25rem;
+  transition: background-color 0.12s ease;
+}
+
+.inv-ts-premium .option:hover,
+.inv-ts-premium .option.active {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.inv-ts-premium .ts-dropdown-content {
+  max-height: 16rem;
+  padding: 0.25rem 0;
+}
+
+.inv-line-table .inv-ts-premium .ts-control {
+  min-height: 2rem;
+  font-size: 0.75rem;
+}
+
+.inv-line-table .inv-ts-premium .option {
+  font-size: 0.75rem;
+}

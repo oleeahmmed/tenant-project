@@ -1,0 +1,268 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block page_title %}HRM · Attendance{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex flex-col gap-3 border-b border-border bg-muted/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'hrm:hrm_dashboard' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent" aria-label="Back">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        </a>
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">Attendance</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">Filter by date, department, status - bulk delete (up to 500 rows)</p>
+        </div>
+      </div>
+      <button type="button" onclick="openAttendanceCreateModal()"
+        class="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity">
+        <i data-lucide="plus" class="h-4 w-4"></i>
+        <span class="hidden sm:inline">Add entry</span>
+      </button>
+    </div>
+    <div class="space-y-5 p-5">
+
+  <form method="get" class="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-card">
+    <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Filters</p>
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label class="mb-1.5 block text-xs font-medium text-muted-foreground" for="att-f-date">Date</label>
+        <input type="date" name="date" id="att-f-date" value="{{ filter_date }}"
+          class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring sm:w-auto" />
+      </div>
+      <div>
+        <label class="mb-1.5 block text-xs font-medium text-muted-foreground" for="att-f-dept">Department</label>
+        <select name="department" id="att-f-dept"
+          class="w-full min-w-[10rem] rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring sm:w-auto">
+          <option value="" {% if not filter_department %}selected{% endif %}>All departments</option>
+          <option value="none" {% if filter_department == 'none' %}selected{% endif %}>Unassigned</option>
+          {% for d in departments %}
+          <option value="{{ d.pk }}" {% if filter_department == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-xs font-medium text-muted-foreground" for="att-f-status">Status</label>
+        <select name="status" id="att-f-status"
+          class="w-full min-w-[10rem] rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring sm:w-auto">
+          <option value="" {% if not filter_status %}selected{% endif %}>All statuses</option>
+          {% for val, label in attendance_statuses %}
+          <option value="{{ val }}" {% if filter_status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Apply</button>
+      {% if filter_date or filter_department or filter_status %}
+      <a href="{% url 'hrm:attendance_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+
+  <form id="attendance-bulk-form" method="post" action="{% url 'hrm:attendance_bulk_action' %}">
+    {% csrf_token %}
+    <input type="hidden" name="bulk_action" id="attendance-bulk-action" value="" />
+    <input type="hidden" name="next" value="{% if request.GET %}{{ request.path }}?{{ request.GET.urlencode }}{% else %}{{ request.path }}{% endif %}" />
+  </form>
+
+  <div class="flex flex-col gap-3 rounded-xl border border-border bg-muted/20 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+    <p class="text-xs text-muted-foreground sm:max-w-[45%]">Select rows below, then delete in bulk (same as overtime list).</p>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" onclick="submitAttendanceBulk('delete')"
+        class="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/20">
+        <i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Delete selected
+      </button>
+    </div>
+  </div>
+
+  <div class="ui-table-wrap overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="w-10 px-2 py-3 text-left">
+            <input type="checkbox" id="attendance-select-all" form="attendance-bulk-form" title="Select all on this page"
+              class="h-4 w-4 rounded border-border" />
+          </th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Employee</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden sm:table-cell">Department</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden md:table-cell">In / Out</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for r in records %}
+        <tr class="hover:bg-accent/40 transition-colors">
+          <td class="px-2 py-3 align-top">
+            <input type="checkbox" form="attendance-bulk-form" name="attendance_ids" value="{{ r.pk }}"
+              class="att-row-cb h-4 w-4 rounded border-border" />
+          </td>
+          <td class="px-4 py-3">
+            <p class="font-medium text-foreground">{{ r.employee.full_name }}</p>
+            <p class="text-xs text-muted-foreground font-mono">{{ r.employee.employee_code }}</p>
+          </td>
+          <td class="px-4 py-3 hidden sm:table-cell text-muted-foreground">{{ r.employee.department.name|default:"—" }}</td>
+          <td class="px-4 py-3 text-muted-foreground whitespace-nowrap">{{ r.date|date:"M j, Y" }}</td>
+          <td class="px-4 py-3 hidden md:table-cell text-muted-foreground text-xs whitespace-nowrap">
+            {% if r.check_in or r.check_out %}
+              {% if r.check_in %}{{ r.check_in|time:"H:i" }}{% else %}—{% endif %} / {% if r.check_out %}{{ r.check_out|time:"H:i" }}{% else %}—{% endif %}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            <span class="inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-foreground">{{ r.get_status_display }}</span>
+          </td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <a href="{% url 'hrm:attendance_edit' r.pk %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Edit">
+                <i data-lucide="pencil" class="h-4 w-4"></i>
+              </a>
+              <button type="button" onclick="openDeleteModal('{% url 'hrm:attendance_delete' r.pk %}', 'Remove attendance for {{ r.employee.full_name|escapejs }} on {{ r.date|date:"M j, Y" }}?')" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" title="Delete">
+                <i data-lucide="trash-2" class="h-4 w-4"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="px-4 py-12 text-center text-sm text-muted-foreground">No attendance records match your filters.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+    </div>
+  </div>
+</div>
+
+<div id="attendance-create-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-[min(96vw,1240px)] rounded-xl border border-border bg-card shadow-xl max-h-[92vh] overflow-hidden">
+    <div class="flex items-center justify-between border-b border-border bg-muted/20 px-5 py-4">
+      <div>
+        <h3 class="text-lg font-semibold text-foreground">New attendance</h3>
+        <p class="text-xs text-muted-foreground mt-0.5">Select employees from the list, then set date/status once for all selected rows.</p>
+      </div>
+      <button type="button" onclick="closeAttendanceCreateModal()" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent" aria-label="Close">
+        <i data-lucide="x" class="h-4 w-4"></i>
+      </button>
+    </div>
+    <div class="p-5 overflow-y-auto max-h-[calc(92vh-74px)]">
+    <form id="attendance-create-form" method="post" action="{% url 'hrm:attendance_create' %}" class="space-y-4">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        <div class="xl:col-span-8">
+          {% include "hrm/includes/employee_bulk_picker.html" with prefix="attendance" hide_selected=True %}
+        </div>
+        <div class="xl:col-span-4">
+      <div class="space-y-4 rounded-xl border border-border bg-muted/20 p-4 xl:sticky xl:top-2">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-foreground">Date</label>
+            {{ bulk_form.date }}
+            {{ bulk_form.date.errors }}
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-foreground">Status</label>
+            {{ bulk_form.status }}
+            {{ bulk_form.status.errors }}
+          </div>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-foreground">Check in</label>
+            {{ bulk_form.check_in }}
+            {{ bulk_form.check_in.errors }}
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-foreground">Check out</label>
+            {{ bulk_form.check_out }}
+            {{ bulk_form.check_out.errors }}
+          </div>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Notes</label>
+          {{ bulk_form.notes }}
+          {{ bulk_form.notes.errors }}
+        </div>
+      </div>
+      <div class="mt-4 flex gap-2 justify-end">
+        <button type="button" onclick="closeAttendanceCreateModal()" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+      </div>
+        </div>
+      </div>
+    </form>
+    </div>
+  </div>
+</div>
+
+<div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-1">Confirm delete</h3>
+    <p id="delete-modal-text" class="text-sm text-muted-foreground mb-4">Are you sure?</p>
+    <form method="post" id="delete-form" action="">
+      {% csrf_token %}
+      <div class="flex gap-2 justify-end">
+        <button type="button" onclick="closeDeleteModal()" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openAttendanceCreateModal() {
+  var m = document.getElementById('attendance-create-modal');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+  var r = document.getElementById('attendance-bulk-picker-root');
+  if (r && r._bulkPickerReset) r._bulkPickerReset();
+}
+function closeAttendanceCreateModal() {
+  var m = document.getElementById('attendance-create-modal');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+  var r = document.getElementById('attendance-bulk-picker-root');
+  if (r && r._bulkPickerReset) r._bulkPickerReset();
+}
+document.addEventListener('DOMContentLoaded', function () {
+  var f = document.getElementById('attendance-create-form');
+  if (f && window.initBulkPicker_attendance) window.initBulkPicker_attendance(f);
+
+  var selAll = document.getElementById('attendance-select-all');
+  if (selAll) {
+    selAll.addEventListener('change', function () {
+      document.querySelectorAll('.att-row-cb').forEach(function (cb) {
+        cb.checked = selAll.checked;
+      });
+    });
+  }
+});
+function submitAttendanceBulk(action) {
+  var checked = document.querySelectorAll('.att-row-cb:checked');
+  if (!checked.length) {
+    alert('Select at least one row.');
+    return;
+  }
+  if (action === 'delete') {
+    if (!confirm('Delete ' + checked.length + ' selected attendance record(s)?')) return;
+  }
+  document.getElementById('attendance-bulk-action').value = action;
+  document.getElementById('attendance-bulk-form').submit();
+}
+function openDeleteModal(actionUrl, text) {
+  document.getElementById('delete-form').action = actionUrl;
+  document.getElementById('delete-modal-text').textContent = text;
+  document.getElementById('delete-modal').classList.remove('hidden');
+  document.getElementById('delete-modal').classList.add('flex');
+}
+function closeDeleteModal() {
+  document.getElementById('delete-modal').classList.add('hidden');
+  document.getElementById('delete-modal').classList.remove('flex');
+}
+</script>
+{% endblock %}

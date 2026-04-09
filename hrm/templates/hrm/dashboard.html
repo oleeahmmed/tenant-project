@@ -1,0 +1,120 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}HRM{% endblock %}
+{% block page_title %}Human Resources{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div>
+    <h2 class="text-xl font-bold text-foreground">HRM overview</h2>
+    <p class="text-sm text-muted-foreground mt-0.5">Tenant-scoped directory, roles, and leave — linked to your workspace.</p>
+  </div>
+
+  {% if hrm_needs_tenant %}
+  <div class="simple-card overflow-hidden rounded-xl border border-amber-500/40 bg-amber-500/5 p-5 shadow-card">
+    <h3 class="text-sm font-semibold text-foreground mb-2">Choose a workspace</h3>
+    <p class="text-sm text-muted-foreground mb-4">
+      Your super admin account is not tied to one tenant. Pick which company to manage for HRM, then use the links below.
+    </p>
+    {% if hrm_tenant_choices %}
+    <form method="post" action="{% url 'hrm:set_active_tenant' %}" class="flex flex-wrap items-end gap-3">
+      {% csrf_token %}
+      <label class="flex flex-col gap-1 text-sm">
+        <span class="text-muted-foreground">Workspace</span>
+        <select name="tenant_id" class="rounded-lg border border-border bg-background px-3 py-2 text-foreground min-w-[12rem]">
+          {% for t in hrm_tenant_choices %}
+          <option value="{{ t.pk }}" {% if hrm_active_tenant_id == t.pk %}selected{% endif %}>{{ t.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+        Use this workspace
+      </button>
+    </form>
+    {% else %}
+    <p class="text-sm text-muted-foreground">No active tenants exist yet. Create one under <a href="{% url 'tenant_list' %}" class="text-primary hover:underline">Tenants</a> in the main dashboard.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+      <p class="text-sm font-medium text-muted-foreground mb-2">Departments</p>
+      <p class="text-2xl font-bold text-foreground">{{ departments_n }}</p>
+    </div>
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+      <p class="text-sm font-medium text-muted-foreground mb-2">Job titles</p>
+      <p class="text-2xl font-bold text-foreground">{{ job_titles_n }}</p>
+    </div>
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+      <p class="text-sm font-medium text-muted-foreground mb-2">Employees</p>
+      <p class="text-2xl font-bold text-foreground">{{ employees_n }}</p>
+    </div>
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+      <p class="text-sm font-medium text-muted-foreground mb-2">Pending leaves</p>
+      <p class="text-2xl font-bold text-foreground">{{ pending_leaves_n }}</p>
+    </div>
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+      <p class="text-sm font-medium text-muted-foreground mb-2">Holidays</p>
+      <p class="text-2xl font-bold text-foreground">{{ holidays_n }}</p>
+    </div>
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+      <p class="text-sm font-medium text-muted-foreground mb-2">Active notices</p>
+      <p class="text-2xl font-bold text-foreground">{{ notices_n }}</p>
+    </div>
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+      <p class="text-sm font-medium text-muted-foreground mb-2">Pending overtime</p>
+      <p class="text-2xl font-bold text-foreground">{{ pending_overtime_n }}</p>
+    </div>
+  </div>
+
+  <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+    <h3 class="text-sm font-semibold text-foreground mb-4">Quick links</h3>
+    <div class="card-actions card-actions--flush flex-wrap gap-3">
+      <a href="{% url 'hrm:recruitment_job_list' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="briefcase" class="h-4 w-4"></i></span>
+        Recruitment
+      </a>
+      <a href="{% url 'hrm:shift_list' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="clock-4" class="h-4 w-4"></i></span>
+        Shifts
+      </a>
+      <a href="{% url 'hrm:roster_bulk' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="users-round" class="h-4 w-4"></i></span>
+        Bulk shifts
+      </a>
+      <a href="{% url 'hrm:roster_preview' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="calendar-range" class="h-4 w-4"></i></span>
+        Roster preview
+      </a>
+      <a href="{% url 'hrm:employee_create' %}" class="card-act card-act--primary card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="user-plus" class="h-4 w-4"></i></span>
+        Add employee
+      </a>
+      <a href="{% url 'hrm:leave_request_list' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="calendar-days" class="h-4 w-4"></i></span>
+        Leave requests
+      </a>
+      <a href="{% url 'hrm:department_list' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="network" class="h-4 w-4"></i></span>
+        Departments
+      </a>
+      <a href="{% url 'hrm:holiday_list' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="calendar-heart" class="h-4 w-4"></i></span>
+        Holidays
+      </a>
+      <a href="{% url 'hrm:notice_list' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="megaphone" class="h-4 w-4"></i></span>
+        Notices
+      </a>
+      <a href="{% url 'hrm:attendance_list' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="clock" class="h-4 w-4"></i></span>
+        Attendance
+      </a>
+      <a href="{% url 'hrm:overtime_list' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="timer" class="h-4 w-4"></i></span>
+        Overtime
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

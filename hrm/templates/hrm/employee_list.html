@@ -1,0 +1,99 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Employees{% endblock %}
+{% block page_title %}HRM · Employees{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex flex-col gap-3 border-b border-border bg-muted/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'hrm:hrm_dashboard' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent" aria-label="Back">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        </a>
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">Employees</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">Workforce records; optional link to a system user</p>
+        </div>
+      </div>
+      <a href="{% url 'hrm:employee_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity">
+        <i data-lucide="user-plus" class="h-4 w-4"></i>
+        <span class="hidden sm:inline">Add employee</span>
+      </a>
+    </div>
+
+  <div class="ui-table-wrap overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Code</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Name</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden md:table-cell">Department</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden lg:table-cell">Job title</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for e in employees %}
+        <tr class="hover:bg-accent/40 transition-colors">
+          <td class="px-4 py-3 font-mono text-xs text-muted-foreground">{{ e.employee_code }}</td>
+          <td class="px-4 py-3">
+            <p class="font-medium text-foreground">{{ e.full_name }}</p>
+            <p class="text-xs text-muted-foreground">{{ e.email|default:"" }}</p>
+          </td>
+          <td class="px-4 py-3 hidden md:table-cell text-muted-foreground">{{ e.department.name|default:"—" }}</td>
+          <td class="px-4 py-3 hidden lg:table-cell text-muted-foreground">{{ e.job_title.name|default:"—" }}</td>
+          <td class="px-4 py-3">
+            <span class="inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-foreground">{{ e.get_status_display }}</span>
+          </td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <a href="{% url 'hrm:employee_edit' e.pk %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Edit">
+                <i data-lucide="pencil" class="h-4 w-4"></i>
+              </a>
+              <button type="button" onclick="openDeleteModal('{% url 'hrm:employee_delete' e.pk %}', 'Remove {{ e.full_name|escapejs }} from the directory?')" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" title="Remove">
+                <i data-lucide="trash-2" class="h-4 w-4"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-4 py-12 text-center text-sm text-muted-foreground">No employees yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  </div>
+</div>
+
+<div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-1">Confirm delete</h3>
+    <p id="delete-modal-text" class="text-sm text-muted-foreground mb-4">Are you sure?</p>
+    <form method="post" id="delete-form" action="">
+      {% csrf_token %}
+      <div class="flex gap-2 justify-end">
+        <button type="button" onclick="closeDeleteModal()" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openDeleteModal(actionUrl, text) {
+  document.getElementById('delete-form').action = actionUrl;
+  document.getElementById('delete-modal-text').textContent = text;
+  document.getElementById('delete-modal').classList.remove('hidden');
+  document.getElementById('delete-modal').classList.add('flex');
+}
+function closeDeleteModal() {
+  document.getElementById('delete-modal').classList.add('hidden');
+  document.getElementById('delete-modal').classList.remove('flex');
+}
+</script>
+{% endblock %}

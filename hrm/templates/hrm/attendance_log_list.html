@@ -1,0 +1,98 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Raw punch logs{% endblock %}
+{% block page_title %}HRM · Attendance logs (devices){% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'hrm:hrm_dashboard' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent" aria-label="Back">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        </a>
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">Raw punch logs</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">Rows from ZKTeco (PyZK/ADMS) and mobile GPS. Match employees via <strong>ZK user ID</strong> on the employee profile.</p>
+        </div>
+      </div>
+    </div>
+    <div class="space-y-5 p-5">
+
+  <form method="get" class="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4 shadow-card">
+    <div>
+      <label class="mb-1 block text-xs text-muted-foreground" for="f-df">From</label>
+      <input type="date" name="date_from" id="f-df" value="{{ filter_date_from }}" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+    </div>
+    <div>
+      <label class="mb-1 block text-xs text-muted-foreground" for="f-dt">To</label>
+      <input type="date" name="date_to" id="f-dt" value="{{ filter_date_to }}" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+    </div>
+    <div>
+      <label class="mb-1 block text-xs text-muted-foreground" for="f-dev">Device</label>
+      <select name="device" id="f-dev" class="min-w-[10rem] rounded-lg border border-border bg-background px-3 py-2 text-sm">
+        <option value="">All</option>
+        {% for d in devices %}
+        <option value="{{ d.pk }}" {% if filter_device == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.serial_number }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="mb-1 block text-xs text-muted-foreground" for="f-uid">User ID</label>
+      <input type="text" name="user_id" id="f-uid" value="{{ filter_user_id }}" placeholder="Device user id" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+    </div>
+    <label class="flex items-center gap-2 text-sm text-muted-foreground">
+      <input type="checkbox" name="gps" value="1" {% if filter_gps %}checked{% endif %} /> GPS only
+    </label>
+    <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Apply</button>
+  </form>
+
+  <div class="ui-table-wrap overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Punch time</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">User ID</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground hidden sm:table-cell">Employee</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground hidden md:table-cell">Device</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground hidden xl:table-cell">Fence</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Validation</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Source</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground hidden lg:table-cell">Location</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for row in log_rows %}
+        {% with log=row.log %}
+        <tr class="hover:bg-accent/40">
+          <td class="px-4 py-3 whitespace-nowrap">{{ log.punch_time }}</td>
+          <td class="px-4 py-3 font-mono text-xs">{{ log.user_id }}</td>
+          <td class="px-4 py-3 hidden sm:table-cell">{{ row.emp_name }}</td>
+          <td class="px-4 py-3 hidden md:table-cell text-muted-foreground text-xs">{% if log.device %}{{ log.device.serial_number }}{% else %}—{% endif %}</td>
+          <td class="px-4 py-3 hidden xl:table-cell text-xs text-muted-foreground">{% if log.matched_location %}{{ log.matched_location.name }}{% else %}—{% endif %}</td>
+          <td class="px-4 py-3 text-xs">{{ log.get_validation_status_display }}</td>
+          <td class="px-4 py-3">{{ log.get_source_display }}</td>
+          <td class="px-4 py-3 hidden lg:table-cell text-xs text-muted-foreground">
+            {% if log.latitude %}
+              {{ log.latitude|floatformat:5 }}, {{ log.longitude|floatformat:5 }}
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endwith %}
+        {% empty %}
+        <tr><td colspan="8" class="px-4 py-12 text-center text-muted-foreground">No logs yet. Sync punches from a TCP device or push ADMS data via API.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+  <div class="flex justify-center gap-2 text-sm">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" class="text-primary hover:underline">Previous</a>{% endif %}
+    <span class="text-muted-foreground">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" class="text-primary hover:underline">Next</a>{% endif %}
+  </div>
+  {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

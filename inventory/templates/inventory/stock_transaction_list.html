@@ -1,0 +1,101 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Stock transactions{% endblock %}
+{% block page_title %}Inventory · Stock transactions{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div>
+        <h2 class="text-lg font-semibold text-foreground">Stock transactions</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">Audit trail of all posted movements</p>
+        {% if filtered_product %}
+        <p class="mt-1 inline-flex rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">Filtered: {{ filtered_product.sku }} — {{ filtered_product.name }}</p>
+        {% endif %}
+      </div>
+      <div class="flex flex-wrap gap-2">
+        {% if filtered_product %}
+        <a href="{% url 'foundation:product_detail' filtered_product.pk %}" class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"><i data-lucide="arrow-left" class="h-4 w-4"></i> Product</a>
+        {% else %}
+        <a href="{% url 'inventory:inventory_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"><i data-lucide="arrow-left" class="h-4 w-4"></i> Back</a>
+        {% endif %}
+      </div>
+    </div>
+
+  <form method="get" class="grid grid-cols-1 gap-2 border-b border-border bg-muted/15 px-5 py-4 md:grid-cols-7">
+    {% if filtered_product %}
+    <input type="hidden" name="product_id" value="{{ filtered_product.pk }}">
+    {% endif %}
+    <input type="text" name="q" value="{{ selected.q }}" placeholder="Search SKU/ref/notes/warehouse" class="rounded-lg border border-border bg-background px-3 py-2 text-sm md:col-span-2">
+    <select name="transaction_type" class="rounded-lg border border-border bg-background px-3 py-2 text-sm">
+      <option value="">All types</option>
+      {% for v,l in transaction_type_choices %}<option value="{{ v }}" {% if selected.transaction_type == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+    </select>
+    <input type="text" name="warehouse" value="{{ selected.warehouse }}" placeholder="Warehouse code" class="rounded-lg border border-border bg-background px-3 py-2 text-sm">
+    <input type="date" name="date_from" value="{{ selected.date_from }}" class="rounded-lg border border-border bg-background px-3 py-2 text-sm">
+    <input type="date" name="date_to" value="{{ selected.date_to }}" class="rounded-lg border border-border bg-background px-3 py-2 text-sm">
+    <div class="flex gap-2">
+      <button class="inline-flex items-center justify-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Filter</button>
+      <a href="{% url 'inventory:stock_transaction_list' %}{% if filtered_product %}?product_id={{ filtered_product.pk }}{% endif %}" class="inline-flex items-center justify-center rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent">Reset</a>
+    </div>
+    <select name="sort" class="rounded-lg border border-border bg-background px-3 py-2 text-sm">
+      <option value="-created_at" {% if selected.sort == '-created_at' %}selected{% endif %}>Time (newest)</option>
+      <option value="created_at" {% if selected.sort == 'created_at' %}selected{% endif %}>Time (oldest)</option>
+      <option value="product__sku" {% if selected.sort == 'product__sku' %}selected{% endif %}>SKU (A-Z)</option>
+      <option value="-product__sku" {% if selected.sort == '-product__sku' %}selected{% endif %}>SKU (Z-A)</option>
+      <option value="-qty_signed" {% if selected.sort == '-qty_signed' %}selected{% endif %}>Qty (high-low)</option>
+      <option value="qty_signed" {% if selected.sort == 'qty_signed' %}selected{% endif %}>Qty (low-high)</option>
+    </select>
+    <select name="page_size" class="rounded-lg border border-border bg-background px-3 py-2 text-sm">
+      <option value="25" {% if selected.page_size == '25' %}selected{% endif %}>25 rows</option>
+      <option value="50" {% if selected.page_size == '50' %}selected{% endif %}>50 rows</option>
+      <option value="75" {% if selected.page_size == '75' %}selected{% endif %}>75 rows</option>
+      <option value="100" {% if selected.page_size == '100' %}selected{% endif %}>100 rows</option>
+    </select>
+    </form>
+
+    <div class="px-5 py-4">
+      <div class="ui-table-wrap overflow-x-auto rounded-lg border border-border">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-border bg-muted/40">
+              <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Time</th>
+              <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Type</th>
+              <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Warehouse</th>
+              <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Item</th>
+              <th class="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Qty +/-</th>
+              <th class="px-3 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Balance</th>
+              <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr class="border-b border-border odd:bg-muted/20 even:bg-background hover:bg-muted/30">
+              <td class="px-3 py-2 whitespace-nowrap text-muted-foreground">{{ row.created_at|date:"Y-m-d H:i" }}</td>
+              <td class="px-3 py-2"><span class="inline-flex rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium">{{ row.get_transaction_type_display }}</span></td>
+              <td class="px-3 py-2">{{ row.warehouse.code }}</td>
+              <td class="px-3 py-2 font-medium">{{ row.product.sku }}</td>
+              <td class="px-3 py-2 text-right font-mono tabular-nums">{{ row.qty_signed }}</td>
+              <td class="px-3 py-2 text-right font-mono tabular-nums">{{ row.balance_after }}</td>
+              <td class="px-3 py-2 text-muted-foreground truncate max-w-[12rem]">{{ row.reference|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="px-4 py-10 text-center text-muted-foreground">No transactions found for current filters.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  {% if is_paginated %}
+    <div class="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-muted/10 px-5 py-4 text-sm">
+      <span class="text-muted-foreground">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      <div class="flex gap-2">
+      {% if page_obj.has_previous %}<a href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}page={{ page_obj.previous_page_number }}" class="rounded-lg border border-border bg-background px-3 py-1.5 hover:bg-accent">Previous</a>{% endif %}
+      {% if page_obj.has_next %}<a href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}page={{ page_obj.next_page_number }}" class="rounded-lg border border-border bg-background px-3 py-1.5 hover:bg-accent">Next</a>{% endif %}
+      </div>
+    </div>
+  {% endif %}
+  </div>
+</div>
+{% endblock %}

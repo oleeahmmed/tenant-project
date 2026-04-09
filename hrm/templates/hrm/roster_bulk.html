@@ -1,0 +1,122 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Bulk shift rules{% endblock %}
+{% block page_title %}HRM · Bulk shift rules{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'hrm:shift_list' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent" aria-label="Back">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        </a>
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">Bulk shift rules</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">Search, department tabs, checkboxes - then apply one rule to selected employees.</p>
+        </div>
+      </div>
+    </div>
+    <div class="p-5">
+  <form id="roster-bulk-form" method="post" action="{% url 'hrm:roster_bulk_apply' %}" class="space-y-4">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-12">
+      <div class="xl:col-span-8">
+        {% include "hrm/includes/employee_bulk_picker.html" with prefix="shiftbulk" %}
+      </div>
+      <div class="xl:col-span-4">
+    <div class="simple-card rounded-xl border border-border p-4 shadow-card space-y-4 xl:sticky xl:top-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Rule to apply</p>
+
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground" for="id_roster_rule_type">Type</label>
+        {{ bulk_form.rule_type }}
+        {{ bulk_form.rule_type.errors }}
+      </div>
+
+      <div id="rb-help-default" class="rounded-lg border border-border/80 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+        <strong class="text-foreground">Default shift:</strong> choose a shift for everyone, or leave empty and submit to <strong>clear</strong> their default shift.
+      </div>
+
+      <div id="rb-row-shift">
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Shift</label>
+        {{ bulk_form.shift }}
+        {{ bulk_form.shift.errors }}
+      </div>
+
+      <div id="rb-row-weekday" class="hidden">
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Weekday</label>
+        {{ bulk_form.weekday }}
+        {{ bulk_form.weekday.errors }}
+      </div>
+
+      <div id="rb-row-range" class="hidden grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">From</label>
+          {{ bulk_form.start_date }}
+          {{ bulk_form.start_date.errors }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">To</label>
+          {{ bulk_form.end_date }}
+          {{ bulk_form.end_date.errors }}
+        </div>
+      </div>
+
+      <div id="rb-row-exception" class="hidden">
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Override date</label>
+        {{ bulk_form.exception_date }}
+        {{ bulk_form.exception_date.errors }}
+      </div>
+
+      <div id="rb-row-note" class="hidden">
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Note</label>
+        {{ bulk_form.note }}
+      </div>
+
+      <div class="flex flex-wrap gap-2 pt-2">
+        <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+          <i data-lucide="users" class="h-4 w-4"></i>
+          Apply to selected
+        </button>
+        <a href="{% url 'hrm:shift_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Shift definitions</a>
+        <a href="{% url 'hrm:roster_preview' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Roster preview</a>
+      </div>
+    </div>
+      </div>
+    </div>
+  </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  function toggleRosterBulk() {
+    var sel = document.getElementById("id_roster_rule_type");
+    if (!sel) return;
+    var v = sel.value;
+    var dHelp = document.getElementById("rb-help-default");
+    var dWd = document.getElementById("rb-row-weekday");
+    var dRg = document.getElementById("rb-row-range");
+    var dEx = document.getElementById("rb-row-exception");
+    var dNt = document.getElementById("rb-row-note");
+    if (dHelp) dHelp.classList.toggle("hidden", v !== "default");
+    if (dWd) dWd.classList.toggle("hidden", v !== "weekday");
+    if (dRg) dRg.classList.toggle("hidden", v !== "range");
+    if (dEx) dEx.classList.toggle("hidden", v !== "exception");
+    if (dNt) dNt.classList.toggle("hidden", v !== "range" && v !== "exception");
+  }
+  document.addEventListener("DOMContentLoaded", function () {
+    var sel = document.getElementById("id_roster_rule_type");
+    if (sel) {
+      toggleRosterBulk();
+      sel.addEventListener("change", toggleRosterBulk);
+    }
+    var f = document.getElementById("roster-bulk-form");
+    if (f && window.initBulkPicker_shiftbulk) window.initBulkPicker_shiftbulk(f);
+  });
+})();
+</script>
+{% endblock %}

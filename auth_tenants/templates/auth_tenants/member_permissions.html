@@ -1,0 +1,67 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Permissions — {{ member.name }}{% endblock %}
+{% block page_title %}Member Permissions{% endblock %}
+
+{% block content %}
+<div class="space-y-5 max-w-2xl">
+
+  <div class="flex items-center gap-3">
+    <a href="{% url 'members' %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent transition-colors">
+      <i data-lucide="arrow-left" class="h-4 w-4"></i>
+    </a>
+    <div>
+      <h2 class="text-xl font-bold text-foreground">{{ member.name }}</h2>
+      <p class="text-sm text-muted-foreground">{{ member.email }} · {{ member.custom_role.name|default:"No role" }}</p>
+    </div>
+  </div>
+
+  <!-- Effective permissions -->
+  <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+    <h3 class="text-sm font-semibold text-foreground mb-3">Effective Permissions</h3>
+    {% if effective %}
+      <div class="flex flex-wrap gap-1.5">
+        {% for perm in effective %}
+          <span class="inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-foreground">{{ perm }}</span>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-sm text-muted-foreground">No permissions yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- Extra permissions form -->
+  <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+    <h3 class="text-sm font-semibold text-foreground mb-1">Extra Permissions</h3>
+    <p class="text-xs text-muted-foreground mb-4">These are in addition to the role's permissions.</p>
+
+    <form method="post" action="{% url 'member_permissions' member.id %}">
+      {% csrf_token %}
+      <div class="space-y-4">
+        {% regroup all_permissions by category as perm_groups %}
+        {% for group in perm_groups %}
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">{{ group.grouper }}</p>
+          <div class="space-y-1">
+            {% for perm in group.list %}
+            <label class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-accent cursor-pointer">
+              <input type="checkbox" name="add_ids" value="{{ perm.id }}"
+                {% if perm.id in extra_perm_ids %}checked{% endif %}
+                class="h-4 w-4 rounded border-border text-primary focus:ring-ring" />
+              <div class="flex-1 flex items-center justify-between">
+                <span class="text-sm text-foreground">{{ perm.label }}</span>
+                <span class="text-[10px] text-muted-foreground">{{ perm.codename }}</span>
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="mt-5 flex gap-2">
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save Permissions</button>
+        <a href="{% url 'members' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

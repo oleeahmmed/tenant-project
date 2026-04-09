@@ -1,0 +1,148 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Invitations{% endblock %}
+{% block page_title %}Invitations{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-foreground">Invitations</h2>
+      <p class="text-sm text-muted-foreground mt-0.5">Invite team members to your workspace</p>
+    </div>
+    <button type="button" onclick="document.getElementById('invite-modal').classList.remove('hidden'); document.getElementById('invite-modal').classList.add('flex');"
+      class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+      <i data-lucide="mail-plus" class="h-4 w-4"></i>
+      <span class="hidden sm:inline">Send Invite</span>
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="ui-table-wrap overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-border bg-muted/40">
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Invitee</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Role</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden sm:table-cell">Expires</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          {% for invite in invitations %}
+          <tr class="hover:bg-accent/40 transition-colors">
+            <td class="px-4 py-3">
+              <p class="font-medium text-foreground">{{ invite.name }}</p>
+              <p class="text-xs text-muted-foreground">{{ invite.email }}</p>
+            </td>
+            <td class="px-4 py-3">
+              {% if invite.role %}
+                <span class="inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium">{{ invite.role.name }}</span>
+              {% else %}
+                <span class="text-xs text-muted-foreground">—</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3">
+              {% if invite.is_accepted %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">
+                  <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span> Accepted
+                </span>
+              {% elif invite.is_valid %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-yellow-500/10 px-2 py-0.5 text-xs font-medium text-yellow-700 dark:text-yellow-400">
+                  <span class="h-1.5 w-1.5 rounded-full bg-yellow-500"></span> Pending
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                  <span class="h-1.5 w-1.5 rounded-full bg-muted-foreground"></span> Expired
+                </span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 hidden sm:table-cell text-xs text-muted-foreground">
+              {{ invite.expires_at|date:"M d, Y H:i" }}
+            </td>
+            <td class="px-4 py-3 text-right">
+              {% if not invite.is_accepted %}
+              <button type="button" onclick="openCancelModal('{% url 'invitation_cancel' invite.id %}', 'Cancel invitation for {{ invite.email|escapejs }}?')" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" title="Cancel">
+                <i data-lucide="x" class="h-4 w-4"></i>
+              </button>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-4 py-12 text-center text-sm text-muted-foreground">No invitations sent yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+  </div>
+</div>
+
+<!-- Cancel invitation modal -->
+<div id="cancel-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-1">Cancel Invitation</h3>
+    <p id="cancel-modal-text" class="text-sm text-muted-foreground mb-4">Are you sure?</p>
+    <form method="post" id="cancel-form" action="">
+      {% csrf_token %}
+      <div class="flex gap-2 justify-end">
+        <button type="button" onclick="closeCancelModal()" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Keep</button>
+        <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Cancel Invite</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Send Invite Modal -->
+<div id="invite-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-4">Send Invitation</h3>
+    <form method="post" action="{% url 'invitation_create' %}">
+      {% csrf_token %}
+      <div class="space-y-4">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Name</label>
+          <input type="text" name="name" required placeholder="Karim Ahmed"
+            class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Email</label>
+          <input type="email" name="email" required placeholder="karim@example.com"
+            class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Role <span class="text-muted-foreground font-normal">(optional)</span></label>
+          <select name="role_id" class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+            <option value="">— No role —</option>
+            {% for role in roles %}
+              <option value="{{ role.id }}">{{ role.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-2 justify-end mt-5">
+        <button type="button" onclick="document.getElementById('invite-modal').classList.add('hidden'); document.getElementById('invite-modal').classList.remove('flex');"
+          class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Send Invite</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openCancelModal(actionUrl, text) {
+  document.getElementById('cancel-form').action = actionUrl;
+  document.getElementById('cancel-modal-text').textContent = text;
+  document.getElementById('cancel-modal').classList.remove('hidden');
+  document.getElementById('cancel-modal').classList.add('flex');
+}
+function closeCancelModal() {
+  document.getElementById('cancel-modal').classList.add('hidden');
+  document.getElementById('cancel-modal').classList.remove('flex');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}শিফট ম্যানেজমেন্ট গাইড{% endblock %}
+{% block page_title %}HRM · শিফট ম্যানেজমেন্ট গাইড{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-3xl space-y-10 pb-12">
+  {# Hero #}
+  <header class="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/8 via-card to-card p-8 shadow-card ring-1 ring-border/60">
+    <div class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/10 blur-2xl"></div>
+    <p class="text-xs font-bold uppercase tracking-widest text-primary">ডকুমেন্টেশন · বাংলা</p>
+    <h1 class="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">শিফট ও রোস্টার ম্যানেজমেন্ট</h1>
+    <p class="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+      এই পাতায় শুধু <strong class="text-foreground">বুঝানো</strong> — আপনার সিস্টেমে শিফট কীভাবে সেট করবেন, কোন মেনু দিয়ে যাবেন, এবং একজন অ্যাডমিনের গল্পে দুইটি বিভাগ ও কয়েকজন ডামি কর্মী দিয়ে ধাপে ধাপে দেখানো হয়েছে।
+    </p>
+  </header>
+
+  {# Story intro #}
+  <section class="simple-card rounded-2xl border border-border p-6 shadow-card">
+    <div class="flex items-start gap-3">
+      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+        <i data-lucide="book-open" class="h-5 w-5"></i>
+      </span>
+      <div>
+        <h2 class="text-lg font-semibold text-foreground">গল্প — অ্যাডমিন করিম</h2>
+        <p class="mt-3 text-sm leading-relaxed text-muted-foreground">
+          <strong class="text-foreground">করিম</strong> আপনার কোম্পানির HR অ্যাডমিন। তিনি চান সব কর্মীর <em>কখন কাজ শুরু–শেষ</em> ঠিক থাকুক, কখনও কখনও বিশেষ দিনে অন্য শিফট দিতে পারেন, আর একসাথে অনেক জনকে সেট করতে না হয় বারবার একই ফর্ম খুলতে।
+        </p>
+        <p class="mt-3 text-sm leading-relaxed text-muted-foreground">
+          সিস্টেমে তিনি প্রথমে <strong class="text-foreground">শিফটের নাম ও সময়</strong> বানান (যেমন সকাল / সন্ধ্যা), তারপর কর্মী অনুযায়ী নিয়ম লাগান। নিচের <strong class="text-foreground">দুইটি সেকশন</strong> (বিভাগ) আর <strong class="text-foreground">ডামি কর্মী</strong> দিয়ে পুরো যাত্রা বোঝানো হলো।
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {# Two departments + dummy employees #}
+  <section class="space-y-4">
+    <h2 class="flex items-center gap-2 text-lg font-semibold text-foreground">
+      <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-xs font-bold">১</span>
+      দুইটি বিভাগ ও ডামি কর্মীরা
+    </h2>
+    <p class="text-sm text-muted-foreground">
+      ধরুন কোম্পানির নাম <strong class="text-foreground">“ব্রাইট ট্রেডিং”</strong>। দুইটি ডিপার্টমেন্ট:
+    </p>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <p class="text-xs font-bold uppercase tracking-wide text-primary">বিভাগ A</p>
+        <p class="mt-1 font-semibold text-foreground">বিক্রয় (Sales)</p>
+        <p class="mt-2 text-xs text-muted-foreground">গ্রাহকের সাথে কথা, অর্ডার — সাধারণত দোকান সময়।</p>
+      </div>
+      <div class="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <p class="text-xs font-bold uppercase tracking-wide text-primary">বিভাগ B</p>
+        <p class="mt-1 font-semibold text-foreground">অপারেশন (Warehouse)</p>
+        <p class="mt-2 text-xs text-muted-foreground">মাল গ্রহণ–বিতরণ — কখনও ভোর বা রাতের শিফট লাগতে পারে।</p>
+      </div>
+    </div>
+
+    <div class="ui-table-wrap overflow-x-auto rounded-xl border border-border">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-border bg-muted/50">
+            <th class="px-4 py-3 text-left font-semibold text-foreground">কর্মী</th>
+            <th class="px-4 py-3 text-left font-semibold text-foreground">কোড</th>
+            <th class="px-4 py-3 text-left font-semibold text-foreground">বিভাগ</th>
+            <th class="px-4 py-3 text-left font-semibold text-foreground">নোট (গল্পে)</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          <tr class="bg-background/80"><td class="px-4 py-3 font-medium">ফাতেমা বেগম</td><td class="px-4 py-3 font-mono text-xs">S001</td><td class="px-4 py-3">বিক্রয়</td><td class="px-4 py-3 text-muted-foreground">টিম লিড — সপ্তাহে সোম–শুক্র সকাল শিফট</td></tr>
+          <tr><td class="px-4 py-3 font-medium">রাফি হাসান</td><td class="px-4 py-3 font-mono text-xs">S002</td><td class="px-4 py-3">বিক্রয়</td><td class="px-4 py-3 text-muted-foreground">জুনিয়র — শনিবার অন্য সময়</td></tr>
+          <tr class="bg-background/80"><td class="px-4 py-3 font-medium">নয়ন ইসলাম</td><td class="px-4 py-3 font-mono text-xs">W001</td><td class="px-4 py-3">অপারেশন</td><td class="px-4 py-3 text-muted-foreground">ডিসেম্বরে নাইট শিফট এক মাস</td></tr>
+          <tr><td class="px-4 py-3 font-medium">সুমি আক্তার</td><td class="px-4 py-3 font-mono text-xs">W002</td><td class="px-4 py-3">অপারেশন</td><td class="px-4 py-3 text-muted-foreground">একদিন হঠাৎ দিবা শিফটে এসেছিল</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-xs text-muted-foreground">উপরের নামগুলো শুধু উদাহরণ — আপনি <a href="{% url 'hrm:employee_list' %}" class="text-primary underline underline-offset-2">Employees</a> থেকে আসল কর্মী বানাবেন।</p>
+  </section>
+
+  {# Menu map #}
+  <section class="space-y-4">
+    <h2 class="flex items-center gap-2 text-lg font-semibold text-foreground">
+      <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-xs font-bold">২</span>
+      মেনু থেকে কোথায় যাবেন (Shifts &amp; roster)
+    </h2>
+    <p class="text-sm text-muted-foreground">বাঁ দিকের সাইডবারে <strong class="text-foreground">HRM</strong> খুলে <strong class="text-foreground">Shifts &amp; roster</strong> — এখানে এই গাইডসহ সব লিংক:</p>
+    <ul class="space-y-2 rounded-xl border border-dashed border-border/80 bg-muted/15 p-4 text-sm">
+      <li class="flex flex-wrap gap-x-2"><span class="font-medium text-foreground">Shift definitions</span> — <a href="{% url 'hrm:shift_list' %}" class="text-primary hover:underline">শিফট তালিকা</a> · কোড, নাম, শুরু–শেষ সময়।</li>
+      <li class="flex flex-wrap gap-x-2"><span class="font-medium text-foreground">শিফট গাইড</span> — <span class="text-muted-foreground">আপনি এখন এখানে আছেন</span>।</li>
+      <li class="flex flex-wrap gap-x-2"><span class="font-medium text-foreground">Bulk apply</span> — <a href="{% url 'hrm:roster_bulk' %}" class="text-primary hover:underline">একসাথে অনেক কর্মী</a> (ডিপার্টমেন্ট ফিল্টার + চেকবক্স)।</li>
+      <li class="flex flex-wrap gap-x-2"><span class="font-medium text-foreground">Weekly patterns</span> — <a href="{% url 'hrm:roster_weekday_list' %}" class="text-primary hover:underline">সপ্তাহের নির্দিষ্ট দিন</a>।</li>
+      <li class="flex flex-wrap gap-x-2"><span class="font-medium text-foreground">Date ranges</span> — <a href="{% url 'hrm:roster_range_list' %}" class="text-primary hover:underline">তারিখ থেকে তারিখ</a> পর্যন্ত।</li>
+      <li class="flex flex-wrap gap-x-2"><span class="font-medium text-foreground">One-day overrides</span> — <a href="{% url 'hrm:roster_exception_list' %}" class="text-primary hover:underline">একদিনের ব্যতিক্রম</a>।</li>
+      <li class="flex flex-wrap gap-x-2"><span class="font-medium text-foreground">Roster preview</span> — <a href="{% url 'hrm:roster_preview' %}" class="text-primary hover:underline">মাস দেখে নিন</a> কী শিফট জুড়েছে।</li>
+    </ul>
+  </section>
+
+  {# Steps #}
+  <section class="space-y-6">
+    <h2 class="flex items-center gap-2 text-lg font-semibold text-foreground">
+      <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-xs font-bold">৩</span>
+      শুরু থেকে শেষ — ধাপে ধাপে (করিম যা করবেন)
+    </h2>
+
+    <div class="relative space-y-6 border-l-2 border-primary/25 pl-6 sm:pl-8">
+      <article class="relative">
+        <span class="absolute -left-[1.35rem] top-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground sm:-left-[2.05rem]">১</span>
+        <h3 class="font-semibold text-foreground">শিফট বানান (মাস্টার তালিকা)</h3>
+        <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <strong class="text-foreground">Shift definitions</strong> এ গিয়ে যেমন <code class="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">MORN</code> (০৯:০০–১৮:০০), <code class="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">EVEN</code> (১৪:০০–২৩:০০), <code class="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">NIGHT</code> ইত্যাদি যোগ করুন। এগুলো পরে সব জায়গায় বেছে নেওয়ার জন্য।
+        </p>
+      </article>
+
+      <article class="relative">
+        <span class="absolute -left-[1.35rem] top-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground sm:-left-[2.05rem]">২</span>
+        <h3 class="font-semibold text-foreground">কর্মী প্রোফাইলে ডিফল্ট (ঐচ্ছিক)</h3>
+        <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <strong class="text-foreground">Employees</strong> → সম্পাদনায় <strong class="text-foreground">Default shift</strong>। উদাহরণ: ফাতেমার ডিফল্ট <em>MORN</em> — যখন কোনও সাপ্তাহিক বা তারিখ নিয়ম নেই, তখন এটাই ধরা হয়।
+        </p>
+      </article>
+
+      <article class="relative">
+        <span class="absolute -left-[1.35rem] top-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground sm:-left-[2.05rem]">৩</span>
+        <h3 class="font-semibold text-foreground">সাপ্তাহিক প্যাটার্ন</h3>
+        <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <strong class="text-foreground">Weekly patterns</strong>: “রাফি — শনিবার → EVEN”। এক কর্মীর একই সপ্তাহের দিনে একটি শিফট।
+        </p>
+      </article>
+
+      <article class="relative">
+        <span class="absolute -left-[1.35rem] top-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground sm:-left-[2.05rem]">৪</span>
+        <h3 class="font-semibold text-foreground">নির্দিষ্ট সময়কাল (রেঞ্জ)</h3>
+        <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <strong class="text-foreground">Date ranges</strong>: নয়নের জন্য “১ ডিসেম্বর–৩১ জানুয়ারি → NIGHT”। ওই তারিখগুলোর মধ্যে সাপ্তাহিক নিয়মের উপরে এটা প্রাধান্য পায় (নিচের “অগ্রাধিকার” দেখুন)।
+        </p>
+      </article>
+
+      <article class="relative">
+        <span class="absolute -left-[1.35rem] top-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground sm:-left-[2.05rem]">৫</span>
+        <h3 class="font-semibold text-foreground">এক দিনের ওভাররাইড</h3>
+        <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <strong class="text-foreground">One-day overrides</strong>: সুমির জন্য নির্দিষ্ট এক তারিখে <em>MORN</em> — সবচেয়ে শক্তিশালী নিয়ম।
+        </p>
+      </article>
+
+      <article class="relative">
+        <span class="absolute -left-[1.35rem] top-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground sm:-left-[2.05rem]">৬</span>
+        <h3 class="font-semibold text-foreground">একসাথে অনেক জন (বাল্ক)</h3>
+        <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <strong class="text-foreground">Bulk apply</strong> — অ্যাটেনডেন্সের মতোই: ডিপার্টমেন্ট ট্যাব, সার্চ, চেকবক্স দিয়ে বেছে নিয়ে এক ধরনের নিয়ম (ডিফল্ট / সাপ্তাহিক / রেঞ্জ / একদিন) সবার ওপর লাগান। বিক্রয় টিম পুরোটাকে একসাথে সকাল শিফট দিতে পারেন।
+        </p>
+      </article>
+
+      <article class="relative">
+        <span class="absolute -left-[1.35rem] top-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground sm:-left-[2.05rem]">৭</span>
+        <h3 class="font-semibold text-foreground">যাচাই ও শেষ</h3>
+        <p class="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <strong class="text-foreground">Roster preview</strong> এ কর্মী বেছে নিয়ে মাস সিলেক্ট করলে প্রতিদিন কোন শিফট জুড়েছে দেখা যাবে। মিল না হলে উপরের ধাপে নিয়ম ঠিক করুন।
+        </p>
+      </article>
+    </div>
+  </section>
+
+  {# Priority flow #}
+  <section class="simple-card rounded-2xl border border-amber-500/25 bg-amber-500/[0.06] p-6 shadow-card">
+    <h2 class="flex items-center gap-2 text-lg font-semibold text-foreground">
+      <i data-lucide="git-merge" class="h-5 w-5 text-amber-700 dark:text-amber-400"></i>
+      একটা তারিখে শিফট কীভাবে ঠিক হয়? (অগ্রাধিকার)
+    </h2>
+    <p class="mt-2 text-sm text-muted-foreground">উপরেরটা জিতবে — নিচেরটা শুধু তখনই যখন উপরে কিছু নেই:</p>
+    <ol class="mt-4 space-y-2 text-sm text-foreground">
+      <li class="flex gap-2"><span class="font-mono text-muted-foreground">১</span> <strong>One-day override</strong> (নির্দিষ্ট তারিখ)</li>
+      <li class="flex gap-2"><span class="font-mono text-muted-foreground">২</span> <strong>Date range</strong> (ওই তারিখ রেঞ্জের ভেতরে)</li>
+      <li class="flex gap-2"><span class="font-mono text-muted-foreground">৩</span> <strong>Weekly pattern</strong> (সেই সপ্তাহের দিন)</li>
+      <li class="flex gap-2"><span class="font-mono text-muted-foreground">৪</span> <strong>Default shift</strong> (কর্মী প্রোফাইল)</li>
+    </ol>
+  </section>
+
+  {# Closing #}
+  <section class="rounded-2xl border border-border bg-muted/25 px-6 py-8 text-center">
+    <p class="text-sm leading-relaxed text-muted-foreground">
+      করিম যখন সব সেট করে দেন, তখন অ্যাটেনডেন্স ও রিপোর্টে “কখন কাজের ঘণ্টা” বোঝা সহজ হয়। প্রশ্ন থাকলে এই পাতাটি বুকমার্ক করে রাখুন — <strong class="text-foreground">Shifts &amp; roster → শিফট গাইড</strong>।
+    </p>
+    <div class="mt-6 flex flex-wrap justify-center gap-3">
+      <a href="{% url 'hrm:shift_list' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">শিফট তালিকায় যান</a>
+      <a href="{% url 'hrm:roster_bulk' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent">Bulk apply</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

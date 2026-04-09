@@ -1,0 +1,61 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}{{ entity_title }}{% endblock %}
+{% block page_title %}Foundation · {{ entity_title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2 class="text-xl font-bold text-foreground">{{ entity_title }}</h2>
+      <p class="text-sm text-muted-foreground mt-0.5">Tenant-scoped master data</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="{% url 'foundation:foundation_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        Overview
+      </a>
+      <a href="{% url create_url_name %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+        <i data-lucide="plus" class="h-4 w-4"></i>
+        Add
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+  <ul class="rounded-lg border border-border bg-card p-3 text-sm text-foreground">
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <div class="ui-table-wrap overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Record</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for object in object_list %}
+        <tr class="border-b border-border hover:bg-muted/30">
+          <td class="px-4 py-3 text-foreground">{{ object }}</td>
+          <td class="px-4 py-3 text-right whitespace-nowrap">
+            {% if detail_url_name %}
+            <a href="{% url detail_url_name object.pk %}" class="text-foreground hover:underline mr-3">View</a>
+            {% endif %}
+            <a href="{% url edit_url_name object.pk %}" class="text-primary hover:underline mr-3">Edit</a>
+            <a href="{% url delete_url_name object.pk %}" class="text-destructive hover:underline">Delete</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="2" class="px-4 py-8 text-center text-muted-foreground">No records yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

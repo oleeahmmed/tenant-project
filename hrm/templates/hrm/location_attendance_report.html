@@ -1,0 +1,62 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Location report{% endblock %}
+{% block page_title %}HRM · Location attendance report{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'hrm:attendance_location_list' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent" aria-label="Back">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        </a>
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">Location report</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">Geofence validation summary by location and status.</p>
+        </div>
+      </div>
+    </div>
+    <div class="space-y-5 p-5">
+  <form method="get" class="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4 shadow-card">
+    <div>
+      <label class="mb-1 block text-xs text-muted-foreground">From</label>
+      <input type="date" name="date_from" value="{{ filter_date_from }}" class="rounded-lg border border-border px-3 py-2 text-sm" />
+    </div>
+    <div>
+      <label class="mb-1 block text-xs text-muted-foreground">To</label>
+      <input type="date" name="date_to" value="{{ filter_date_to }}" class="rounded-lg border border-border px-3 py-2 text-sm" />
+    </div>
+    <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Apply</button>
+  </form>
+
+  <div class="simple-card rounded-xl border border-border p-5 shadow-card">
+    <h3 class="text-sm font-semibold text-foreground mb-3">Valid punches by geofence &amp; status</h3>
+    <div class="ui-table-wrap overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-border bg-muted/40">
+            <th class="px-4 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">Location</th>
+            <th class="px-4 py-2 text-left text-xs font-semibold uppercase text-muted-foreground">Validation</th>
+            <th class="px-4 py-2 text-right text-xs font-semibold uppercase text-muted-foreground">Count</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          {% for row in by_location %}
+          <tr>
+            <td class="px-4 py-2">{{ row.matched_location__name|default:"—" }}</td>
+            <td class="px-4 py-2 text-muted-foreground">{{ row.validation_status }}</td>
+            <td class="px-4 py-2 text-right font-medium">{{ row.total }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="px-4 py-8 text-center text-muted-foreground">No matched geofence data in range.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="text-sm text-muted-foreground">Exception-style rows in range (approx.): <strong>{{ exception_count }}</strong> - use <a href="{% url 'hrm:attendance_review_list' %}" class="text-primary hover:underline">Review queue</a>.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

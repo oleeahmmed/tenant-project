@@ -1,0 +1,132 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Departments{% endblock %}
+{% block page_title %}HRM · Departments{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'hrm:hrm_dashboard' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent" aria-label="Back">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        </a>
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">Departments</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">Organizational units for your company</p>
+        </div>
+      </div>
+      <button type="button" onclick="document.getElementById('dept-create-modal').classList.remove('hidden'); document.getElementById('dept-create-modal').classList.add('flex');"
+        class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity">
+        <i data-lucide="plus" class="h-4 w-4"></i>
+        <span class="hidden sm:inline">Add department</span>
+      </button>
+    </div>
+
+  <div class="ui-table-wrap overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Name</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Code</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden sm:table-cell">Parent</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for d in departments %}
+        <tr class="hover:bg-accent/40 transition-colors">
+          <td class="px-4 py-3 font-medium text-foreground">{{ d.name }}</td>
+          <td class="px-4 py-3 text-muted-foreground">{{ d.code|default:"—" }}</td>
+          <td class="px-4 py-3 hidden sm:table-cell text-muted-foreground">{{ d.parent.name|default:"—" }}</td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <a href="{% url 'hrm:department_edit' d.pk %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Edit">
+                <i data-lucide="pencil" class="h-4 w-4"></i>
+              </a>
+              <button type="button" onclick="openDeleteModal('{% url 'hrm:department_delete' d.pk %}', 'Delete department {{ d.name|escapejs }}?')" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" title="Delete">
+                <i data-lucide="trash-2" class="h-4 w-4"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="px-4 py-12 text-center text-sm text-muted-foreground">No departments yet. Add one to get started.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  </div>
+</div>
+
+<!-- Create modal -->
+<div id="dept-create-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+    <h3 class="text-base font-semibold text-foreground mb-4">New department</h3>
+    <form method="post" action="{% url 'hrm:department_create' %}">
+      {% csrf_token %}
+      <div class="space-y-4">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-foreground">Name</label>
+            {{ form.name }}
+            {{ form.name.errors }}
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-foreground">Code <span class="text-muted-foreground font-normal">(optional)</span></label>
+            {{ form.code }}
+          </div>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Parent <span class="text-muted-foreground font-normal">(optional)</span></label>
+          {{ form.parent }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Description</label>
+          {{ form.description }}
+        </div>
+      </div>
+      <div class="mt-6 flex gap-2 justify-end">
+        <button type="button" onclick="closeDeptCreateModal()" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete modal -->
+<div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-1">Confirm delete</h3>
+    <p id="delete-modal-text" class="text-sm text-muted-foreground mb-4">Are you sure?</p>
+    <form method="post" id="delete-form" action="">
+      {% csrf_token %}
+      <div class="flex gap-2 justify-end">
+        <button type="button" onclick="closeDeleteModal()" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function closeDeptCreateModal() {
+  var m = document.getElementById('dept-create-modal');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+}
+function openDeleteModal(actionUrl, text) {
+  document.getElementById('delete-form').action = actionUrl;
+  document.getElementById('delete-modal-text').textContent = text;
+  document.getElementById('delete-modal').classList.remove('hidden');
+  document.getElementById('delete-modal').classList.add('flex');
+}
+function closeDeleteModal() {
+  document.getElementById('delete-modal').classList.add('hidden');
+  document.getElementById('delete-modal').classList.remove('flex');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Roles{% endblock %}
+{% block page_title %}Roles & Permissions{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-foreground">Roles</h2>
+      <p class="text-sm text-muted-foreground mt-0.5">Create roles and assign permissions from the master list</p>
+    </div>
+    <button type="button" onclick="document.getElementById('create-modal').classList.remove('hidden'); document.getElementById('create-modal').classList.add('flex');"
+      class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity">
+      <i data-lucide="plus" class="h-4 w-4"></i>
+      <span class="hidden sm:inline">New Role</span>
+    </button>
+  </div>
+
+  <!-- Roles grid — same card pattern as ui/index.html (directory / contact cards) -->
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {% for role in roles %}
+    <article class="flex flex-col rounded-xl border border-border bg-card p-5 shadow-card transition-colors hover:border-primary/20">
+      <div class="flex gap-4">
+        <span class="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary ring-2 ring-border" aria-hidden="true">
+          <i data-lucide="shield" class="h-8 w-8"></i>
+        </span>
+        <div class="min-w-0 flex-1">
+          <div class="flex flex-wrap items-center gap-2">
+            <h3 class="text-base font-semibold text-foreground">{{ role.name }}</h3>
+          </div>
+          <p class="text-sm text-muted-foreground">Custom role · {{ role.permissions.count }} permission{{ role.permissions.count|pluralize }}</p>
+          {% if role.permissions.count %}
+            <span class="mt-1 inline-block rounded bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">Configured</span>
+          {% else %}
+            <span class="mt-1 inline-block rounded bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Empty</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="card-actions" role="toolbar" aria-label="Role actions">
+        <button type="button" onclick="openEditModal({{ role.id }}, '{{ role.name|escapejs }}')" class="card-act card-act--primary">
+          <span class="card-act__icon" aria-hidden="true"><i data-lucide="pencil" class="h-3.5 w-3.5"></i></span>
+          Edit
+        </button>
+        <button type="button" onclick="openDeleteModal('{% url 'role_delete' role.id %}', 'Delete role {{ role.name|escapejs }}?')" class="card-act card-act--danger">
+          <span class="card-act__icon" aria-hidden="true"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i></span>
+          Delete
+        </button>
+      </div>
+      <p class="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+        {% for perm in role.permissions.all %}
+          {% if forloop.counter <= 5 %}
+            <span class="font-mono text-xs text-foreground/90">{{ perm.codename }}</span>{% if forloop.counter < 5 and forloop.counter < role.permissions.count %}<span class="text-muted-foreground"> · </span>{% endif %}
+            {% if forloop.counter == 5 and role.permissions.count > 5 %}<span class="text-muted-foreground text-xs"> (+{{ role.permissions.count|add:"-5" }} more)</span>{% endif %}
+          {% endif %}
+        {% empty %}
+          No permissions yet. Add permissions when creating this role or create a new role with checks selected.
+        {% endfor %}
+      </p>
+      <button type="button" onclick="openEditModal({{ role.id }}, '{{ role.name|escapejs }}')" class="card-act-cta">
+        <i data-lucide="pencil" class="h-4 w-4 shrink-0 opacity-90"></i>
+        Edit role
+      </button>
+      <div class="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+        <div>
+          <p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Permissions</p>
+          <p class="text-lg font-bold text-foreground">{{ role.permissions.count }}</p>
+        </div>
+        <div>
+          <p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Since</p>
+          <p class="text-lg font-bold text-foreground">{{ role.created_at|date:"M y" }}</p>
+        </div>
+        <div>
+          <p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Scope</p>
+          <p class="text-lg font-bold text-primary">Tenant</p>
+        </div>
+      </div>
+    </article>
+    {% empty %}
+    <div class="col-span-full rounded-xl border border-dashed border-border bg-card p-12 text-center shadow-card">
+      <i data-lucide="shield" class="mx-auto mb-3 h-8 w-8 text-muted-foreground"></i>
+      <p class="text-sm text-muted-foreground">No roles yet. Create your first role.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Edit Role Modal -->
+<div id="edit-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-4">Edit Role</h3>
+    <form method="post" id="edit-form" action="">
+      {% csrf_token %}
+      <label class="mb-1.5 block text-sm font-medium text-foreground">Role Name</label>
+      <input id="edit-role-name" type="text" name="name" required class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring mb-4" />
+      <div class="flex gap-2 justify-end">
+        <button type="button" onclick="closeEditModal()" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Create Role Modal -->
+<div id="create-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+    <h3 class="text-base font-semibold text-foreground mb-4">Create Role</h3>
+    <form method="post" action="{% url 'role_create' %}">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Role Name</label>
+        <input type="text" name="name" required placeholder="e.g. Support, Manager"
+          class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+      </div>
+      <div class="mb-4">
+        <label class="mb-2 block text-sm font-medium text-foreground">Permissions</label>
+        <div class="space-y-3">
+          {% regroup all_permissions by category as perm_groups %}
+          {% for group in perm_groups %}
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">{{ group.grouper }}</p>
+            <div class="space-y-1">
+              {% for perm in group.list %}
+              <label class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-accent cursor-pointer">
+                <input type="checkbox" name="permission_ids" value="{{ perm.id }}" class="h-4 w-4 rounded border-border text-primary focus:ring-ring" />
+                <div>
+                  <span class="text-sm text-foreground">{{ perm.label }}</span>
+                  <span class="ml-1.5 text-[10px] text-muted-foreground">{{ perm.codename }}</span>
+                </div>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-sm text-muted-foreground">No permissions in master list. Ask super admin to add some.</p>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="flex gap-2 justify-end pt-2 border-t border-border">
+        <button type="button" onclick="document.getElementById('create-modal').classList.add('hidden'); document.getElementById('create-modal').classList.remove('flex');"
+          class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Create</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-1">Confirm Delete</h3>
+    <p id="delete-modal-text" class="text-sm text-muted-foreground mb-4">Are you sure?</p>
+    <form method="post" id="delete-form" action="">
+      {% csrf_token %}
+      <div class="flex gap-2 justify-end">
+        <button type="button" onclick="closeDeleteModal()" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openEditModal(roleId, roleName) {
+  document.getElementById('edit-form').action = '/dashboard/roles/' + roleId + '/update/';
+  document.getElementById('edit-role-name').value = roleName;
+  document.getElementById('edit-modal').classList.remove('hidden');
+  document.getElementById('edit-modal').classList.add('flex');
+}
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.add('hidden');
+  document.getElementById('edit-modal').classList.remove('flex');
+}
+function openDeleteModal(actionUrl, text) {
+  document.getElementById('delete-form').action = actionUrl;
+  document.getElementById('delete-modal-text').textContent = text;
+  document.getElementById('delete-modal').classList.remove('hidden');
+  document.getElementById('delete-modal').classList.add('flex');
+}
+function closeDeleteModal() {
+  document.getElementById('delete-modal').classList.add('hidden');
+  document.getElementById('delete-modal').classList.remove('flex');
+}
+</script>
+{% endblock %}

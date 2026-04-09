@@ -1,0 +1,64 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Edit job{% endblock %}
+{% block page_title %}HRM · Edit job posting{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="flex items-center gap-3">
+    <a href="{% url 'hrm:recruitment_job_list' %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent"><i data-lucide="arrow-left" class="h-4 w-4"></i></a>
+    <div>
+      <h2 class="text-xl font-bold text-foreground">Edit job posting</h2>
+      <p class="text-sm text-muted-foreground">{{ job.title }}</p>
+    </div>
+  </div>
+
+  <div class="simple-card max-w-3xl rounded-xl border border-border p-6 shadow-card">
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="mb-1.5 block text-sm font-medium">Title</label>
+        {{ form.title }}
+        {{ form.title.errors }}
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Department</label>
+          {{ form.department }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Status</label>
+          {{ form.status }}
+          {{ form.status.errors }}
+        </div>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Location</label>
+          {{ form.location }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Employment type</label>
+          {{ form.employment_type }}
+        </div>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium">Openings</label>
+        {{ form.openings }}
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium">Description</label>
+        {{ form.description }}
+        {{ form.description.errors }}
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium">Requirements</label>
+        {{ form.requirements }}
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+        <a href="{% url 'hrm:recruitment_job_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

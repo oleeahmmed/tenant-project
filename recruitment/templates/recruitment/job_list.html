@@ -1,0 +1,158 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Recruitment jobs{% endblock %}
+{% block page_title %}HRM · Recruitment · Jobs{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-foreground">Job postings</h2>
+      <p class="text-sm text-muted-foreground mt-0.5">Open roles for your organization — link to HRM departments when relevant</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{% url 'hrm:recruitment_application_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">
+        <i data-lucide="users" class="h-4 w-4"></i>
+        Applications
+      </a>
+      <button type="button" onclick="document.getElementById('job-create-modal').classList.remove('hidden'); document.getElementById('job-create-modal').classList.add('flex');"
+        class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+        <i data-lucide="plus" class="h-4 w-4"></i>
+        <span class="hidden sm:inline">New job</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="ui-table-wrap overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Title</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden md:table-cell">Department</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden sm:table-cell">Type</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for j in jobs %}
+        <tr class="hover:bg-accent/40 transition-colors">
+          <td class="px-4 py-3">
+            <p class="font-medium text-foreground">{{ j.title }}</p>
+            <p class="text-xs text-muted-foreground">{{ j.openings }} opening(s){% if j.location %} · {{ j.location }}{% endif %}</p>
+          </td>
+          <td class="px-4 py-3 hidden md:table-cell text-muted-foreground">{{ j.department.name|default:"—" }}</td>
+          <td class="px-4 py-3">
+            <span class="inline-flex rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium">{{ j.get_status_display }}</span>
+          </td>
+          <td class="px-4 py-3 hidden sm:table-cell text-muted-foreground text-xs">{{ j.get_employment_type_display }}</td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex items-center justify-end gap-1">
+              <a href="{% url 'hrm:recruitment_application_list' %}?job={{ j.pk }}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent" title="Applications">
+                <i data-lucide="user-plus" class="h-4 w-4"></i>
+              </a>
+              <a href="{% url 'hrm:recruitment_job_edit' j.pk %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent" title="Edit">
+                <i data-lucide="pencil" class="h-4 w-4"></i>
+              </a>
+              <button type="button" onclick="openJobDeleteModal('{% url 'hrm:recruitment_job_delete' j.pk %}', '{{ j.title|escapejs }}')" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" title="Delete">
+                <i data-lucide="trash-2" class="h-4 w-4"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-4 py-12 text-center text-sm text-muted-foreground">No job postings yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="job-create-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-4">New job posting</h3>
+    <form method="post" action="{% url 'hrm:recruitment_job_create' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="space-y-3">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Title</label>
+          {{ form.title }}
+          {{ form.title.errors }}
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium">Department</label>
+            {{ form.department }}
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium">Status</label>
+            {{ form.status }}
+          </div>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium">Location</label>
+            {{ form.location }}
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium">Employment type</label>
+            {{ form.employment_type }}
+          </div>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Openings</label>
+          {{ form.openings }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Description</label>
+          {{ form.description }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Requirements</label>
+          {{ form.requirements }}
+        </div>
+      </div>
+      <div class="mt-6 flex gap-2 justify-end">
+        <button type="button" onclick="closeJobModal()" class="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="job-delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold mb-1">Delete job?</h3>
+    <p id="job-delete-text" class="text-sm text-muted-foreground mb-4"></p>
+    <form method="post" id="job-delete-form" action="">{% csrf_token %}
+      <div class="flex gap-2 justify-end">
+        <button type="button" onclick="closeJobDeleteModal()" class="rounded-lg border border-border px-4 py-2 text-sm">Cancel</button>
+        <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm text-destructive-foreground">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function closeJobModal() {
+  var m = document.getElementById('job-create-modal');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+}
+function openJobDeleteModal(url, title) {
+  document.getElementById('job-delete-form').action = url;
+  document.getElementById('job-delete-text').textContent = 'Remove “' + title + '” and its applications?';
+  var m = document.getElementById('job-delete-modal');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+}
+function closeJobDeleteModal() {
+  var m = document.getElementById('job-delete-modal');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+}
+</script>
+{% endblock %}

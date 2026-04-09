@@ -1,0 +1,279 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Members{% endblock %}
+{% block page_title %}Members{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+
+  <!-- Header -->
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-foreground">Team Members</h2>
+      <p class="text-sm text-muted-foreground mt-0.5">Manage your tenant's staff members</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="inline-flex rounded-lg border border-border bg-muted/40 p-0.5" role="group" aria-label="View mode">
+        <button type="button" id="members-view-table" onclick="setMembersView('table')" class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors members-view-btn text-foreground bg-background shadow-sm">
+          <i data-lucide="layout-list" class="h-3.5 w-3.5"></i>
+          <span>Table</span>
+        </button>
+        <button type="button" id="members-view-cards" onclick="setMembersView('cards')" class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors members-view-btn text-muted-foreground hover:text-foreground">
+          <i data-lucide="layout-grid" class="h-3.5 w-3.5"></i>
+          <span>Cards</span>
+        </button>
+      </div>
+      <a href="{% url 'invitations' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity">
+        <i data-lucide="user-plus" class="h-4 w-4"></i>
+        <span class="hidden sm:inline">Invite Member</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Table view -->
+  <div id="members-table-view" class="members-view-panel">
+  <div class="ui-table-wrap overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-border bg-muted/40">
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Member</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Role</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden md:table-cell">Permissions</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden sm:table-cell">Joined</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          {% for member in members %}
+          <tr class="hover:bg-accent/40 transition-colors">
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                  {{ member.name|first|upper }}
+                </span>
+                <div>
+                  <p class="font-medium text-foreground">{{ member.name }}</p>
+                  <p class="text-xs text-muted-foreground">{{ member.email }}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-3">
+              {% if member.custom_role %}
+                <span class="inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
+                  {{ member.custom_role.name }}
+                </span>
+              {% else %}
+                <span class="text-xs text-muted-foreground">No role</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 hidden md:table-cell">
+              <div class="flex flex-wrap gap-1 max-w-xs">
+                {% for perm in member.get_all_permissions_set %}
+                  <span class="inline-flex items-center rounded border border-border bg-muted/60 px-1.5 py-0.5 text-[10px] text-muted-foreground">{{ perm }}</span>
+                {% empty %}
+                  <span class="text-xs text-muted-foreground">—</span>
+                {% endfor %}
+              </div>
+            </td>
+            <td class="px-4 py-3 hidden sm:table-cell text-xs text-muted-foreground">
+              {{ member.created_at|date:"M d, Y" }}
+            </td>
+            <td class="px-4 py-3 text-right">
+              <div class="flex items-center justify-end gap-1">
+                <a href="{% url 'member_permissions' member.id %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Manage permissions">
+                  <i data-lucide="key-round" class="h-4 w-4"></i>
+                </a>
+                <button type="button" onclick="openRoleModal({{ member.id }}, '{{ member.name|escapejs }}')" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Change role">
+                  <i data-lucide="shield" class="h-4 w-4"></i>
+                </button>
+                <button type="button" onclick="openDeleteModal('{% url 'member_delete' member.id %}', 'Remove {{ member.name|escapejs }}?')" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" title="Remove">
+                  <i data-lucide="trash-2" class="h-4 w-4"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-4 py-12 text-center text-sm text-muted-foreground">
+              No members yet. <a href="{% url 'invitations' %}" class="text-primary hover:underline">Invite someone</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Card view — same pattern as ui/index.html Contact Directory -->
+  <div id="members-card-view" class="members-view-panel hidden">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {% for member in members %}
+      <article class="flex flex-col rounded-xl border border-border bg-card p-5 shadow-card transition-colors hover:border-primary/20">
+        <div class="flex gap-4">
+          {% if member.avatar %}
+          <img src="{{ member.avatar.url }}" alt="" width="64" height="64" class="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-border" />
+          {% else %}
+          <span class="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary ring-2 ring-border" aria-hidden="true">{{ member.name|first|upper }}</span>
+          {% endif %}
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <h3 class="text-base font-semibold text-foreground truncate">{{ member.name }}</h3>
+            </div>
+            <p class="text-sm text-muted-foreground truncate">{{ member.email }}</p>
+            <p class="text-sm text-muted-foreground mt-0.5">
+              {% if member.custom_role %}{{ member.custom_role.name }}{% else %}<span class="italic">No role assigned</span>{% endif %}
+            </p>
+            {% if member.is_active %}
+            <span class="mt-1 inline-block rounded bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">Active</span>
+            {% else %}
+            <span class="mt-1 inline-block rounded bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Inactive</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-actions" role="toolbar" aria-label="Member actions">
+          <a href="{% url 'member_permissions' member.id %}" class="card-act card-act--muted">
+            <span class="card-act__icon" aria-hidden="true"><i data-lucide="key-round" class="h-3.5 w-3.5"></i></span>
+            Permissions
+          </a>
+          <button type="button" onclick="openRoleModal({{ member.id }}, '{{ member.name|escapejs }}')" class="card-act card-act--primary">
+            <span class="card-act__icon" aria-hidden="true"><i data-lucide="shield" class="h-3.5 w-3.5"></i></span>
+            Role
+          </button>
+          <button type="button" onclick="openDeleteModal('{% url 'member_delete' member.id %}', 'Remove {{ member.name|escapejs }}?')" class="card-act card-act--danger">
+            <span class="card-act__icon" aria-hidden="true"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i></span>
+            Remove
+          </button>
+        </div>
+        <p class="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+          {% with perms=member.get_all_permissions_set %}
+            {% for perm in perms %}
+              {% if forloop.counter <= 5 %}
+                <span class="font-mono text-xs text-foreground/90">{{ perm }}</span>{% if forloop.counter < 5 and forloop.counter < perms|length %}<span class="text-muted-foreground"> · </span>{% endif %}
+                {% if forloop.counter == 5 and perms|length > 5 %}<span class="text-muted-foreground text-xs"> (+{{ perms|length|add:"-5" }} more)</span>{% endif %}
+              {% endif %}
+            {% empty %}
+              No effective permissions yet — assign a role or extra permissions.
+            {% endfor %}
+          {% endwith %}
+        </p>
+        <a href="{% url 'member_permissions' member.id %}" class="card-act-cta">
+          <i data-lucide="key-round" class="h-4 w-4 shrink-0 opacity-90"></i>
+          Manage permissions
+        </a>
+        <div class="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+          <div>
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Permissions</p>
+            <p class="text-lg font-bold text-foreground">{% with perms=member.get_all_permissions_set %}{{ perms|length }}{% endwith %}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Joined</p>
+            <p class="text-lg font-bold text-foreground">{{ member.created_at|date:"M y" }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Access</p>
+            <p class="text-lg font-bold text-primary truncate px-1" title="{% if member.custom_role %}{{ member.custom_role.name }}{% else %}—{% endif %}">{% if member.custom_role %}{{ member.custom_role.name }}{% else %}—{% endif %}</p>
+          </div>
+        </div>
+      </article>
+      {% empty %}
+      <div class="col-span-full rounded-xl border border-dashed border-border bg-card p-12 text-center shadow-card">
+        <i data-lucide="users" class="mx-auto mb-3 h-8 w-8 text-muted-foreground"></i>
+        <p class="text-sm text-muted-foreground">No members yet. <a href="{% url 'invitations' %}" class="text-primary hover:underline">Invite someone</a></p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Role change modal -->
+<div id="role-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-1">Change Role</h3>
+    <p class="text-sm text-muted-foreground mb-4">Assign a role to <strong id="modal-member-name"></strong></p>
+    <form method="post" id="role-form" action="">
+      {% csrf_token %}
+      <select name="role_id" class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring mb-4">
+        <option value="">— No role —</option>
+        {% for role in roles %}
+          <option value="{{ role.id }}">{{ role.name }}</option>
+        {% endfor %}
+      </select>
+      <div class="flex gap-2 justify-end">
+        <button type="button" onclick="closeRoleModal()" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-1">Confirm Delete</h3>
+    <p id="delete-modal-text" class="text-sm text-muted-foreground mb-4">Are you sure?</p>
+    <form method="post" id="delete-form" action="">
+      {% csrf_token %}
+      <div class="flex gap-2 justify-end">
+        <button type="button" onclick="closeDeleteModal()" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</button>
+        <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var MEMBER_ROLE_URL_TMPL = "{% url 'member_role' 999999999 %}";
+
+function setMembersView(mode) {
+  var table = document.getElementById('members-table-view');
+  var cards = document.getElementById('members-card-view');
+  var btnTable = document.getElementById('members-view-table');
+  var btnCards = document.getElementById('members-view-cards');
+  var active = 'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors members-view-btn text-foreground bg-background shadow-sm';
+  var idle = 'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors members-view-btn text-muted-foreground hover:text-foreground';
+  if (mode === 'cards') {
+    table.classList.add('hidden');
+    cards.classList.remove('hidden');
+    btnTable.className = idle;
+    btnCards.className = active;
+    try { localStorage.setItem('membersView', 'cards'); } catch (e) {}
+    if (window.lucide) lucide.createIcons();
+  } else {
+    cards.classList.add('hidden');
+    table.classList.remove('hidden');
+    btnCards.className = idle;
+    btnTable.className = active;
+    try { localStorage.setItem('membersView', 'table'); } catch (e) {}
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  var v = 'table';
+  try { v = localStorage.getItem('membersView') || 'table'; } catch (e) {}
+  if (v === 'cards') setMembersView('cards');
+});
+
+function openRoleModal(memberId, memberName) {
+  document.getElementById('modal-member-name').textContent = memberName;
+  document.getElementById('role-form').action = MEMBER_ROLE_URL_TMPL.replace('999999999', String(memberId));
+  document.getElementById('role-modal').classList.remove('hidden');
+  document.getElementById('role-modal').classList.add('flex');
+}
+function closeRoleModal() {
+  document.getElementById('role-modal').classList.add('hidden');
+  document.getElementById('role-modal').classList.remove('flex');
+}
+function openDeleteModal(actionUrl, text) {
+  document.getElementById('delete-form').action = actionUrl;
+  document.getElementById('delete-modal-text').textContent = text;
+  document.getElementById('delete-modal').classList.remove('hidden');
+  document.getElementById('delete-modal').classList.add('flex');
+}
+function closeDeleteModal() {
+  document.getElementById('delete-modal').classList.add('hidden');
+  document.getElementById('delete-modal').classList.remove('flex');
+}
+</script>
+{% endblock %}

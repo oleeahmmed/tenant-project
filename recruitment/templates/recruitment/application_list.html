@@ -1,0 +1,172 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Applications{% endblock %}
+{% block page_title %}HRM · Recruitment · Applications{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-foreground">Applications</h2>
+      <p class="text-sm text-muted-foreground mt-0.5">Candidates and pipeline stages — optional link to HRM employee when hired</p>
+    </div>
+    <a href="{% url 'hrm:recruitment_job_list' %}" class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-accent">
+      <i data-lucide="briefcase" class="h-4 w-4"></i>
+      Job postings
+    </a>
+  </div>
+
+  <form method="get" class="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4 shadow-card">
+    <div>
+      <label class="mb-1.5 block text-xs font-medium text-muted-foreground">Job</label>
+      <select name="job" class="w-full min-w-[12rem] rounded-lg border border-border bg-background px-3 py-2 text-sm sm:w-auto">
+        <option value="">All jobs</option>
+        {% for j in jobs_filter %}
+        <option value="{{ j.pk }}" {% if filter_job == j.pk|stringformat:"s" %}selected{% endif %}>{{ j.title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="mb-1.5 block text-xs font-medium text-muted-foreground">Stage</label>
+      <select name="stage" class="w-full min-w-[9rem] rounded-lg border border-border bg-background px-3 py-2 text-sm sm:w-auto">
+        <option value="">All stages</option>
+        <option value="applied" {% if filter_stage == 'applied' %}selected{% endif %}>Applied</option>
+        <option value="screening" {% if filter_stage == 'screening' %}selected{% endif %}>Screening</option>
+        <option value="interview" {% if filter_stage == 'interview' %}selected{% endif %}>Interview</option>
+        <option value="offer" {% if filter_stage == 'offer' %}selected{% endif %}>Offer</option>
+        <option value="hired" {% if filter_stage == 'hired' %}selected{% endif %}>Hired</option>
+        <option value="rejected" {% if filter_stage == 'rejected' %}selected{% endif %}>Rejected</option>
+      </select>
+    </div>
+    <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Apply</button>
+    {% if filter_job or filter_stage %}
+    <a href="{% url 'hrm:recruitment_application_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Clear</a>
+    {% endif %}
+  </form>
+
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <p class="text-xs text-muted-foreground">Add a candidate manually or open a row to change stage / notes.</p>
+    <button type="button" onclick="document.getElementById('app-create-modal').classList.remove('hidden'); document.getElementById('app-create-modal').classList.add('flex');"
+      class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+      <i data-lucide="user-plus" class="h-4 w-4"></i>
+      Add candidate
+    </button>
+  </div>
+
+  <div class="ui-table-wrap overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Candidate</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Job</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Stage</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground hidden md:table-cell">Applied</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-muted-foreground">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for a in applications %}
+        <tr class="hover:bg-accent/40">
+          <td class="px-4 py-3">
+            <p class="font-medium text-foreground">{{ a.full_name }}</p>
+            <p class="text-xs text-muted-foreground">{{ a.email }}{% if a.phone %} · {{ a.phone }}{% endif %}</p>
+          </td>
+          <td class="px-4 py-3 text-muted-foreground">{{ a.job.title }}</td>
+          <td class="px-4 py-3">
+            <span class="rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-medium">{{ a.get_stage_display }}</span>
+          </td>
+          <td class="px-4 py-3 hidden md:table-cell text-xs text-muted-foreground whitespace-nowrap">{{ a.created_at|date:"M j, Y" }}</td>
+          <td class="px-4 py-3 text-right">
+            <div class="flex justify-end gap-1">
+              <a href="{% url 'hrm:recruitment_application_edit' a.pk %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent" title="Edit">
+                <i data-lucide="pencil" class="h-4 w-4"></i>
+              </a>
+              <button type="button" onclick="openAppDeleteModal('{% url 'hrm:recruitment_application_delete' a.pk %}', '{{ a.full_name|escapejs }}')" class="rounded-md p-1.5 text-muted-foreground hover:text-destructive" title="Remove">
+                <i data-lucide="trash-2" class="h-4 w-4"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-4 py-12 text-center text-muted-foreground">No applications match your filters.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="app-create-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+    <h3 class="text-base font-semibold mb-4">Add candidate</h3>
+    <form method="post" action="{% url 'hrm:recruitment_application_create' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="space-y-3">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Job posting</label>
+          <select name="job" required class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
+            <option value="">— Select —</option>
+            {% for j in job_postings %}
+            <option value="{{ j.pk }}">{{ j.title }} ({{ j.get_status_display }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Full name</label>
+          {{ quick_form.full_name }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Email</label>
+          {{ quick_form.email }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Phone</label>
+          {{ quick_form.phone }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Cover letter</label>
+          {{ quick_form.cover_letter }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium">Resume</label>
+          {{ quick_form.resume }}
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button" onclick="document.getElementById('app-create-modal').classList.add('hidden'); document.getElementById('app-create-modal').classList.remove('flex');" class="rounded-lg border px-4 py-2 text-sm">Cancel</button>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="app-delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold mb-1">Remove application?</h3>
+    <p id="app-delete-text" class="text-sm text-muted-foreground mb-4"></p>
+    <form method="post" id="app-delete-form" action="">{% csrf_token %}
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeAppDeleteModal()" class="rounded-lg border px-4 py-2 text-sm">Cancel</button>
+        <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm text-destructive-foreground">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openAppDeleteModal(url, name) {
+  document.getElementById('app-delete-form').action = url;
+  document.getElementById('app-delete-text').textContent = 'Remove application for ' + name + '?';
+  var m = document.getElementById('app-delete-modal');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+}
+function closeAppDeleteModal() {
+  var m = document.getElementById('app-delete-modal');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+}
+</script>
+{% endblock %}

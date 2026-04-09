@@ -1,0 +1,106 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <!-- Welcome — hero strip like Simple -->
+  <div class="simple-card rounded-xl border border-border p-6 shadow-card sm:p-8">
+    <p class="mb-2 inline-flex rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">Workspace</p>
+    <h2 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Welcome back, {{ request.user.name }}</h2>
+    <p class="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
+      {% if request.user.tenant %}{{ request.user.tenant.name }}{% else %}Super Admin{% endif %} — manage members, roles, and invitations from one place.
+    </p>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {% if request.user.role == 'super_admin' %}
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-sm font-medium text-muted-foreground">Total Tenants</p>
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <i data-lucide="building-2" class="h-4 w-4"></i>
+        </span>
+      </div>
+      <p class="text-2xl font-bold text-foreground">{{ stats.total_tenants|default:"—" }}</p>
+    </div>
+    {% endif %}
+
+    {% if request.user.role == 'super_admin' or request.user.role == 'tenant_admin' %}
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-sm font-medium text-muted-foreground">Members</p>
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <i data-lucide="users" class="h-4 w-4"></i>
+        </span>
+      </div>
+      <p class="text-2xl font-bold text-foreground">{{ stats.total_members|default:"—" }}</p>
+    </div>
+
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-sm font-medium text-muted-foreground">Roles</p>
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <i data-lucide="shield-check" class="h-4 w-4"></i>
+        </span>
+      </div>
+      <p class="text-2xl font-bold text-foreground">{{ stats.total_roles|default:"—" }}</p>
+    </div>
+
+    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-sm font-medium text-muted-foreground">Pending Invites</p>
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <i data-lucide="mail-plus" class="h-4 w-4"></i>
+        </span>
+      </div>
+      <p class="text-2xl font-bold text-foreground">{{ stats.pending_invites|default:"—" }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Quick actions -->
+  {% if request.user.role == 'super_admin' or request.user.role == 'tenant_admin' %}
+  <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+    <h3 class="text-sm font-semibold text-foreground mb-4">Quick Actions</h3>
+    <div class="card-actions card-actions--flush gap-3">
+      <a href="{% url 'invitations' %}" class="card-act card-act--primary card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="user-plus" class="h-4 w-4"></i></span>
+        Invite Member
+      </a>
+      <a href="{% url 'roles' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="shield-plus" class="h-4 w-4"></i></span>
+        Create Role
+      </a>
+      <a href="{% url 'members' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="users" class="h-4 w-4"></i></span>
+        View Members
+      </a>
+      <a href="{% url 'hrm:hrm_dashboard' %}" class="card-act card-act--muted card-act--lg">
+        <span class="card-act__icon" aria-hidden="true"><i data-lucide="id-card" class="h-4 w-4"></i></span>
+        HRM
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- My permissions (staff) -->
+  {% if request.user.role == 'staff' %}
+  <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
+    <h3 class="text-sm font-semibold text-foreground mb-4">My Permissions</h3>
+    {% if my_permissions %}
+      <div class="flex flex-wrap gap-2">
+        {% for perm in my_permissions %}
+          <span class="inline-flex items-center rounded-md border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">{{ perm }}</span>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-sm text-muted-foreground">No permissions assigned yet.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

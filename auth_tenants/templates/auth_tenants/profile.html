@@ -1,0 +1,60 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Profile{% endblock %}
+{% block page_title %}Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-lg space-y-5">
+  <div>
+    <h2 class="text-xl font-bold text-foreground">My Profile</h2>
+    <p class="text-sm text-muted-foreground mt-0.5">Update your name and profile picture</p>
+  </div>
+
+  <div class="simple-card overflow-hidden rounded-xl border border-border p-6 shadow-card">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="mb-4 rounded-lg border px-4 py-3 text-sm
+          {% if message.tags == 'error' %}border-destructive/30 bg-destructive/10 text-destructive
+          {% else %}border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Avatar -->
+    <div class="mb-6 flex items-center gap-4">
+      {% if request.user.avatar %}
+        <img src="{{ request.user.avatar.url }}" alt="" class="h-20 w-20 rounded-full object-cover ring-2 ring-border" />
+      {% else %}
+        <span class="inline-flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary text-2xl font-bold ring-2 ring-border">
+          {{ request.user.name|first|upper }}
+        </span>
+      {% endif %}
+      <div>
+        <p class="font-semibold text-foreground">{{ request.user.name }}</p>
+        <p class="text-sm text-muted-foreground">{{ request.user.email }}</p>
+        <p class="text-xs text-muted-foreground mt-0.5">{{ request.user.get_role_display }}</p>
+      </div>
+    </div>
+
+    <form method="post" action="{% url 'profile' %}" enctype="multipart/form-data" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Full Name</label>
+        <input type="text" name="name" value="{{ request.user.name }}" required
+          class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Profile Picture</label>
+        <input type="file" name="avatar" accept="image/*"
+          class="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1 file:text-xs file:font-medium file:text-primary-foreground" />
+        <p class="mt-1 text-xs text-muted-foreground">JPG, PNG, GIF — max 2MB</p>
+      </div>
+      <div class="pt-2">
+        <button type="submit" class="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity">
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

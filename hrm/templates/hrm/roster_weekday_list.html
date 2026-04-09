@@ -1,0 +1,105 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Weekly patterns{% endblock %}
+{% block page_title %}HRM · Weekly shift patterns{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'hrm:shift_list' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent" aria-label="Back">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        </a>
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">Weekly patterns</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">One row per employee + weekday (e.g. Mon to Morning).</p>
+        </div>
+      </div>
+      <button type="button" onclick="document.getElementById('wk-create-modal').classList.remove('hidden'); document.getElementById('wk-create-modal').classList.add('flex');"
+        class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+        <i data-lucide="plus" class="h-4 w-4"></i>
+        <span class="hidden sm:inline">Add pattern</span>
+      </button>
+    </div>
+    <div class="p-5">
+  <div class="ui-table-wrap overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Employee</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Day</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Shift</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for r in rows %}
+        <tr class="hover:bg-accent/40 transition-colors">
+          <td class="px-4 py-3 font-medium text-foreground">{{ r.employee.full_name }}</td>
+          <td class="px-4 py-3 text-muted-foreground">{% with w=r.weekday %}{% if w == 0 %}Monday{% elif w == 1 %}Tuesday{% elif w == 2 %}Wednesday{% elif w == 3 %}Thursday{% elif w == 4 %}Friday{% elif w == 5 %}Saturday{% elif w == 6 %}Sunday{% else %}{{ w }}{% endif %}{% endwith %}</td>
+          <td class="px-4 py-3"><span class="font-mono text-xs">{{ r.shift.code }}</span> {{ r.shift.name }}</td>
+          <td class="px-4 py-3 text-right">
+            <a href="{% url 'hrm:roster_weekday_edit' r.pk %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent inline-block" title="Edit"><i data-lucide="pencil" class="h-4 w-4"></i></a>
+            <button type="button" onclick="openWkDel('{% url 'hrm:roster_weekday_delete' r.pk %}')" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" title="Delete"><i data-lucide="trash-2" class="h-4 w-4"></i></button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="px-4 py-12 text-center text-muted-foreground">No weekly rules. Add shifts first, then patterns.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+    </div>
+  </div>
+</div>
+
+<div id="wk-create-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl">
+    <h3 class="text-base font-semibold text-foreground mb-4">New weekly pattern</h3>
+    <form method="post" action="{% url 'hrm:roster_weekday_create' %}">
+      {% csrf_token %}
+      <div class="space-y-4">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Employee</label>
+          {{ form.employee }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Weekday</label>
+          {{ form.weekday }}
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Shift</label>
+          {{ form.shift }}
+        </div>
+      </div>
+      <div class="mt-6 flex gap-2 justify-end">
+        <button type="button" onclick="document.getElementById('wk-create-modal').classList.add('hidden'); document.getElementById('wk-create-modal').classList.remove('flex');" class="rounded-lg border border-border px-4 py-2 text-sm">Cancel</button>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="wk-del-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 px-4">
+  <div class="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-xl">
+    <p class="text-sm text-muted-foreground mb-4">Remove this weekly pattern?</p>
+    <form method="post" id="wk-del-form" action="">
+      {% csrf_token %}
+      <div class="flex gap-2 justify-end">
+        <button type="button" onclick="document.getElementById('wk-del-modal').classList.add('hidden')" class="rounded-lg border border-border px-4 py-2 text-sm">Cancel</button>
+        <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm text-destructive-foreground">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openWkDel(url) {
+  document.getElementById('wk-del-form').action = url;
+  document.getElementById('wk-del-modal').classList.remove('hidden');
+  document.getElementById('wk-del-modal').classList.add('flex');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Roster preview{% endblock %}
+{% block page_title %}HRM · Roster preview{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'hrm:shift_list' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent" aria-label="Back">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        </a>
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">Roster preview</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">Resolved shift per day using: override -> range -> weekly -> default.</p>
+        </div>
+      </div>
+    </div>
+    <div class="space-y-5 p-5">
+  <div class="simple-card rounded-xl border border-border p-5 shadow-card">
+    <form method="get" class="flex flex-wrap items-end gap-4">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Employee</label>
+        <select name="employee" class="rounded-lg border border-border bg-background px-3 py-2 text-sm min-w-[14rem]">
+          <option value="">— Select —</option>
+          {% for e in employees %}
+          <option value="{{ e.pk }}" {% if selected_employee_id == e.pk|stringformat:"s" %}selected{% endif %}>{{ e.full_name }} ({{ e.employee_code }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-foreground">Month</label>
+        <input type="month" name="month" value="{{ selected_month }}" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+      </div>
+      <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Show</button>
+    </form>
+  </div>
+
+  {% if preview_employee %}
+  <div class="flex items-center justify-between gap-2 flex-wrap">
+    <p class="text-sm font-medium text-foreground">{{ preview_employee.full_name }} — {{ month_label }}</p>
+    <div class="flex gap-2 text-sm">
+      <a href="?employee={{ selected_employee_id }}&month={{ prev_month }}" class="text-primary hover:underline">← Previous</a>
+      <a href="?employee={{ selected_employee_id }}&month={{ next_month }}" class="text-primary hover:underline">Next →</a>
+    </div>
+  </div>
+
+  <div class="ui-table-wrap overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Date</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Day</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Resolved shift</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for row in preview_rows %}
+        <tr class="hover:bg-accent/40">
+          <td class="px-4 py-2 font-mono text-xs">{{ row.date }}</td>
+          <td class="px-4 py-2 text-muted-foreground">{{ row.weekday }}</td>
+          <td class="px-4 py-2">{% if row.shift %}<span class="font-mono text-xs">{{ row.shift.code }}</span> — {{ row.shift_label }}{% else %}<span class="text-muted-foreground">—</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-sm text-muted-foreground">Select an employee and month to preview.</p>
+  {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}{% if is_edit %}Edit{% else %}Add{% endif %}{% endblock %}
+{% block page_title %}Foundation{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl space-y-5">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="text-xl font-bold text-foreground">{% if is_edit %}Edit{% else %}Add{% endif %}</h2>
+    <a href="{% url list_url_name %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+      <i data-lucide="arrow-left" class="h-4 w-4"></i>
+      Back to list
+    </a>
+  </div>
+
+  {% if messages %}
+  <ul class="rounded-lg border border-border bg-card p-3 text-sm text-foreground">
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <form method="post" class="space-y-4 rounded-lg border border-border bg-card p-6">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+      {{ form.non_field_errors }}
+    </div>
+    {% endif %}
+    {% for field in form %}
+    <div class="space-y-1">
+      {% if field.label %}
+      <label for="{{ field.id_for_label }}" class="text-sm font-medium text-foreground">{{ field.label }}{% if field.field.required %} <span class="text-destructive">*</span>{% endif %}</label>
+      {% endif %}
+      {{ field }}
+      {% if field.help_text %}<p class="text-xs text-muted-foreground">{{ field.help_text }}</p>{% endif %}
+      {% if field.errors %}<p class="text-xs text-destructive">{{ field.errors }}</p>{% endif %}
+    </div>
+    {% endfor %}
+    <div class="flex flex-wrap gap-2 pt-2">
+      <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+        {% if is_edit %}Save{% else %}Create{% endif %}
+      </button>
+      <a href="{% url list_url_name %}" class="inline-flex items-center rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

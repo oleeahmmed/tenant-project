@@ -1,0 +1,43 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}{{ list_heading }}{% endblock %}
+{% block page_title %}Foundation · {{ list_heading }}{% endblock %}
+
+{% block content %}
+<div class="space-y-5">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 class="text-xl font-bold text-foreground">{{ list_heading }}</h2>
+      <p class="text-sm text-muted-foreground mt-0.5">{{ list_description }}</p>
+    </div>
+    <a href="{% url 'foundation:foundation_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors">
+      <i data-lucide="arrow-left" class="h-4 w-4"></i>
+      Foundation overview
+    </a>
+  </div>
+
+  <div class="simple-card overflow-hidden rounded-xl border border-dashed border-border p-10 shadow-card text-center">
+    <i data-lucide="database" class="h-10 w-10 mx-auto text-muted-foreground opacity-50 mb-3"></i>
+    <p class="text-sm font-medium text-foreground">No data model wired yet</p>
+    <p class="text-xs text-muted-foreground mt-1 max-w-md mx-auto">
+      This screen is ready for your CRUD and imports. Add models under <code class="rounded bg-muted px-1 py-0.5 text-[11px]">foundation.models</code> and replace this placeholder.
+    </p>
+  </div>
+
+  <div class="ui-table-wrap overflow-x-auto opacity-60 pointer-events-none">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Code</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Name</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan="3" class="px-4 py-8 text-center text-sm text-muted-foreground">Example row — connect your queryset here.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
