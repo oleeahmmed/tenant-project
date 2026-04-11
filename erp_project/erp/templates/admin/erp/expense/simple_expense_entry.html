@@ -1,0 +1,558 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Simple Expense Entry - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'erp:expense-list' %}">Expense Entries</a>
+    &rsaquo; Simple Expense Entry
+</div>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* Modern Expense Entry - POS Style Design */
+    :root {
+        --lime-50: #f7fee7;
+        --lime-100: #ecfccb;
+        --lime-200: #d9f99d;
+        --lime-300: #bef264;
+        --lime-500: #84cc16;
+        --lime-600: #65a30d;
+        --lime-700: #4d7c0f;
+        --lime-800: #3f6212;
+        --dark-bg: #1e293b;
+        --dark-bg2: #0f172a;
+    }
+
+    #content-main {
+        padding: 0 !important;
+        background: #f8fafc !important;
+    }
+
+    /* Main container with POS-style border */
+    .expense-container {
+        max-width: 800px;
+        margin: 16px auto;
+        background: white;
+        border: 3px solid var(--lime-300);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    /* Header with lime gradient */
+    .expense-header {
+        background: linear-gradient(135deg, var(--lime-500) 0%, var(--lime-600) 100%);
+        padding: 24px 32px;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 4px 16px rgba(132, 204, 22, 0.3);
+        position: relative;
+    }
+
+    .expense-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    }
+
+    .expense-header h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .expense-header .icon {
+        font-size: 32px;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    /* Info box with dark gradient */
+    .info-box {
+        background: linear-gradient(135deg, var(--dark-bg) 0%, var(--dark-bg2) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin: 24px 32px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .info-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    }
+
+    .info-box::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at bottom right, rgba(132, 204, 22, 0.08), transparent 60%);
+        pointer-events: none;
+    }
+
+    .info-box h3 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        font-weight: 700;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .info-box p {
+        margin: 4px 0 0 0;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 13px;
+        line-height: 1.6;
+        position: relative;
+        z-index: 1;
+    }
+
+    .info-box strong {
+        color: var(--lime-300);
+        font-weight: 700;
+    }
+
+    /* Form container */
+    .form-container {
+        padding: 32px;
+    }
+
+    /* Form group with lime accent */
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 700;
+        color: var(--lime-800);
+        margin-bottom: 8px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .form-group label.required:after {
+        content: " *";
+        color: #ef4444;
+        font-weight: bold;
+    }
+
+    /* Form controls with lime focus */
+    .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--lime-200);
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+        color: #111827;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+        font-family: inherit;
+    }
+
+    .form-control:hover {
+        border-color: var(--lime-300);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--lime-500);
+        box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.1), 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .form-control::placeholder {
+        color: #9ca3af;
+    }
+
+    /* Select styling */
+    select.form-control {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2384cc16' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 12px center;
+        background-repeat: no-repeat;
+        background-size: 20px;
+        padding-right: 40px;
+        appearance: none;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    /* Textarea styling */
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+        font-family: inherit;
+        line-height: 1.6;
+    }
+
+    /* Help text */
+    .help-text {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 6px;
+        display: block;
+    }
+
+    /* Error messages */
+    .errorlist {
+        background: #fef2f2;
+        border: 2px solid #fecaca;
+        color: #991b1b;
+        padding: 16px 20px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        font-size: 14px;
+        list-style: none;
+        font-weight: 500;
+    }
+
+    .errorlist li {
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Field errors */
+    .form-group.errors .form-control {
+        border-color: #ef4444;
+        background: #fef2f2;
+    }
+
+    .form-group.errors .help-text {
+        color: #dc2626;
+        font-weight: 500;
+    }
+
+    /* Submit section with lime background */
+    .submit-section {
+        background: var(--lime-50);
+        border-top: 2px solid var(--lime-200);
+        padding: 24px 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        font-family: inherit;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--lime-500), var(--lime-600));
+        color: white;
+        box-shadow: 0 3px 12px rgba(132, 204, 22, 0.3);
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--lime-600), var(--lime-700));
+        color: white;
+        text-decoration: none;
+        box-shadow: 0 5px 20px rgba(132, 204, 22, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: white;
+        color: var(--lime-700);
+        border: 1px solid var(--lime-300);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-secondary:hover {
+        background: var(--lime-50);
+        color: var(--lime-800);
+        text-decoration: none;
+        border-color: var(--lime-500);
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Loading state */
+    .btn.loading {
+        opacity: 0.7;
+        pointer-events: none;
+        position: relative;
+    }
+
+    .btn.loading:after {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        margin: auto;
+        border: 2px solid transparent;
+        border-top-color: currentColor;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        right: 12px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .expense-container {
+            margin: 8px;
+            border-width: 2px;
+        }
+
+        .expense-header {
+            padding: 20px 24px;
+        }
+
+        .expense-header h1 {
+            font-size: 20px;
+        }
+
+        .form-container {
+            padding: 24px;
+        }
+
+        .info-box {
+            margin: 20px 24px;
+            padding: 16px 20px;
+        }
+
+        .submit-section {
+            flex-direction: column-reverse;
+            padding: 20px 24px;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* Focus indicators for accessibility */
+    .form-control:focus-visible,
+    .btn:focus-visible {
+        outline: 2px solid var(--lime-500);
+        outline-offset: 2px;
+    }
+
+    /* Dark theme support */
+    html[data-theme="dark"] .expense-container {
+        background: #1f2937;
+        border-color: var(--lime-500);
+    }
+
+    html[data-theme="dark"] .form-control {
+        background: #111827;
+        color: #f9fafb;
+        border-color: #374151;
+    }
+
+    html[data-theme="dark"] .form-control:hover {
+        border-color: var(--lime-500);
+    }
+
+    html[data-theme="dark"] .form-control:focus {
+        border-color: var(--lime-500);
+        box-shadow: 0 0 0 3px rgba(132, 204, 22, 0.2);
+    }
+
+    html[data-theme="dark"] .form-group label {
+        color: var(--lime-300);
+    }
+
+    html[data-theme="dark"] .help-text {
+        color: #9ca3af;
+    }
+
+    html[data-theme="dark"] .submit-section {
+        background: #111827;
+        border-color: #374151;
+    }
+
+    html[data-theme="dark"] .btn-secondary {
+        background: #1f2937;
+        color: var(--lime-300);
+        border-color: #374151;
+    }
+
+    html[data-theme="dark"] .btn-secondary:hover {
+        background: #111827;
+        color: var(--lime-200);
+    }
+
+    html[data-theme="dark"] .errorlist {
+        background: #450a0a;
+        border-color: #7f1d1d;
+        color: #fca5a5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="expense-container">
+        <div class="expense-header">
+            <span class="icon">💰</span>
+            <h1>Simple Expense Entry</h1>
+        </div>
+        
+        {% if cash_account %}
+        <div class="info-box">
+            <h3>💳 Payment Account</h3>
+            <p><strong>{{ cash_account.account_code }} - {{ cash_account.account_name }}</strong></p>
+            <p>Payment will be automatically recorded from this account</p>
+        </div>
+        {% endif %}
+        
+        <form method="post" novalidate class="form-container" id="expense-form">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <ul class="errorlist">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="expense_account" class="required">Expense Account</label>
+                <select id="expense_account" name="expense_account" class="form-control" required>
+                    <option value="">Select expense account...</option>
+                    {% for account in expense_accounts %}
+                        <option value="{{ account.id }}">{{ account.account_code }} - {{ account.account_name }}</option>
+                    {% endfor %}
+                </select>
+                <span class="help-text">Choose the expense category for this transaction</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="amount" class="required">Amount (৳)</label>
+                <input type="number" id="amount" name="amount" class="form-control" 
+                       step="0.01" min="0.01" required placeholder="0.00">
+                <span class="help-text">Enter the expense amount in Taka</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="description" class="required">Description</label>
+                <textarea id="description" name="description" class="form-control" 
+                          rows="4" required placeholder="Enter expense description (e.g., Electricity bill for January)"></textarea>
+                <span class="help-text">Provide a clear description of the expense</span>
+            </div>
+        </form>
+        
+        <div class="submit-section">
+            <a href="{% url 'erp:expense-list' %}" class="btn btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                View Recent Entries
+            </a>
+            <button type="submit" form="expense-form" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Create Expense Entry
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('expense-form');
+    const submitBtn = document.querySelector('.btn-primary');
+    const expenseAccount = document.getElementById('expense_account');
+    const amount = document.getElementById('amount');
+    const description = document.getElementById('description');
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Remove previous error styling
+        document.querySelectorAll('.form-group').forEach(group => {
+            group.classList.remove('errors');
+        });
+        
+        let isValid = true;
+        
+        // Validate fields
+        if (!expenseAccount.value) {
+            expenseAccount.closest('.form-group').classList.add('errors');
+            isValid = false;
+        }
+        
+        if (!amount.value || parseFloat(amount.value) <= 0) {
+            amount.closest('.form-group').classList.add('errors');
+            isValid = false;
+        }
+        
+        if (!description.value.trim()) {
+            description.closest('.form-group').classList.add('errors');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            return;
+        }
+        
+        // Show loading state
+        submitBtn.classList.add('loading');
+        submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Creating...';
+        
+        // Submit form
+        form.submit();
+    });
+    
+    // Real-time validation
+    [expenseAccount, amount, description].forEach(field => {
+        field.addEventListener('input', function() {
+            if (this.value && (this !== amount || parseFloat(this.value) > 0)) {
+                this.closest('.form-group').classList.remove('errors');
+            }
+        });
+    });
+    
+    // Focus first field
+    expenseAccount.focus();
+});
+</script>
+{% endblock %}

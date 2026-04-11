@@ -62,13 +62,13 @@
             <div class="flex items-center justify-end gap-1">
               <form method="post" action="{% url 'hrm:leave_request_approve' lr.pk %}" class="inline">
                 {% csrf_token %}
-                <button type="submit" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Approve">
+                <button type="submit" class="table-action-btn" title="Approve">
                   <i data-lucide="check" class="h-4 w-4"></i>
                 </button>
               </form>
               <form method="post" action="{% url 'hrm:leave_request_reject' lr.pk %}" class="inline">
                 {% csrf_token %}
-                <button type="submit" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" title="Reject">
+                <button type="submit" class="table-action-btn table-action-btn--danger" title="Reject">
                   <i data-lucide="x" class="h-4 w-4"></i>
                 </button>
               </form>

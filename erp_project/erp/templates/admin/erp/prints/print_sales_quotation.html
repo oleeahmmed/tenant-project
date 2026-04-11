@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Quotation - {{ quotation.quotation_number }}</title>
+    <style>
+        @page { size: A4; margin: 10mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.3; color: #000; background: #fff; }
+        .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 15px; border: 2px solid #d0d0d0; background: #fff; display: flex; flex-direction: column; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #1565c0; }
+        .header-left { width: 30%; }
+        .logo-box { width: 100px; height: 100px; border: 1px solid #ccc; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 10pt; color: #999; }
+        .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .company-name { font-size: 12pt; font-weight: bold; margin-bottom: 3px; }
+        .company-address { font-size: 8pt; line-height: 1.4; color: #333; }
+        .header-center { width: 40%; text-align: center; }
+        .title { font-size: 22pt; font-weight: bold; color: #1565c0; letter-spacing: 2px; margin-bottom: 10px; }
+        .quotation-info-box { display: inline-block; border: 2px solid #1565c0; padding: 10px 20px; background: #e3f2fd; border-radius: 5px; margin-top: 5px; }
+        .quotation-number { font-size: 16pt; font-weight: bold; color: #1565c0; margin-bottom: 5px; }
+        .quotation-date { font-size: 12pt; font-weight: bold; color: #0d47a1; }
+        .header-right { width: 30%; text-align: right; font-size: 9pt; line-height: 1.5; }
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 10pt; font-weight: bold; margin-top: 10px; }
+        .status-draft { background: #e0e0e0; color: #424242; }
+        .status-sent { background: #bbdefb; color: #1565c0; }
+        .status-accepted { background: #c8e6c9; color: #2e7d32; }
+        .status-converted { background: #a5d6a7; color: #1b5e20; }
+        .status-rejected { background: #ffcdd2; color: #c62828; }
+        .status-expired { background: #ffe0b2; color: #e65100; }
+        .valid-until-box { background: #fff3e0; border: 2px solid #ff9800; padding: 10px 20px; border-radius: 5px; text-align: center; margin-bottom: 15px; }
+        .valid-until-label { font-size: 9pt; color: #e65100; }
+        .valid-until-date { font-size: 14pt; font-weight: bold; color: #e65100; }
+        .info-bar { display: table; width: 100%; margin-bottom: 15px; border-collapse: collapse; }
+        .info-bar-row { display: table-row; }
+        .info-bar-cell { display: table-cell; padding: 8px 6px; border: 1px solid #64b5f6; background: #e3f2fd; text-align: center; font-size: 9pt; font-weight: bold; color: #1565c0; }
+        .content { flex: 1; }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .items-table thead { background: #1565c0; color: #fff; }
+        .items-table th { padding: 10px 6px; text-align: center; font-size: 9pt; font-weight: bold; border: 1px solid #1565c0; }
+        .items-table td { padding: 8px 6px; border: 1px solid #e0e0e0; text-align: center; font-size: 9pt; }
+        .items-table tbody tr:nth-child(odd) { background: #e3f2fd; }
+        .items-table tbody tr:nth-child(even) { background: #fff; }
+        .text-left { text-align: left !important; padding-left: 8px !important; }
+        .text-right { text-align: right !important; padding-right: 10px !important; }
+        .bottom-section { display: flex; justify-content: space-between; margin-top: 15px; }
+        .notes-section { width: 55%; border: 1px solid #d0d0d0; padding: 12px; min-height: 100px; }
+        .notes-section h4 { font-size: 9pt; color: #666; margin-bottom: 8px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
+        .totals-section { width: 42%; }
+        .totals-table { width: 100%; border-collapse: collapse; }
+        .totals-table td { padding: 8px 10px; border: 1px solid #e0e0e0; font-size: 10pt; }
+        .totals-table .label { text-align: left; font-weight: 600; background: #f9fafb; }
+        .totals-table .value { text-align: right; width: 35%; }
+        .totals-table .currency { text-align: center; width: 10%; }
+        .totals-table tr:last-child { background: #1565c0; color: #fff; font-weight: bold; font-size: 11pt; }
+        .totals-table tr:last-child .label { background: #1565c0; }
+        .terms-section { margin-top: 20px; padding: 12px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 5px; }
+        .terms-section h4 { font-size: 9pt; color: #424242; margin-bottom: 8px; }
+        .terms-section p { font-size: 8pt; color: #666; line-height: 1.5; }
+        .signature-section { display: flex; justify-content: space-between; margin-top: 40px; margin-bottom: 20px; }
+        .signature-box { width: 45%; text-align: center; }
+        .signature-line { border-top: 1px solid #000; margin-top: 50px; padding-top: 8px; font-size: 9pt; }
+        .footer { text-align: center; font-size: 12pt; color: #1565c0; font-weight: bold; margin-top: auto; padding-top: 15px; border-top: 2px solid #1565c0; }
+        .copyright { text-align: center; font-size: 8pt; color: #999; margin-top: 10px; }
+        .print-btn { position: fixed; top: 15px; right: 15px; padding: 12px 24px; background: #1565c0; color: #fff; border: none; border-radius: 5px; font-size: 11pt; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); z-index: 9999; }
+        .print-btn:hover { background: #0d47a1; }
+        @media print { .print-btn { display: none !important; } .page { border: none; padding: 0; min-height: auto; } body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ PRINT</button>
+    <div class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-box">{% if company.logo %}<img src="{{ company.logo.url }}" alt="Logo">{% else %}LOGO{% endif %}</div>
+                <div class="company-name">{{ company.name|default:"Company Name" }}</div>
+                <div class="company-address">{{ company.address|default:"Address" }}<br>{{ company.phone|default:"Phone" }}<br>{{ company.email|default:"Email" }}</div>
+            </div>
+            <div class="header-center">
+                <div class="title">SALES QUOTATION</div>
+                <div class="quotation-info-box">
+                    <div class="quotation-number">{{ quotation.quotation_number }}</div>
+                    <div class="quotation-date">{{ quotation.quotation_date|date:"d F, Y" }}</div>
+                </div>
+                <div class="status-badge status-{{ quotation.status }}">{{ quotation.get_status_display|upper }}</div>
+            </div>
+            <div class="header-right">
+                <strong>Customer:</strong><br>
+                <strong style="font-size: 11pt;">{{ quotation.customer.name }}</strong><br>
+                {{ quotation.customer.address|default:"" }}<br>
+                {% if quotation.customer.city %}{{ quotation.customer.city }}, {{ quotation.customer.country|default:"" }}{% endif %}<br>
+                <strong>Phone:</strong> {{ quotation.customer.phone|default:"-" }}<br>
+                <strong>Email:</strong> {{ quotation.customer.email|default:"-" }}
+            </div>
+        </div>
+
+        {% if quotation.valid_until %}
+        <div class="valid-until-box">
+            <div class="valid-until-label">⏰ This quotation is valid until:</div>
+            <div class="valid-until-date">{{ quotation.valid_until|date:"d F, Y" }}</div>
+        </div>
+        {% endif %}
+
+        <div class="info-bar">
+            <div class="info-bar-row">
+                <div class="info-bar-cell"><strong>Salesperson:</strong><br>{{ quotation.salesperson|default:"-" }}</div>
+                <div class="info-bar-cell"><strong>Job Reference:</strong><br>{{ quotation.job_reference|default:"-" }}</div>
+                <div class="info-bar-cell"><strong>Shipping Method:</strong><br>{{ quotation.shipping_method|default:"-" }}</div>
+                <div class="info-bar-cell"><strong>Delivery Terms:</strong><br>{{ quotation.delivery_terms|default:"-" }}</div>
+                <div class="info-bar-cell"><strong>Payment Terms:</strong><br>{{ quotation.payment_terms|default:"-" }}</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 12%;">SKU</th>
+                        <th style="width: 35%;">PRODUCT DESCRIPTION</th>
+                        <th style="width: 10%;">QTY</th>
+                        <th style="width: 13%;">UNIT PRICE</th>
+                        <th style="width: 10%;">DISCOUNT</th>
+                        <th style="width: 15%;">LINE TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in quotation.items.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.product.sku }}</td>
+                        <td class="text-left">{{ item.product.name }}</td>
+                        <td>{{ item.quantity|floatformat:0 }}</td>
+                        <td class="text-right">{{ item.unit_price|floatformat:2 }}</td>
+                        <td class="text-right">0.00</td>
+                        <td class="text-right">{{ item.line_total|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% with item_count=quotation.items.count %}
+                    {% for i in "12345678901234567890" %}
+                    {% if forloop.counter|add:item_count <= 12 %}
+                    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+                </tbody>
+            </table>
+
+            <div class="bottom-section">
+                <div class="notes-section">
+                    <h4>Notes / Special Instructions:</h4>
+                    <p style="font-size: 9pt;">{{ quotation.notes|default:"" }}</p>
+                </div>
+                <div class="totals-section">
+                    <table class="totals-table">
+                        <tr><td class="label">SUBTOTAL</td><td class="currency">$</td><td class="value">{{ quotation.subtotal|floatformat:2 }}</td></tr>
+                        <tr><td class="label">DISCOUNT</td><td class="currency">$</td><td class="value">{{ quotation.discount_amount|default:"0.00"|floatformat:2 }}</td></tr>
+                        <tr><td class="label">TAX ({{ quotation.tax_rate|default:"0" }}%)</td><td class="currency">$</td><td class="value">{{ quotation.tax_amount|default:"0.00"|floatformat:2 }}</td></tr>
+                        <tr><td class="label">GRAND TOTAL</td><td class="currency">$</td><td class="value">{{ quotation.total_amount|floatformat:2 }}</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="terms-section">
+                <h4>Terms & Conditions:</h4>
+                <p>1. This quotation is valid for the period mentioned above.<br>
+                   2. Prices are subject to change without prior notice after validity period.<br>
+                   3. Payment terms as mentioned above.<br>
+                   4. Delivery timeline will be confirmed upon order confirmation.</p>
+            </div>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box"><div class="signature-line">Authorized Signature</div></div>
+            <div class="signature-box"><div class="signature-line">Customer Acceptance</div></div>
+        </div>
+
+        <div class="footer">Thank You For Your Interest!</div>
+        <div class="copyright">© {{ company.name|default:"Company" }} | {{ company.website|default:"www.company.com" }}</div>
+    </div>
+</body>
+</html>

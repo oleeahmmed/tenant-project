@@ -6,7 +6,24 @@ import django.db.models.deletion
 
 def _drop_orphans(apps, schema_editor):
     AttendanceLog = apps.get_model("hrm", "AttendanceLog")
-    AttendanceLog.objects.filter(tenant__isnull=True).delete()
+    Employee = apps.get_model("hrm", "Employee")
+    ZKDevice = apps.get_model("hrm", "ZKDevice")
+    for row in AttendanceLog.objects.filter(tenant__isnull=True).iterator():
+        tenant_id = None
+        if getattr(row, "employee_id", None):
+            emp = Employee.objects.filter(pk=row.employee_id).only("tenant_id").first()
+            tenant_id = getattr(emp, "tenant_id", None)
+        if tenant_id is None and getattr(row, "device_id", None):
+            dev = ZKDevice.objects.filter(pk=row.device_id).only("tenant_id").first()
+            tenant_id = getattr(dev, "tenant_id", None)
+        if tenant_id is not None:
+            row.tenant_id = tenant_id
+            row.save(update_fields=["tenant"])
+    unresolved = AttendanceLog.objects.filter(tenant__isnull=True).count()
+    if unresolved:
+        raise RuntimeError(
+            f"Cannot enforce non-null tenant on AttendanceLog: {unresolved} row(s) still unresolved."
+        )
 
 
 def _noop(apps, schema_editor):

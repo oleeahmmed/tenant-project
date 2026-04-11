@@ -1,14 +1,17 @@
 from django import forms
 from django.forms import inlineformset_factory
+from django.urls import reverse_lazy
 
 from foundation.models import Currency, Customer, PaymentMethod, Supplier
 
 from .models import (
     APInvoice,
     APInvoiceLine,
+    APPaymentAllocation,
     APPayment,
     ARInvoice,
     ARInvoiceLine,
+    ARReceiptAllocation,
     ARReceipt,
     Account,
     AssetDepreciation,
@@ -51,6 +54,7 @@ class AccountForm(forms.ModelForm):
             if self.instance.pk:
                 qs = qs.exclude(pk=self.instance.pk)
             self.fields["parent"].queryset = qs
+        self.fields["parent"].widget.attrs["class"] = _ctrl + " inv-ts-local"
 
 
 class FiscalYearForm(forms.ModelForm):
@@ -77,6 +81,7 @@ class FiscalPeriodForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if tenant:
             self.fields["fiscal_year"].queryset = FiscalYear.objects.filter(tenant=tenant)
+        self.fields["fiscal_year"].widget.attrs["class"] = _ctrl + " inv-ts-local"
 
 
 class JournalEntryForm(forms.ModelForm):
@@ -95,6 +100,7 @@ class JournalEntryForm(forms.ModelForm):
         self.fields["fiscal_period"].required = False
         if tenant:
             self.fields["fiscal_period"].queryset = FiscalPeriod.objects.filter(tenant=tenant)
+        self.fields["fiscal_period"].widget.attrs["class"] = _ctrl + " inv-ts-local"
 
 
 class JournalLineForm(forms.ModelForm):
@@ -119,6 +125,9 @@ class JournalLineForm(forms.ModelForm):
             self.fields["account"].queryset = Account.objects.filter(tenant=tenant, is_active=True)
             self.fields["cost_center"].queryset = CostCenter.objects.filter(tenant=tenant, is_active=True)
             self.fields["project"].queryset = Project.objects.filter(tenant=tenant, is_active=True)
+        self.fields["account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["cost_center"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["project"].widget.attrs["class"] = _ctrl + " inv-ts-local"
 
 
 JournalLineFormSet = inlineformset_factory(
@@ -164,6 +173,13 @@ class APInvoiceForm(forms.ModelForm):
             self.fields["expense_account"].queryset = acc
             self.fields["ap_account"].queryset = acc
             self.fields["tax_account"].queryset = acc
+        self.fields["supplier"].widget.attrs["class"] = _ctrl + " inv-ts-autocomplete"
+        self.fields["supplier"].widget.attrs["data-autocomplete-url"] = reverse_lazy("foundation_api:autocomplete_suppliers")
+        self.fields["currency"].widget.attrs["class"] = _ctrl + " inv-ts-autocomplete"
+        self.fields["currency"].widget.attrs["data-autocomplete-url"] = reverse_lazy("foundation_api:autocomplete_currencies")
+        self.fields["expense_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["ap_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["tax_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
 
 
 class APInvoiceLineForm(forms.ModelForm):
@@ -216,6 +232,13 @@ class ARInvoiceForm(forms.ModelForm):
             self.fields["revenue_account"].queryset = acc
             self.fields["ar_account"].queryset = acc
             self.fields["tax_account"].queryset = acc
+        self.fields["customer"].widget.attrs["class"] = _ctrl + " inv-ts-autocomplete"
+        self.fields["customer"].widget.attrs["data-autocomplete-url"] = reverse_lazy("foundation_api:autocomplete_customers")
+        self.fields["currency"].widget.attrs["class"] = _ctrl + " inv-ts-autocomplete"
+        self.fields["currency"].widget.attrs["data-autocomplete-url"] = reverse_lazy("foundation_api:autocomplete_currencies")
+        self.fields["revenue_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["ar_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["tax_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
 
 
 class ARInvoiceLineForm(forms.ModelForm):
@@ -237,10 +260,11 @@ ARInvoiceLineFormSet = inlineformset_factory(ARInvoice, ARInvoiceLine, form=ARIn
 class APPaymentForm(forms.ModelForm):
     class Meta:
         model = APPayment
-        fields = ["doc_no", "supplier", "posting_date", "amount", "payment_method", "bank_account", "ap_account", "cash_account"]
+        fields = ["doc_no", "supplier", "ap_invoice", "posting_date", "amount", "payment_method", "bank_account", "ap_account", "cash_account"]
         widgets = {f: forms.TextInput(attrs={"class": _ctrl}) for f in ["doc_no"]}
         widgets.update({
             "supplier": forms.Select(attrs={"class": _ctrl}),
+            "ap_invoice": forms.Select(attrs={"class": _ctrl}),
             "posting_date": forms.DateInput(attrs={"class": _ctrl, "type": "date"}),
             "amount": forms.NumberInput(attrs={"class": _ctrl, "step": "any"}),
             "payment_method": forms.Select(attrs={"class": _ctrl}),
@@ -251,24 +275,63 @@ class APPaymentForm(forms.ModelForm):
 
     def __init__(self, *args, tenant=None, **kwargs):
         super().__init__(*args, **kwargs)
-        for f in ["payment_method", "bank_account", "ap_account", "cash_account"]:
+        for f in ["payment_method", "bank_account", "ap_account", "cash_account", "ap_invoice"]:
             self.fields[f].required = False
         if tenant:
             self.fields["supplier"].queryset = Supplier.objects.filter(tenant=tenant, is_active=True)
+            self.fields["ap_invoice"].queryset = APInvoice.objects.filter(tenant=tenant, status=APInvoice.Status.POSTED).order_by("-posting_date", "-id")
             self.fields["payment_method"].queryset = PaymentMethod.objects.filter(tenant=tenant, is_active=True)
             self.fields["bank_account"].queryset = BankAccount.objects.filter(tenant=tenant, is_active=True)
             acc = Account.objects.filter(tenant=tenant, is_active=True)
             self.fields["ap_account"].queryset = acc
             self.fields["cash_account"].queryset = acc
+        self.fields["supplier"].widget.attrs["class"] = _ctrl + " inv-ts-autocomplete"
+        self.fields["supplier"].widget.attrs["data-autocomplete-url"] = reverse_lazy("foundation_api:autocomplete_suppliers")
+        self.fields["ap_invoice"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["payment_method"].widget.attrs["class"] = _ctrl + " inv-ts-autocomplete"
+        self.fields["payment_method"].widget.attrs["data-autocomplete-url"] = reverse_lazy("foundation_api:autocomplete_payment_methods")
+        self.fields["bank_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["ap_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["cash_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+
+
+class APPaymentAllocationForm(forms.ModelForm):
+    class Meta:
+        model = APPaymentAllocation
+        fields = ["invoice", "amount"]
+        widgets = {
+            "invoice": forms.Select(attrs={"class": _ctrl}),
+            "amount": forms.NumberInput(attrs={"class": _ctrl, "step": "any"}),
+        }
+
+    def __init__(self, *args, tenant=None, supplier=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        qs = APInvoice.objects.none()
+        if tenant:
+            qs = APInvoice.objects.filter(tenant=tenant, status=APInvoice.Status.POSTED).order_by("-posting_date", "-id")
+            if supplier:
+                qs = qs.filter(supplier=supplier)
+        self.fields["invoice"].queryset = qs
+        self.fields["invoice"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+
+
+APPaymentAllocationFormSet = inlineformset_factory(
+    APPayment,
+    APPaymentAllocation,
+    form=APPaymentAllocationForm,
+    extra=1,
+    can_delete=True,
+)
 
 
 class ARReceiptForm(forms.ModelForm):
     class Meta:
         model = ARReceipt
-        fields = ["doc_no", "customer", "posting_date", "amount", "payment_method", "bank_account", "ar_account", "cash_account"]
+        fields = ["doc_no", "customer", "ar_invoice", "posting_date", "amount", "payment_method", "bank_account", "ar_account", "cash_account"]
         widgets = {
             "doc_no": forms.TextInput(attrs={"class": _ctrl}),
             "customer": forms.Select(attrs={"class": _ctrl}),
+            "ar_invoice": forms.Select(attrs={"class": _ctrl}),
             "posting_date": forms.DateInput(attrs={"class": _ctrl, "type": "date"}),
             "amount": forms.NumberInput(attrs={"class": _ctrl, "step": "any"}),
             "payment_method": forms.Select(attrs={"class": _ctrl}),
@@ -279,15 +342,53 @@ class ARReceiptForm(forms.ModelForm):
 
     def __init__(self, *args, tenant=None, **kwargs):
         super().__init__(*args, **kwargs)
-        for f in ["payment_method", "bank_account", "ar_account", "cash_account"]:
+        for f in ["payment_method", "bank_account", "ar_account", "cash_account", "ar_invoice"]:
             self.fields[f].required = False
         if tenant:
             self.fields["customer"].queryset = Customer.objects.filter(tenant=tenant, is_active=True)
+            self.fields["ar_invoice"].queryset = ARInvoice.objects.filter(tenant=tenant, status=ARInvoice.Status.POSTED).order_by("-posting_date", "-id")
             self.fields["payment_method"].queryset = PaymentMethod.objects.filter(tenant=tenant, is_active=True)
             self.fields["bank_account"].queryset = BankAccount.objects.filter(tenant=tenant, is_active=True)
             acc = Account.objects.filter(tenant=tenant, is_active=True)
             self.fields["ar_account"].queryset = acc
             self.fields["cash_account"].queryset = acc
+        self.fields["customer"].widget.attrs["class"] = _ctrl + " inv-ts-autocomplete"
+        self.fields["customer"].widget.attrs["data-autocomplete-url"] = reverse_lazy("foundation_api:autocomplete_customers")
+        self.fields["ar_invoice"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["payment_method"].widget.attrs["class"] = _ctrl + " inv-ts-autocomplete"
+        self.fields["payment_method"].widget.attrs["data-autocomplete-url"] = reverse_lazy("foundation_api:autocomplete_payment_methods")
+        self.fields["bank_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["ar_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["cash_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+
+
+class ARReceiptAllocationForm(forms.ModelForm):
+    class Meta:
+        model = ARReceiptAllocation
+        fields = ["invoice", "amount"]
+        widgets = {
+            "invoice": forms.Select(attrs={"class": _ctrl}),
+            "amount": forms.NumberInput(attrs={"class": _ctrl, "step": "any"}),
+        }
+
+    def __init__(self, *args, tenant=None, customer=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        qs = ARInvoice.objects.none()
+        if tenant:
+            qs = ARInvoice.objects.filter(tenant=tenant, status=ARInvoice.Status.POSTED).order_by("-posting_date", "-id")
+            if customer:
+                qs = qs.filter(customer=customer)
+        self.fields["invoice"].queryset = qs
+        self.fields["invoice"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+
+
+ARReceiptAllocationFormSet = inlineformset_factory(
+    ARReceipt,
+    ARReceiptAllocation,
+    form=ARReceiptAllocationForm,
+    extra=1,
+    can_delete=True,
+)
 
 
 class BankAccountForm(forms.ModelForm):
@@ -306,6 +407,7 @@ class BankAccountForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if tenant:
             self.fields["gl_account"].queryset = Account.objects.filter(tenant=tenant, is_active=True)
+        self.fields["gl_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
 
 
 class CashTransactionForm(forms.ModelForm):
@@ -331,6 +433,9 @@ class CashTransactionForm(forms.ModelForm):
             self.fields["from_bank_account"].queryset = BankAccount.objects.filter(tenant=tenant, is_active=True)
             self.fields["to_bank_account"].queryset = BankAccount.objects.filter(tenant=tenant, is_active=True)
             self.fields["counterparty_account"].queryset = Account.objects.filter(tenant=tenant, is_active=True)
+        self.fields["from_bank_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["to_bank_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["counterparty_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
 
 
 class FixedAssetForm(forms.ModelForm):
@@ -358,6 +463,9 @@ class FixedAssetForm(forms.ModelForm):
             self.fields["asset_account"].queryset = acc
             self.fields["accumulated_depreciation_account"].queryset = acc
             self.fields["depreciation_expense_account"].queryset = acc
+        self.fields["asset_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["accumulated_depreciation_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["depreciation_expense_account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
 
 
 class AssetDepreciationForm(forms.ModelForm):
@@ -377,6 +485,8 @@ class AssetDepreciationForm(forms.ModelForm):
         if tenant:
             self.fields["asset"].queryset = FixedAsset.objects.filter(tenant=tenant)
             self.fields["period"].queryset = FiscalPeriod.objects.filter(tenant=tenant)
+        self.fields["asset"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["period"].widget.attrs["class"] = _ctrl + " inv-ts-local"
 
 
 class BudgetForm(forms.ModelForm):
@@ -393,6 +503,7 @@ class BudgetForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if tenant:
             self.fields["fiscal_year"].queryset = FiscalYear.objects.filter(tenant=tenant)
+        self.fields["fiscal_year"].widget.attrs["class"] = _ctrl + " inv-ts-local"
 
 
 class BudgetLineForm(forms.ModelForm):
@@ -413,6 +524,9 @@ class BudgetLineForm(forms.ModelForm):
             self.fields["fiscal_period"].queryset = FiscalPeriod.objects.filter(tenant=tenant)
             self.fields["account"].queryset = Account.objects.filter(tenant=tenant, is_active=True)
             self.fields["cost_center"].queryset = CostCenter.objects.filter(tenant=tenant, is_active=True)
+        self.fields["fiscal_period"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["account"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+        self.fields["cost_center"].widget.attrs["class"] = _ctrl + " inv-ts-local"
 
 
 BudgetLineFormSet = inlineformset_factory(Budget, BudgetLine, form=BudgetLineForm, extra=1, can_delete=True)

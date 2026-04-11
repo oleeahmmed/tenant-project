@@ -1,0 +1,112 @@
+{% extends 'erp/mobile_app/base_app.html' %}
+{% block title %}Dashboard - ERP Mobile{% endblock %}
+{% block extra_styles %}
+<style>
+.container{padding:0 20px 20px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:16px;padding:20px;transition:transform 0.2s,box-shadow 0.2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px var(--shadow)}
+.stat-card.accent{background:var(--accent-primary);color:#000}
+.stat-icon{font-size:28px;margin-bottom:12px}
+.stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;opacity:0.7}
+.stat-value{font-size:32px;font-weight:700;margin-bottom:4px}
+.stat-change{font-size:12px;opacity:0.7}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.section-title{font-size:16px;font-weight:700;color:var(--text-primary)}
+.view-link{font-size:12px;color:var(--text-secondary);text-decoration:none;font-weight:600}
+.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.action-btn{background:var(--bg-card);border:1px solid var(--border-color);border-radius:16px;padding:20px 12px;text-align:center;text-decoration:none;color:var(--text-primary);transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:8px}
+.action-btn:hover{transform:translateY(-2px);border-color:var(--accent-primary)}
+.action-icon{font-size:32px}
+.action-label{font-size:11px;font-weight:600;text-transform:uppercase}
+.order-list{display:flex;flex-direction:column;gap:12px}
+.order-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:16px;transition:all 0.2s}
+.order-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px var(--shadow)}
+.order-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:8px}
+.order-number{font-size:14px;font-weight:700;color:var(--text-primary)}
+.order-badge{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase}
+.badge-pending{background:rgba(234,179,8,0.15);color:#eab308;border:1px solid rgba(234,179,8,0.3)}
+.badge-completed{background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3)}
+.order-info{font-size:12px;color:var(--text-secondary);margin-bottom:8px}
+.order-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--border-color)}
+.order-amount{font-size:16px;font-weight:700;color:var(--accent-primary)}
+.order-date{font-size:11px;color:var(--text-muted)}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-muted)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container">
+<div class="stats-grid">
+<div class="stat-card accent">
+<div class="stat-icon">💰</div>
+<div class="stat-label">Monthly Sales</div>
+<div class="stat-value">৳{{month_sales_total|floatformat:0}}</div>
+<div class="stat-change">{{month_sales_count}} orders</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon">📦</div>
+<div class="stat-label">Products</div>
+<div class="stat-value">{{total_products}}</div>
+<div class="stat-change">In stock</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon">🛒</div>
+<div class="stat-label">Purchases</div>
+<div class="stat-value">৳{{month_purchases_total|floatformat:0}}</div>
+<div class="stat-change">{{month_purchases_count}} orders</div>
+</div>
+<div class="stat-card">
+<div class="stat-icon">💸</div>
+<div class="stat-label">Expenses</div>
+<div class="stat-value">৳{{month_expenses_total|floatformat:0}}</div>
+<div class="stat-change">This month</div>
+</div>
+</div>
+
+<div class="section-header">
+<h3 class="section-title">Quick Actions</h3>
+</div>
+<div class="quick-actions">
+<a href="{% url 'erp:erp-mobile-products' %}" class="action-btn">
+<span class="action-icon">📦</span>
+<span class="action-label">Products</span>
+</a>
+<a href="{% url 'erp:erp-mobile-sales' %}" class="action-btn">
+<span class="action-icon">🛍️</span>
+<span class="action-label">Sales</span>
+</a>
+<a href="{% url 'erp:erp-mobile-purchases' %}" class="action-btn">
+<span class="action-icon">🛒</span>
+<span class="action-label">Purchase</span>
+</a>
+<a href="{% url 'erp:erp-mobile-expenses' %}" class="action-btn">
+<span class="action-icon">💸</span>
+<span class="action-label">Expense</span>
+</a>
+</div>
+
+<div class="section-header">
+<h3 class="section-title">Recent Sales Orders</h3>
+<a href="{% url 'erp:erp-mobile-sales' %}" class="view-link">View All</a>
+</div>
+<div class="order-list">
+{% if recent_sales %}
+{% for order in recent_sales %}
+<div class="order-card">
+<div class="order-header">
+<span class="order-number">#{{order.order_number}}</span>
+<span class="order-badge badge-{{order.status|lower}}">{{order.status|upper}}</span>
+</div>
+<div class="order-info">{{order.customer.name|default:"Walk-in Customer"}}</div>
+<div class="order-footer">
+<span class="order-amount">৳{{order.total_amount|floatformat:2}}</span>
+<span class="order-date">{{order.order_date|date:"M d, Y"}}</span>
+</div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state">No recent sales orders</div>
+{% endif %}
+</div>
+</div>
+{% endblock %}

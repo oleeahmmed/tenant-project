@@ -9,30 +9,13 @@ from django.views.generic import TemplateView, View
 
 from .forms import EmployeeSelfLeaveForm
 from .mixins import EmployeePortalMixin, HrmPageContextMixin, PostOnlyMixin
-from .models import AttendanceLog, AttendanceRecord, Employee, LeaveRequest, LeaveType
+from .models import AttendanceLog, Employee, LeaveRequest, LeaveType
 from .services.location_checkin import (
     get_or_create_location_policy,
     persist_mobile_attendance_log,
     process_mobile_checkin,
+    sync_daily_record_from_log,
 )
-def _sync_daily_record_from_log(employee: Employee, log: AttendanceLog) -> None:
-    """Update daily AttendanceRecord after a successful mobile punch."""
-    local = timezone.localtime(log.punch_time)
-    d = local.date()
-    t = local.time()
-    rec, _ = AttendanceRecord.objects.get_or_create(
-        employee=employee,
-        date=d,
-        defaults={"status": AttendanceRecord.Status.PRESENT},
-    )
-    if log.punch_type == AttendanceLog.PunchType.CHECK_IN:
-        if rec.check_in is None or t < rec.check_in:
-            rec.check_in = t
-    elif log.punch_type == AttendanceLog.PunchType.CHECK_OUT:
-        if rec.check_out is None or t > rec.check_out:
-            rec.check_out = t
-    rec.status = AttendanceRecord.Status.PRESENT
-    rec.save()
 
 
 def _bar_pct(total: int, taken: int, due: int) -> tuple[float, float, float]:
@@ -230,9 +213,17 @@ class EmployeeLeaveSubmitView(EmployeePortalMixin, PostOnlyMixin, View):
         if form.is_valid():
             obj = form.save(commit=False)
             obj.employee = emp
-            obj.status = LeaveRequest.Status.PENDING
+            if obj.leave_type.requires_approval:
+                obj.status = LeaveRequest.Status.PENDING
+            else:
+                obj.status = LeaveRequest.Status.APPROVED
+                obj.reviewed_by = request.user
+                obj.reviewed_at = timezone.now()
             obj.save()
-            messages.success(request, "Leave request submitted.")
+            if obj.status == LeaveRequest.Status.APPROVED:
+                messages.success(request, "Leave submitted and auto-approved.")
+            else:
+                messages.success(request, "Leave request submitted.")
         else:
             for errs in form.errors.values():
                 for e in errs:

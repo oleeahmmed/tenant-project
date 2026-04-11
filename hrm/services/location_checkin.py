@@ -13,6 +13,7 @@ from django.utils import timezone
 from hrm.models import (
     AttendanceLocation,
     AttendanceLog,
+    AttendanceRecord,
     Employee,
     Holiday,
     LocationAttendancePolicy,
@@ -88,6 +89,26 @@ def persist_mobile_attendance_log(defaults: dict[str, Any]) -> AttendanceLog:
         defaults=defaults,
     )
     return log
+
+
+def sync_daily_record_from_log(employee: Employee, log: AttendanceLog) -> None:
+    """Keep canonical daily AttendanceRecord in sync with accepted punches."""
+    local = timezone.localtime(log.punch_time)
+    d = local.date()
+    t = local.time()
+    rec, _ = AttendanceRecord.objects.get_or_create(
+        employee=employee,
+        date=d,
+        defaults={"status": AttendanceRecord.Status.PRESENT},
+    )
+    if log.punch_type == AttendanceLog.PunchType.CHECK_IN:
+        if rec.check_in is None or t < rec.check_in:
+            rec.check_in = t
+    elif log.punch_type == AttendanceLog.PunchType.CHECK_OUT:
+        if rec.check_out is None or t > rec.check_out:
+            rec.check_out = t
+    rec.status = AttendanceRecord.Status.PRESENT
+    rec.save()
 
 
 def process_mobile_checkin(

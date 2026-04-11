@@ -6,11 +6,14 @@ from django.utils import timezone
 
 from finance.models import (
     APInvoice,
+    APPaymentAllocation,
     APPayment,
     ARInvoice,
+    ARReceiptAllocation,
     ARReceipt,
     AssetDepreciation,
     CashTransaction,
+    FiscalPeriod,
     JournalEntry,
     JournalLine,
     LedgerEntry,
@@ -20,6 +23,19 @@ from finance.models import (
 def _ensure_period_open(journal: JournalEntry):
     if journal.fiscal_period and journal.fiscal_period.is_closed:
         raise ValidationError("Selected fiscal period is closed.")
+
+
+def _resolve_open_period(*, tenant, posting_date):
+    period = (
+        FiscalPeriod.objects.filter(tenant=tenant, start_date__lte=posting_date, end_date__gte=posting_date)
+        .order_by("start_date", "period_no")
+        .first()
+    )
+    if not period:
+        raise ValidationError("No fiscal period found for posting date.")
+    if period.is_closed:
+        raise ValidationError("Posting period is closed.")
+    return period
 
 
 def _journal_totals(journal: JournalEntry):
@@ -33,6 +49,7 @@ def _journal_totals(journal: JournalEntry):
 
 @transaction.atomic
 def post_journal_entry(*, journal: JournalEntry, posted_by=None):
+    journal = JournalEntry.objects.select_for_update().get(pk=journal.pk)
     if journal.status != JournalEntry.Status.DRAFT:
         raise ValidationError("Only draft journal entries can be posted.")
     _ensure_period_open(journal)
@@ -111,10 +128,12 @@ def reverse_journal_entry(*, journal: JournalEntry, posted_by=None):
 
 
 def _post_simple_document(*, tenant, doc_type: str, doc_id: int, posting_date, memo: str, lines, posted_by=None):
+    period = _resolve_open_period(tenant=tenant, posting_date=posting_date)
     journal = JournalEntry.objects.create(
         tenant=tenant,
         entry_no=f"{doc_type}-{doc_id}",
         posting_date=posting_date,
+        fiscal_period=period,
         memo=memo,
         source_document_type=doc_type,
         source_document_id=doc_id,
@@ -139,6 +158,7 @@ def _post_simple_document(*, tenant, doc_type: str, doc_id: int, posting_date, m
 
 @transaction.atomic
 def post_ap_invoice(*, invoice: APInvoice, posted_by=None):
+    invoice = APInvoice.objects.select_for_update().get(pk=invoice.pk)
     if invoice.status != APInvoice.Status.DRAFT:
         raise ValidationError("Only draft AP invoices can be posted.")
     if not invoice.expense_account_id or not invoice.ap_account_id:
@@ -167,6 +187,7 @@ def post_ap_invoice(*, invoice: APInvoice, posted_by=None):
 
 @transaction.atomic
 def post_ar_invoice(*, invoice: ARInvoice, posted_by=None):
+    invoice = ARInvoice.objects.select_for_update().get(pk=invoice.pk)
     if invoice.status != ARInvoice.Status.DRAFT:
         raise ValidationError("Only draft AR invoices can be posted.")
     if not invoice.revenue_account_id or not invoice.ar_account_id:
@@ -195,10 +216,12 @@ def post_ar_invoice(*, invoice: ARInvoice, posted_by=None):
 
 @transaction.atomic
 def post_ap_payment(*, payment: APPayment, posted_by=None):
+    payment = APPayment.objects.select_for_update().get(pk=payment.pk)
     if payment.status != APPayment.Status.DRAFT:
         raise ValidationError("Only draft AP payments can be posted.")
     if not payment.ap_account_id or not payment.cash_account_id:
         raise ValidationError("AP and cash/bank accounts are required.")
+    _validate_ap_allocations(payment=payment)
     journal = _post_simple_document(
         tenant=payment.tenant,
         doc_type="ap_payment",
@@ -214,15 +237,20 @@ def post_ap_payment(*, payment: APPayment, posted_by=None):
     payment.journal_entry = journal
     payment.status = APPayment.Status.POSTED
     payment.save(update_fields=["journal_entry", "status", "updated_at"])
+    remaining = _auto_allocate_ap_payment(payment=payment)
+    payment.unapplied_amount = remaining if remaining > 0 else Decimal("0")
+    payment.save(update_fields=["unapplied_amount", "updated_at"])
     return journal
 
 
 @transaction.atomic
 def post_ar_receipt(*, receipt: ARReceipt, posted_by=None):
+    receipt = ARReceipt.objects.select_for_update().get(pk=receipt.pk)
     if receipt.status != ARReceipt.Status.DRAFT:
         raise ValidationError("Only draft AR receipts can be posted.")
     if not receipt.ar_account_id or not receipt.cash_account_id:
         raise ValidationError("AR and cash/bank accounts are required.")
+    _validate_ar_allocations(receipt=receipt)
     journal = _post_simple_document(
         tenant=receipt.tenant,
         doc_type="ar_receipt",
@@ -238,11 +266,15 @@ def post_ar_receipt(*, receipt: ARReceipt, posted_by=None):
     receipt.journal_entry = journal
     receipt.status = ARReceipt.Status.POSTED
     receipt.save(update_fields=["journal_entry", "status", "updated_at"])
+    remaining = _auto_allocate_ar_receipt(receipt=receipt)
+    receipt.unapplied_amount = remaining if remaining > 0 else Decimal("0")
+    receipt.save(update_fields=["unapplied_amount", "updated_at"])
     return journal
 
 
 @transaction.atomic
 def post_cash_transaction(*, txn: CashTransaction, posted_by=None):
+    txn = CashTransaction.objects.select_for_update().get(pk=txn.pk)
     if txn.status != CashTransaction.Status.DRAFT:
         raise ValidationError("Only draft cash transactions can be posted.")
     if txn.direction == CashTransaction.Direction.TRANSFER:
@@ -283,6 +315,7 @@ def post_cash_transaction(*, txn: CashTransaction, posted_by=None):
 
 @transaction.atomic
 def post_asset_depreciation(*, dep: AssetDepreciation, posted_by=None):
+    dep = AssetDepreciation.objects.select_for_update().get(pk=dep.pk)
     if dep.status != AssetDepreciation.Status.DRAFT:
         raise ValidationError("Only draft depreciation rows can be posted.")
     asset = dep.asset
@@ -302,4 +335,166 @@ def post_asset_depreciation(*, dep: AssetDepreciation, posted_by=None):
     dep.status = AssetDepreciation.Status.POSTED
     dep.save(update_fields=["journal_entry", "status", "updated_at"])
     return journal
+
+
+def _auto_allocate_ap_payment(*, payment: APPayment):
+    already_allocated = sum((a.amount for a in payment.allocations.all()), Decimal("0"))
+    remaining = payment.amount - already_allocated
+    if payment.ap_invoice_id:
+        inv = payment.ap_invoice
+        if inv.tenant_id != payment.tenant_id or inv.supplier_id != payment.supplier_id or inv.status != APInvoice.Status.POSTED:
+            raise ValidationError("Selected AP invoice is not valid for this payment.")
+        applied = sum((a.amount for a in inv.payment_allocations.all()), Decimal("0"))
+        outstanding = inv.total_amount - applied
+        if outstanding > 0 and remaining > 0:
+            use_amt = remaining if remaining <= outstanding else outstanding
+            APPaymentAllocation.objects.create(
+                tenant=payment.tenant,
+                payment=payment,
+                invoice=inv,
+                amount=use_amt,
+            )
+            remaining -= use_amt
+
+    invoices = APInvoice.objects.filter(
+        tenant=payment.tenant,
+        supplier=payment.supplier,
+        status=APInvoice.Status.POSTED,
+    ).order_by("posting_date", "id")
+    for inv in invoices:
+        if remaining <= 0:
+            break
+        if APPaymentAllocation.objects.filter(payment=payment, invoice=inv).exists():
+            continue
+        applied = sum((a.amount for a in inv.payment_allocations.all()), Decimal("0"))
+        outstanding = inv.total_amount - applied
+        if outstanding <= 0:
+            continue
+        use_amt = remaining if remaining <= outstanding else outstanding
+        APPaymentAllocation.objects.create(
+            tenant=payment.tenant,
+            payment=payment,
+            invoice=inv,
+            amount=use_amt,
+        )
+        remaining -= use_amt
+    return remaining
+
+
+def _auto_allocate_ar_receipt(*, receipt: ARReceipt):
+    already_allocated = sum((a.amount for a in receipt.allocations.all()), Decimal("0"))
+    remaining = receipt.amount - already_allocated
+    if receipt.ar_invoice_id:
+        inv = receipt.ar_invoice
+        if inv.tenant_id != receipt.tenant_id or inv.customer_id != receipt.customer_id or inv.status != ARInvoice.Status.POSTED:
+            raise ValidationError("Selected AR invoice is not valid for this receipt.")
+        applied = sum((a.amount for a in inv.receipt_allocations.all()), Decimal("0"))
+        outstanding = inv.total_amount - applied
+        if outstanding > 0 and remaining > 0:
+            use_amt = remaining if remaining <= outstanding else outstanding
+            ARReceiptAllocation.objects.create(
+                tenant=receipt.tenant,
+                receipt=receipt,
+                invoice=inv,
+                amount=use_amt,
+            )
+            remaining -= use_amt
+
+    invoices = ARInvoice.objects.filter(
+        tenant=receipt.tenant,
+        customer=receipt.customer,
+        status=ARInvoice.Status.POSTED,
+    ).order_by("posting_date", "id")
+    for inv in invoices:
+        if remaining <= 0:
+            break
+        if ARReceiptAllocation.objects.filter(receipt=receipt, invoice=inv).exists():
+            continue
+        applied = sum((a.amount for a in inv.receipt_allocations.all()), Decimal("0"))
+        outstanding = inv.total_amount - applied
+        if outstanding <= 0:
+            continue
+        use_amt = remaining if remaining <= outstanding else outstanding
+        ARReceiptAllocation.objects.create(
+            tenant=receipt.tenant,
+            receipt=receipt,
+            invoice=inv,
+            amount=use_amt,
+        )
+        remaining -= use_amt
+    return remaining
+
+
+def _validate_ap_allocations(*, payment: APPayment):
+    total = Decimal("0")
+    for row in payment.allocations.select_related("invoice").all():
+        inv = row.invoice
+        if inv.tenant_id != payment.tenant_id or inv.supplier_id != payment.supplier_id:
+            raise ValidationError("AP allocation invoice must belong to same supplier and tenant.")
+        if inv.status != APInvoice.Status.POSTED:
+            raise ValidationError("AP allocation requires posted invoices.")
+        total += row.amount
+    if total > payment.amount:
+        raise ValidationError("AP allocation total cannot exceed payment amount.")
+
+
+def _validate_ar_allocations(*, receipt: ARReceipt):
+    total = Decimal("0")
+    for row in receipt.allocations.select_related("invoice").all():
+        inv = row.invoice
+        if inv.tenant_id != receipt.tenant_id or inv.customer_id != receipt.customer_id:
+            raise ValidationError("AR allocation invoice must belong to same customer and tenant.")
+        if inv.status != ARInvoice.Status.POSTED:
+            raise ValidationError("AR allocation requires posted invoices.")
+        total += row.amount
+    if total > receipt.amount:
+        raise ValidationError("AR allocation total cannot exceed receipt amount.")
+
+
+@transaction.atomic
+def cancel_ap_invoice(*, invoice: APInvoice, posted_by=None):
+    invoice = APInvoice.objects.select_for_update().get(pk=invoice.pk)
+    if invoice.status == APInvoice.Status.CANCELLED:
+        return invoice
+    if invoice.status == APInvoice.Status.POSTED and invoice.journal_entry_id:
+        reverse_journal_entry(journal=invoice.journal_entry, posted_by=posted_by)
+    invoice.status = APInvoice.Status.CANCELLED
+    invoice.save(update_fields=["status", "updated_at"])
+    return invoice
+
+
+@transaction.atomic
+def cancel_ar_invoice(*, invoice: ARInvoice, posted_by=None):
+    invoice = ARInvoice.objects.select_for_update().get(pk=invoice.pk)
+    if invoice.status == ARInvoice.Status.CANCELLED:
+        return invoice
+    if invoice.status == ARInvoice.Status.POSTED and invoice.journal_entry_id:
+        reverse_journal_entry(journal=invoice.journal_entry, posted_by=posted_by)
+    invoice.status = ARInvoice.Status.CANCELLED
+    invoice.save(update_fields=["status", "updated_at"])
+    return invoice
+
+
+@transaction.atomic
+def cancel_ap_payment(*, payment: APPayment, posted_by=None):
+    payment = APPayment.objects.select_for_update().get(pk=payment.pk)
+    if payment.status == APPayment.Status.CANCELLED:
+        return payment
+    if payment.status == APPayment.Status.POSTED and payment.journal_entry_id:
+        reverse_journal_entry(journal=payment.journal_entry, posted_by=posted_by)
+    payment.status = APPayment.Status.CANCELLED
+    payment.save(update_fields=["status", "updated_at"])
+    return payment
+
+
+@transaction.atomic
+def cancel_ar_receipt(*, receipt: ARReceipt, posted_by=None):
+    receipt = ARReceipt.objects.select_for_update().get(pk=receipt.pk)
+    if receipt.status == ARReceipt.Status.CANCELLED:
+        return receipt
+    if receipt.status == ARReceipt.Status.POSTED and receipt.journal_entry_id:
+        reverse_journal_entry(journal=receipt.journal_entry, posted_by=posted_by)
+    receipt.status = ARReceipt.Status.CANCELLED
+    receipt.save(update_fields=["status", "updated_at"])
+    return receipt
 

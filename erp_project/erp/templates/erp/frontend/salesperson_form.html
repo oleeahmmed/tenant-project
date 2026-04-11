@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - ERP System{% endblock %}
+
+{% block content %}
+<!-- Page header section -->
+<div class="block-header">
+    <div class="row clearfix">
+        <div class="col-lg-6 col-md-12 col-sm-12">
+            <h1>{{ title }}</h1>
+            <span>{% if object %}Edit existing sales person{% else %}Add a new sales person{% endif %}</span>
+        </div>
+        <div class="col-lg-6 col-md-12 col-sm-12 text-lg-right">
+            <a href="{% url 'erp:salesperson_list' %}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Messages -->
+{% if messages %}
+<div class="row clearfix">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Sales Person Form -->
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>Sales Person Information</h2>
+                <small class="text-muted">Fill in the sales person details below</small>
+            </div>
+            <div class="body">
+                <form method="post" action="">
+                    {% csrf_token %}
+
+                    <div class="row clearfix">
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Full Name <span class="text-danger">*</span></label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="name"
+                                       name="name"
+                                       placeholder="Enter full name"
+                                       value="{{ object.name|default:'' }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Employee ID</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="employee_id"
+                                       name="employee_id"
+                                       placeholder="Enter employee ID"
+                                       value="{{ object.employee_id|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Email</label>
+                                <input type="email"
+                                       class="form-control"
+                                       id="email"
+                                       name="email"
+                                       placeholder="Enter email address"
+                                       value="{{ object.email|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Phone</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="phone"
+                                       name="phone"
+                                       placeholder="Enter phone number"
+                                       value="{{ object.phone|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Commission Rate (%)</label>
+                                <input type="number"
+                                       class="form-control"
+                                       id="commission_rate"
+                                       name="commission_rate"
+                                       placeholder="e.g. 5.00"
+                                       step="0.01"
+                                       min="0"
+                                       max="100"
+                                       value="{{ object.commission_rate|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Status <span class="text-danger">*</span></label>
+                                <select class="form-control show-tick" id="is_active" name="is_active">
+                                    <option value="True" {% if not object or object.is_active %}selected{% endif %}>Active</option>
+                                    <option value="False" {% if object and not object.is_active %}selected{% endif %}>Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row clearfix">
+                        <div class="col-sm-12">
+                            <button type="submit" class="btn btn-primary theme-bg gradient">
+                                <i class="fa fa-save"></i> {{ button_text }} Sales Person
+                            </button>
+                            <a href="{% url 'erp:salesperson_list' %}" class="btn btn-default">
+                                <i class="fa fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if object %}
+        <!-- Additional Info Card -->
+        <div class="card">
+            <div class="header">
+                <h2>Additional Information</h2>
+            </div>
+            <div class="body">
+                <div class="row clearfix">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Created Date</label>
+                            <p class="form-control-static">{{ object.created_at|date:"d M, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Last Updated</label>
+                            <p class="form-control-static">{{ object.updated_at|date:"d M, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Current Status</label>
+                            <p class="form-control-static">
+                                {% if object.is_active %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Commission Rate</label>
+                            <p class="form-control-static">{{ object.commission_rate|default:"0" }}%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('name').focus();
+</script>
+{% endblock %}

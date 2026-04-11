@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill of Materials - {{ bom.bom_number }}</title>
+    <style>
+        @page { size: A4; margin: 10mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.3; color: #000; background: #fff; }
+        .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 15px; border: 2px solid #d0d0d0; background: #fff; display: flex; flex-direction: column; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #8b5cf6; }
+        .header-left { width: 30%; }
+        .logo-box { width: 100px; height: 100px; border: 1px solid #ccc; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 10pt; color: #999; }
+        .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .company-name { font-size: 12pt; font-weight: bold; margin-bottom: 3px; }
+        .company-address { font-size: 8pt; line-height: 1.4; color: #333; }
+        .header-center { width: 40%; text-align: center; }
+        .title { font-size: 20pt; font-weight: bold; color: #8b5cf6; letter-spacing: 2px; margin-bottom: 10px; }
+        .bom-info-box { display: inline-block; border: 2px solid #8b5cf6; padding: 10px 20px; background: #ede9fe; border-radius: 5px; margin-top: 5px; }
+        .bom-number { font-size: 16pt; font-weight: bold; color: #8b5cf6; margin-bottom: 5px; }
+        .bom-name { font-size: 11pt; font-weight: bold; color: #7c3aed; }
+        .header-right { width: 30%; text-align: right; font-size: 9pt; line-height: 1.5; }
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 10pt; font-weight: bold; margin-top: 10px; }
+        .status-draft { background: #e0e0e0; color: #424242; }
+        .status-active { background: #c8e6c9; color: #2e7d32; }
+        .status-inactive { background: #ffcdd2; color: #c62828; }
+        .status-obsolete { background: #ffe0b2; color: #e65100; }
+        .product-box { background: #f3e8ff; border: 2px solid #8b5cf6; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
+        .product-box h3 { font-size: 11pt; color: #7c3aed; margin-bottom: 10px; }
+        .product-info { display: flex; gap: 30px; }
+        .product-detail { font-size: 10pt; }
+        .product-detail strong { color: #8b5cf6; }
+        .info-bar { display: table; width: 100%; margin-bottom: 15px; border-collapse: collapse; }
+        .info-bar-row { display: table-row; }
+        .info-bar-cell { display: table-cell; padding: 8px 6px; border: 1px solid #c4b5fd; background: #ede9fe; text-align: center; font-size: 9pt; font-weight: bold; color: #8b5cf6; }
+        .content { flex: 1; }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .items-table thead { background: #8b5cf6; color: #fff; }
+        .items-table th { padding: 10px 6px; text-align: center; font-size: 9pt; font-weight: bold; border: 1px solid #8b5cf6; }
+        .items-table td { padding: 8px 6px; border: 1px solid #e0e0e0; text-align: center; font-size: 9pt; }
+        .items-table tbody tr:nth-child(odd) { background: #ede9fe; }
+        .items-table tbody tr:nth-child(even) { background: #fff; }
+        .text-left { text-align: left !important; padding-left: 8px !important; }
+        .text-right { text-align: right !important; padding-right: 10px !important; }
+        .bottom-section { display: flex; justify-content: space-between; margin-top: 15px; }
+        .notes-section { width: 55%; border: 1px solid #d0d0d0; padding: 12px; min-height: 100px; }
+        .notes-section h4 { font-size: 9pt; color: #666; margin-bottom: 8px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
+        .cost-section { width: 42%; }
+        .cost-table { width: 100%; border-collapse: collapse; }
+        .cost-table td { padding: 8px 10px; border: 1px solid #e0e0e0; font-size: 10pt; }
+        .cost-table .label { text-align: left; font-weight: 600; background: #f9fafb; }
+        .cost-table .value { text-align: right; width: 35%; }
+        .cost-table .currency { text-align: center; width: 10%; }
+        .cost-table tr:last-child { background: #8b5cf6; color: #fff; font-weight: bold; font-size: 11pt; }
+        .cost-table tr:last-child .label { background: #8b5cf6; }
+        .signature-section { display: flex; justify-content: space-between; margin-top: 40px; margin-bottom: 20px; }
+        .signature-box { width: 30%; text-align: center; }
+        .signature-line { border-top: 1px solid #000; margin-top: 50px; padding-top: 8px; font-size: 9pt; }
+        .footer { text-align: center; font-size: 12pt; color: #8b5cf6; font-weight: bold; margin-top: auto; padding-top: 15px; border-top: 2px solid #8b5cf6; }
+        .copyright { text-align: center; font-size: 8pt; color: #999; margin-top: 10px; }
+        .print-btn { position: fixed; top: 15px; right: 15px; padding: 12px 24px; background: #8b5cf6; color: #fff; border: none; border-radius: 5px; font-size: 11pt; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); z-index: 9999; }
+        .print-btn:hover { background: #7c3aed; }
+        @media print { .print-btn { display: none !important; } .page { border: none; padding: 0; min-height: auto; } body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ PRINT</button>
+    <div class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-box">{% if company.logo %}<img src="{{ company.logo.url }}" alt="Logo">{% else %}LOGO{% endif %}</div>
+                <div class="company-name">{{ company.name|default:"Company Name" }}</div>
+                <div class="company-address">{{ company.address|default:"Address" }}<br>{{ company.phone|default:"Phone" }}<br>{{ company.email|default:"Email" }}</div>
+            </div>
+            <div class="header-center">
+                <div class="title">BILL OF MATERIALS</div>
+                <div class="bom-info-box">
+                    <div class="bom-number">{{ bom.bom_number }}</div>
+                    <div class="bom-name">{{ bom.name }}</div>
+                </div>
+                <div class="status-badge status-{{ bom.status }}">{{ bom.get_status_display|upper }}</div>
+            </div>
+            <div class="header-right">
+                <strong>Version:</strong> {{ bom.version }}<br>
+                <strong>Created:</strong> {{ bom.created_at|date:"d M, Y" }}<br>
+                <strong>Updated:</strong> {{ bom.updated_at|date:"d M, Y" }}
+            </div>
+        </div>
+
+        <div class="product-box">
+            <h3>🏭 Finished Product</h3>
+            <div class="product-info">
+                <div class="product-detail"><strong>Product:</strong> {{ bom.product.name }}</div>
+                <div class="product-detail"><strong>SKU:</strong> {{ bom.product.sku }}</div>
+                <div class="product-detail"><strong>Quantity:</strong> {{ bom.quantity|floatformat:0 }} {{ bom.product.unit }}</div>
+                <div class="product-detail"><strong>Category:</strong> {{ bom.product.category|default:"-" }}</div>
+            </div>
+        </div>
+
+        <div class="info-bar">
+            <div class="info-bar-row">
+                <div class="info-bar-cell"><strong>Material Cost:</strong><br>$ {{ bom.material_cost|floatformat:2 }}</div>
+                <div class="info-bar-cell"><strong>Labor Cost:</strong><br>$ {{ bom.labor_cost|floatformat:2 }}</div>
+                <div class="info-bar-cell"><strong>Overhead Cost:</strong><br>$ {{ bom.overhead_cost|floatformat:2 }}</div>
+                <div class="info-bar-cell"><strong>Total Cost:</strong><br>$ {{ bom.total_cost|floatformat:2 }}</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 12%;">SKU</th>
+                        <th style="width: 30%;">COMPONENT</th>
+                        <th style="width: 10%;">QTY</th>
+                        <th style="width: 8%;">UNIT</th>
+                        <th style="width: 10%;">SCRAP %</th>
+                        <th style="width: 12%;">UNIT COST</th>
+                        <th style="width: 13%;">LINE TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for comp in bom.components.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ comp.product.sku }}</td>
+                        <td class="text-left">{{ comp.product.name }}</td>
+                        <td>{{ comp.quantity|floatformat:2 }}</td>
+                        <td>{{ comp.product.unit }}</td>
+                        <td>{{ comp.scrap_percentage|floatformat:1 }}%</td>
+                        <td class="text-right">{{ comp.unit_cost|floatformat:2 }}</td>
+                        <td class="text-right">{{ comp.line_total|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% with item_count=bom.components.count %}
+                    {% for i in "12345678901234567890" %}
+                    {% if forloop.counter|add:item_count <= 15 %}
+                    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+                </tbody>
+            </table>
+
+            <div class="bottom-section">
+                <div class="notes-section">
+                    <h4>Notes / Instructions:</h4>
+                    <p style="font-size: 9pt;">{{ bom.notes|default:"" }}</p>
+                </div>
+                <div class="cost-section">
+                    <table class="cost-table">
+                        <tr><td class="label">MATERIAL COST</td><td class="currency">$</td><td class="value">{{ bom.material_cost|floatformat:2 }}</td></tr>
+                        <tr><td class="label">LABOR COST</td><td class="currency">$</td><td class="value">{{ bom.labor_cost|floatformat:2 }}</td></tr>
+                        <tr><td class="label">OVERHEAD COST</td><td class="currency">$</td><td class="value">{{ bom.overhead_cost|floatformat:2 }}</td></tr>
+                        <tr><td class="label">TOTAL COST</td><td class="currency">$</td><td class="value">{{ bom.total_cost|floatformat:2 }}</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box"><div class="signature-line">Prepared By</div></div>
+            <div class="signature-box"><div class="signature-line">Reviewed By</div></div>
+            <div class="signature-box"><div class="signature-line">Approved By</div></div>
+        </div>
+
+        <div class="footer">Bill of Materials Document</div>
+        <div class="copyright">© {{ company.name|default:"Company" }} | {{ company.website|default:"www.company.com" }}</div>
+    </div>
+</body>
+</html>

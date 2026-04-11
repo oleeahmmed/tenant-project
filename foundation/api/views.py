@@ -24,16 +24,24 @@ from foundation.models import (
 from hrm.tenant_scope import get_hrm_tenant, user_belongs_to_workspace_tenant
 
 
-def _resolve_tenant(request):
+def _resolve_tenant(request, module_code="foundation", required_permission="foundation.view"):
     """Same workspace scope as Foundation / Inventory dashboards."""
     t = get_hrm_tenant(request)
     if t is None or not request.user.is_authenticated:
         return None
     if getattr(request.user, "role", None) == "super_admin":
         return t
-    if user_belongs_to_workspace_tenant(request.user, t):
+    if not user_belongs_to_workspace_tenant(request.user, t):
+        return None
+    if getattr(request.user, "role", None) == "tenant_admin":
         return t
-    return None
+    if getattr(request.user, "role", None) != "staff":
+        return None
+    if module_code and not t.is_module_enabled(module_code):
+        return None
+    if required_permission and not request.user.has_tenant_permission(required_permission):
+        return None
+    return t
 
 
 def _limit(request, default=30, cap=100):

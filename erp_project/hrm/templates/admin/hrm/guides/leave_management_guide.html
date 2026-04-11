@@ -1,0 +1,354 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Leave Management Guide" %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+    &rsaquo; {% trans "Leave Management Guide" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1 style="margin-bottom: 30px; color: #1f2937;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 32px;">event_busy</span>
+        {% trans "Leave Management Guide" %}
+    </h1>
+    
+    <p style="color: #6b7280; margin-bottom: 30px; font-size: 16px;">
+        এই guide এ দেখানো হয়েছে কিভাবে leave types setup করবেন, leave balance manage করবেন, 
+        leave application process করবেন এবং holidays configure করবেন।
+    </p>
+
+    <!-- Leave Flow -->
+    <div style="background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">timeline</span>
+            Leave Management Flow
+        </h2>
+        <p style="margin: 0; font-size: 15px; opacity: 0.95;">
+            Leave Types → Leave Balance → Application → Approval → Attendance Update
+        </p>
+    </div>
+
+    <!-- Step 1: Leave Types -->
+    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #3b82f6; font-size: 32px;">category</span>
+            Step 1: Setup Leave Types
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Leave Type কি?</h3>
+            <div style="background: #dbeafe; padding: 16px; border-left: 4px solid #3b82f6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #1e40af;">Leave Type</strong> হলো বিভিন্ন ধরনের ছুটি। যেমন: Casual Leave, Sick Leave, Annual Leave ইত্যাদি।
+            </div>
+            
+            <code style="background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Leave Management → Leave Types → Add</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example: Casual Leave</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Code:</strong> CL
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Name:</strong> Casual Leave
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Days Per Year:</strong> 10 days
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Carry Forward:</strong> Yes (max 5 days)
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Requires Approval:</strong> Yes ✅
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Paid:</strong> Yes ✅
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Leave Types -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📊 Common Leave Types:</h3>
+            <div style="display: grid; gap: 12px;">
+                <div style="background: #dbeafe; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <strong style="color: #1e40af;">Casual Leave (CL)</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">
+                        সাধারণ ছুটি - 10 days/year, paid, carry forward allowed
+                    </div>
+                </div>
+                
+                <div style="background: #fee2e2; padding: 16px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                    <strong style="color: #991b1b;">Sick Leave (SL)</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">
+                        অসুস্থতার ছুটি - 14 days/year, paid, medical certificate required
+                    </div>
+                </div>
+                
+                <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                    <strong style="color: #065f46;">Annual Leave (AL)</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">
+                        বার্ষিক ছুটি - 18 days/year, paid, advance booking required
+                    </div>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <strong style="color: #92400e;">Unpaid Leave (UL)</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">
+                        বেতন ছাড়া ছুটি - unlimited, unpaid, special approval required
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Leave Balance -->
+    <div style="background: #dcfce7; border: 2px solid #10b981; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #065f46; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">account_balance_wallet</span>
+            Step 2: Manage Leave Balance
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Leave Balance কি?</h3>
+            <div style="background: #dcfce7; padding: 16px; border-left: 4px solid #10b981; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #065f46;">Leave Balance</strong> হলো প্রতিটি employee এর available leave days। 
+                Automatically calculate হয় বা manually adjust করা যায়।
+            </div>
+            
+            <code style="background: #dcfce7; color: #065f46; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Leave Management → Leave Balances</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example Leave Balance:</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Employee:</strong> John Doe
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Leave Type:</strong> Casual Leave
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Year:</strong> 2024
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Total Allocated:</strong> 10 days
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Used:</strong> 3 days
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Remaining:</strong> 7 days ✅
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+            <strong style="color: #92400e;">💡 Auto Allocation:</strong> নতুন fiscal year শুরু হলে automatically সব employee এর 
+            leave balance allocate হয়ে যায়। Manual adjustment এর দরকার শুধু special cases এ।
+        </div>
+    </div>
+
+    <!-- Step 3: Leave Application -->
+    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 32px;">pending_actions</span>
+            Step 3: Leave Application Process
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Application Process:</h3>
+            
+            <code style="background: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Leave Management → Leave Applications → Add</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example Application:</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Employee:</strong> John Doe
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Leave Type:</strong> Casual Leave
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">From Date:</strong> 2024-03-15
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">To Date:</strong> 2024-03-17
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Total Days:</strong> 3 days
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Reason:</strong> Personal work
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                        <strong style="color: #92400e;">Status:</strong> Pending ⏳
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Status -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📊 Application Status:</h3>
+            <div style="display: grid; gap: 12px;">
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                    <strong style="color: #92400e;">⏳ Pending:</strong> Application submitted, waiting for approval
+                </div>
+                <div style="background: #dcfce7; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                    <strong style="color: #065f46;">✅ Approved:</strong> Leave approved, balance deducted
+                </div>
+                <div style="background: #fee2e2; padding: 12px; border-radius: 6px; border-left: 3px solid #ef4444;">
+                    <strong style="color: #991b1b;">❌ Rejected:</strong> Leave rejected, balance not affected
+                </div>
+                <div style="background: #e5e7eb; padding: 12px; border-radius: 6px; border-left: 3px solid #6b7280;">
+                    <strong style="color: #374151;">🚫 Cancelled:</strong> Employee cancelled the application
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Approval Process -->
+    <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #991b1b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #ef4444; font-size: 32px;">approval</span>
+            Step 4: Approval Process
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 How to Approve/Reject:</h3>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Approval Steps:</h4>
+                <ol style="margin: 0; padding-left: 20px; color: #374151;">
+                    <li style="margin-bottom: 8px;">Go to: HRM → Leave Management → Leave Applications</li>
+                    <li style="margin-bottom: 8px;">Filter by Status: Pending</li>
+                    <li style="margin-bottom: 8px;">Click on application to view details</li>
+                    <li style="margin-bottom: 8px;">Check leave balance and reason</li>
+                    <li style="margin-bottom: 8px;">Change Status to "Approved" or "Rejected"</li>
+                    <li style="margin-bottom: 8px;">Add approval notes (optional)</li>
+                    <li style="margin-bottom: 8px;">Save</li>
+                </ol>
+            </div>
+        </div>
+
+        <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+            <strong style="color: #92400e;">💡 Auto Update:</strong> Leave approve হলে automatically leave balance deduct হয় 
+            এবং attendance record update হয়। Manual intervention এর দরকার নেই।
+        </div>
+    </div>
+
+    <!-- Step 5: Holidays -->
+    <div style="background: #e0e7ff; border: 2px solid #6366f1; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #3730a3; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1; font-size: 32px;">celebration</span>
+            Step 5: Configure Holidays
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Holiday কি?</h3>
+            <div style="background: #e0e7ff; padding: 16px; border-left: 4px solid #6366f1; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #3730a3;">Holiday</strong> হলো public holidays এবং weekly offs। 
+                এই দিনগুলোতে attendance mandatory না এবং leave balance affect হয় না।
+            </div>
+            
+            <code style="background: #e0e7ff; color: #3730a3; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Leave Management → Holidays → Add</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example Holiday:</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Name:</strong> Independence Day
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Date:</strong> 2024-03-26
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Type:</strong> Public Holiday
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Applies To:</strong> All Employees
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Paid:</strong> Yes ✅
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Holidays -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📅 Common Holidays (Bangladesh):</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+                <div style="background: #e0e7ff; padding: 12px; border-radius: 6px;">
+                    <div style="font-weight: 600; color: #3730a3;">Independence Day</div>
+                    <div style="font-size: 12px; color: #6b7280;">March 26</div>
+                </div>
+                <div style="background: #dbeafe; padding: 12px; border-radius: 6px;">
+                    <div style="font-weight: 600; color: #1e40af;">Victory Day</div>
+                    <div style="font-size: 12px; color: #6b7280;">December 16</div>
+                </div>
+                <div style="background: #dcfce7; padding: 12px; border-radius: 6px;">
+                    <div style="font-weight: 600; color: #065f46;">Eid-ul-Fitr</div>
+                    <div style="font-size: 12px; color: #6b7280;">Variable (2-3 days)</div>
+                </div>
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px;">
+                    <div style="font-weight: 600; color: #92400e;">Eid-ul-Adha</div>
+                    <div style="font-size: 12px; color: #6b7280;">Variable (2-3 days)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Best Practices -->
+    <div style="background: #dcfce7; border: 2px solid #10b981; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #065f46; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">tips_and_updates</span>
+            Best Practices
+        </h2>
+        
+        <div style="display: grid; gap: 12px;">
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✓ Advance Notice:</strong> Employees কে encourage করুন advance এ leave apply করতে
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✓ Documentation:</strong> Sick leave এর জন্য medical certificate require করুন
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✓ Balance Check:</strong> Approve করার আগে leave balance check করুন
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✓ Policy:</strong> Clear leave policy document তৈরি করুন এবং সবাইকে জানান
+            </div>
+        </div>
+    </div>
+
+    <!-- Next Steps -->
+    <div style="background: #e0e7ff; border: 2px solid #6366f1; border-radius: 12px; padding: 24px;">
+        <h2 style="color: #3730a3; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1; font-size: 32px;">arrow_forward</span>
+            Next Steps
+        </h2>
+        
+        <div style="display: grid; gap: 12px;">
+            <a href="{% url 'hrm:salary-payroll-guide' %}" style="background: white; padding: 16px; border-radius: 8px; text-decoration: none; display: block; border-left: 4px solid #6366f1;">
+                <div style="font-weight: 600; color: #3730a3; margin-bottom: 4px;">Salary & Payroll Guide →</div>
+                <div style="font-size: 14px; color: #6b7280;">Salary setup এবং payroll process করুন</div>
+            </a>
+            
+            <a href="{% url 'hrm:attendance-management-guide' %}" style="background: white; padding: 16px; border-radius: 8px; text-decoration: none; display: block; border-left: 4px solid #6366f1;">
+                <div style="font-weight: 600; color: #3730a3; margin-bottom: 4px;">Attendance Management Guide →</div>
+                <div style="font-size: 14px; color: #6b7280;">Attendance track এবং manage করুন</div>
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

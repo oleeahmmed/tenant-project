@@ -30,6 +30,7 @@ def _device(request, device_id):
 
 class PyZKFetchUsersView(APIView):
     permission_classes = [IsHrmTenantAdmin]
+    required_permission = "hrm.device.manage"
 
     def post(self, request, device_id):
         device = _device(request, device_id)
@@ -94,6 +95,7 @@ class PyZKFetchUsersView(APIView):
 
 class PyZKImportUsersView(APIView):
     permission_classes = [IsHrmTenantAdmin]
+    required_permission = "hrm.device.manage"
 
     def post(self, request, device_id):
         device = _device(request, device_id)
@@ -120,6 +122,7 @@ class PyZKImportUsersView(APIView):
 
 class PyZKFetchAttendanceView(APIView):
     permission_classes = [IsHrmTenantAdmin]
+    required_permission = "hrm.device.manage"
 
     def post(self, request, device_id):
         device = _device(request, device_id)
@@ -196,6 +199,7 @@ class PyZKFetchAttendanceView(APIView):
 
 class PyZKImportAttendanceView(APIView):
     permission_classes = [IsHrmTenantAdmin]
+    required_permission = "hrm.device.manage"
 
     def post(self, request, device_id):
         device = _device(request, device_id)

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{% block title %}ERP Mobile{% endblock %}</title>
+{% block extra_head %}{% endblock %}
+<style>
+:root[data-theme="dark"]{
+--bg-primary:#0a0a0a;
+--bg-secondary:#1a1a1a;
+--bg-card:#1e1e1e;
+--text-primary:#ffffff;
+--text-secondary:#a0a0a0;
+--text-muted:#666666;
+--accent-primary:#c4ff0d;
+--accent-secondary:#9acc0a;
+--border-color:#2a2a2a;
+--shadow:rgba(0,0,0,0.3);
+}
+:root[data-theme="light"]{
+--bg-primary:#f5f5f5;
+--bg-secondary:#ffffff;
+--bg-card:#ffffff;
+--text-primary:#1a1a1a;
+--text-secondary:#666666;
+--text-muted:#999999;
+--accent-primary:#c4ff0d;
+--accent-secondary:#9acc0a;
+--border-color:#e5e5e5;
+--shadow:rgba(0,0,0,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);padding-bottom:90px;min-height:100vh;transition:background 0.3s,color 0.3s}
+.header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;position:sticky;top:0;background:var(--bg-secondary);border-bottom:1px solid var(--border-color);z-index:100}
+.header-left{display:flex;align-items:center;gap:12px}
+.back-btn{width:40px;height:40px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;color:var(--text-primary);transition:all 0.2s;text-decoration:none}
+.back-btn:hover{transform:scale(1.05);background:var(--accent-primary);color:#000}
+.page-title{font-size:18px;font-weight:700;color:var(--text-primary)}
+.header-right{display:flex;gap:8px}
+.icon-btn{width:40px;height:40px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:var(--text-primary);transition:all 0.2s}
+.icon-btn:hover{transform:scale(1.05)}
+.header.dashboard{background:transparent;border:none;position:relative}
+.user-section{display:flex;align-items:center;gap:12px}
+.avatar{width:48px;height:48px;border-radius:50%;background:var(--accent-primary);object-fit:cover}
+.user-text{flex:1}
+.welcome{font-size:12px;color:var(--text-secondary);margin-bottom:2px}
+.user-name{font-size:18px;font-weight:700;color:var(--text-primary)}
+.header-actions{display:flex;gap:8px}
+{% block extra_styles %}{% endblock %}
+</style>
+</head>
+<body>
+{% block header %}
+<div class="header {% if request.resolver_match.url_name == 'erp-mobile-dashboard' %}dashboard{% endif %}">
+{% if request.resolver_match.url_name != 'erp-mobile-dashboard' %}
+<div class="header-left">
+<a href="javascript:history.back()" class="back-btn">←</a>
+<h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+</div>
+<div class="header-right">
+<button class="icon-btn" onclick="toggleTheme()" id="themeToggle">☀️</button>
+</div>
+{% else %}
+<div class="user-section">
+<div class="avatar" style="display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;font-size:20px">{{user.first_name.0|upper}}</div>
+<div class="user-text">
+<div class="welcome">Welcome back,</div>
+<div class="user-name">{{user.first_name}} {{user.last_name}}</div>
+</div>
+</div>
+<div class="header-actions">
+<button class="icon-btn">🔔</button>
+<button class="icon-btn" onclick="toggleTheme()" id="themeToggle">☀️</button>
+</div>
+{% endif %}
+</div>
+{% endblock %}
+{% block content %}{% endblock %}
+{% include 'erp/mobile_app/bottom_nav.html' %}
+<script>
+function toggleTheme(){
+const html=document.documentElement;
+const currentTheme=html.getAttribute('data-theme');
+const newTheme=currentTheme==='dark'?'light':'dark';
+html.setAttribute('data-theme',newTheme);
+localStorage.setItem('theme',newTheme);
+document.getElementById('themeToggle').textContent=newTheme==='dark'?'☀️':'🌙';
+}
+document.addEventListener('DOMContentLoaded',()=>{
+const savedTheme=localStorage.getItem('theme')||'dark';
+document.documentElement.setAttribute('data-theme',savedTheme);
+document.getElementById('themeToggle').textContent=savedTheme==='dark'?'☀️':'🌙';
+});
+</script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

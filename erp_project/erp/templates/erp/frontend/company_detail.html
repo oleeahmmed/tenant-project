@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ company.name }} - Company Details{% endblock %}
+
+{% block content %}
+<!-- Page header section -->
+<div class="block-header">
+    <div class="row clearfix">
+        <div class="col-lg-6 col-md-12 col-sm-12">
+            <h1>{{ company.name }}</h1>
+            <span>Company Details</span>
+        </div>
+        <div class="col-lg-6 col-md-12 col-sm-12 text-lg-right">
+            <a href="{% url 'erp:company_update' company.pk %}" class="btn btn-warning">
+                <i class="fa fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'erp:company_list' %}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Company Info -->
+<div class="row clearfix">
+    <div class="col-lg-8 col-md-12">
+        <div class="card">
+            <div class="header">
+                <h2>Company Information</h2>
+            </div>
+            <div class="body">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <th width="200">Name:</th>
+                            <td><strong>{{ company.name }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td><a href="mailto:{{ company.email }}">{{ company.email }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Phone:</th>
+                            <td><a href="tel:{{ company.phone }}">{{ company.phone }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Website:</th>
+                            <td>
+                                {% if company.website %}
+                                <a href="{{ company.website }}" target="_blank">{{ company.website }}</a>
+                                {% else %}
+                                Not provided
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Address:</th>
+                            <td>{{ company.address|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>City:</th>
+                            <td>{{ company.city|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Country:</th>
+                            <td>{{ company.country|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tax Number:</th>
+                            <td>{{ company.tax_number|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ company.created_at|date:"d M, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Updated:</th>
+                            <td>{{ company.updated_at|date:"d M, Y H:i" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-12">
+        <!-- Company Logo -->
+        {% if company.logo %}
+        <div class="card">
+            <div class="header">
+                <h2>Company Logo</h2>
+            </div>
+            <div class="body text-center">
+                <img src="{{ company.logo.url }}" alt="{{ company.name }}" style="max-width: 100%; height: auto; border-radius: 8px;">
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Quick Info -->
+        <div class="card">
+            <div class="header">
+                <h2>Quick Info</h2>
+            </div>
+            <div class="body">
+                <div class="text-center mb-3">
+                    <i class="fa fa-building fa-3x text-primary"></i>
+                    <p class="mt-2 mb-0">Organization</p>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <p class="text-muted mb-1">Location</p>
+                    <h6 class="mb-0">{{ company.city }}, {{ company.country }}</h6>
+                </div>
+                <div class="mb-3">
+                    <p class="text-muted mb-1">Contact</p>
+                    <h6 class="mb-0">{{ company.phone }}</h6>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="card">
+            <div class="header">
+                <h2>Actions</h2>
+            </div>
+            <div class="body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'erp:company_update' company.pk %}" class="btn btn-warning btn-block mb-2">
+                        <i class="fa fa-edit"></i> Edit Company
+                    </a>
+                    <button type="button" class="btn btn-danger btn-block" onclick="confirmDelete()">
+                        <i class="fa fa-trash"></i> Delete Company
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete company "<strong>{{ company.name }}</strong>"?</p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'erp:company_delete' company.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete() {
+    $('#deleteModal').modal('show');
+}
+</script>
+{% endblock %}

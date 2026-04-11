@@ -1,0 +1,73 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block page_title %}Purchase · {{ page_title }}{% endblock %}
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <h2 class="text-lg font-semibold text-foreground">{{ page_title }}</h2>
+      <div class="flex items-center gap-2">
+        <a href="{% url 'purchase:purchase_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+        </a>
+        <a href="{% url create_url %}" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Add</a>
+      </div>
+    </div>
+    <div class="p-5">
+      <div class="ui-table-wrap overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-border bg-muted/40">
+              <th class="px-3 py-2 text-left">Document</th>
+              <th class="px-3 py-2 text-left">Status</th>
+              <th class="px-3 py-2 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            {% for obj in object_list %}
+            <tr>
+              <td class="px-3 py-2">{{ obj }}</td>
+              <td class="px-3 py-2">{{ obj.status }}</td>
+              <td class="px-3 py-2 text-right space-x-1">
+                {% if page_title == 'Purchase requests' %}
+                  <a href="{% url 'purchase:purchase_request_detail' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">View</a>
+                  {% if obj.status == 'draft' %}
+                    <a href="{% url 'purchase:purchase_request_edit' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">Edit</a>
+                    <form method="post" action="{% url 'purchase:purchase_request_approve' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 hover:bg-accent">Approve</button></form>
+                    <form method="post" action="{% url 'purchase:purchase_request_delete' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button></form>
+                  {% endif %}
+                {% elif page_title == 'Purchase orders' %}
+                  <a href="{% url 'purchase:purchase_order_detail' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">View</a>
+                  {% if obj.status == 'draft' %}
+                    <a href="{% url 'purchase:purchase_order_edit' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">Edit</a>
+                    <form method="post" action="{% url 'purchase:purchase_order_approve' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 hover:bg-accent">Approve</button></form>
+                    <form method="post" action="{% url 'purchase:purchase_order_delete' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button></form>
+                  {% endif %}
+                {% elif page_title == 'Purchase returns' %}
+                  <a href="{% url 'purchase:purchase_return_detail' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">View</a>
+                  {% if obj.status == 'draft' %}
+                    <a href="{% url 'purchase:purchase_return_edit' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">Edit</a>
+                    <form method="post" action="{% url 'purchase:purchase_return_post' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 hover:bg-accent">Post</button></form>
+                    <form method="post" action="{% url 'purchase:purchase_return_delete' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button></form>
+                  {% endif %}
+                {% else %}
+                  <a href="{% url 'purchase:goods_receipt_detail' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">View</a>
+                  {% if obj.status == 'draft' %}
+                    <a href="{% url 'purchase:goods_receipt_edit' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">Edit</a>
+                    <form method="post" action="{% url 'purchase:goods_receipt_post' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 hover:bg-accent">Post</button></form>
+                    <form method="post" action="{% url 'purchase:goods_receipt_delete' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button></form>
+                  {% endif %}
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="px-3 py-6 text-center text-muted-foreground">No records found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

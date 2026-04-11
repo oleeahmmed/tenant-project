@@ -2,7 +2,9 @@ from collections import defaultdict
 from datetime import date
 from decimal import Decimal
 
+from django.db.models import F
 from django.db.models import Sum
+from django.db.models.functions import Coalesce
 
 from finance.models import Account, APInvoice, ARInvoice, Budget, BudgetLine, LedgerEntry
 
@@ -95,13 +97,25 @@ def balance_sheet(*, tenant, date_to: date | None = None):
 
 
 def ap_aging(*, tenant):
-    rows = APInvoice.objects.filter(tenant=tenant, status=APInvoice.Status.POSTED).select_related("supplier")
-    return rows
+    rows = (
+        APInvoice.objects.filter(tenant=tenant, status=APInvoice.Status.POSTED)
+        .select_related("supplier")
+        .annotate(applied_amount=Coalesce(Sum("payment_allocations__amount"), Decimal("0")))
+        .annotate(outstanding_amount=F("total_amount") - F("applied_amount"))
+        .filter(outstanding_amount__gt=0)
+    )
+    return rows.order_by("due_date", "posting_date", "id")
 
 
 def ar_aging(*, tenant):
-    rows = ARInvoice.objects.filter(tenant=tenant, status=ARInvoice.Status.POSTED).select_related("customer")
-    return rows
+    rows = (
+        ARInvoice.objects.filter(tenant=tenant, status=ARInvoice.Status.POSTED)
+        .select_related("customer")
+        .annotate(applied_amount=Coalesce(Sum("receipt_allocations__amount"), Decimal("0")))
+        .annotate(outstanding_amount=F("total_amount") - F("applied_amount"))
+        .filter(outstanding_amount__gt=0)
+    )
+    return rows.order_by("due_date", "posting_date", "id")
 
 
 def budget_vs_actual(*, tenant, budget_id: int):
@@ -115,7 +129,10 @@ def budget_vs_actual(*, tenant, budget_id: int):
             LedgerEntry.objects.filter(tenant=tenant, account=line.account, posting_date__gte=line.fiscal_period.start_date, posting_date__lte=line.fiscal_period.end_date)
             .aggregate(dr=Sum("debit"), cr=Sum("credit"))
         )
-        actual_amount = (actual["dr"] or Decimal("0")) - (actual["cr"] or Decimal("0"))
+        if line.account.account_type in (Account.AccountType.INCOME, Account.AccountType.LIABILITY, Account.AccountType.EQUITY):
+            actual_amount = (actual["cr"] or Decimal("0")) - (actual["dr"] or Decimal("0"))
+        else:
+            actual_amount = (actual["dr"] or Decimal("0")) - (actual["cr"] or Decimal("0"))
         variance = line.amount - actual_amount
         out.append(
             {

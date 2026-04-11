@@ -4,7 +4,7 @@ from hrm.tenant_scope import get_hrm_tenant, user_belongs_to_workspace_tenant
 
 
 class IsHrmTenantAdmin(BasePermission):
-    """Matches HRM web: super_admin / tenant_admin / staff in the resolved workspace."""
+    """HRM API admin scope: super_admin / tenant_admin in the resolved workspace."""
 
     def has_permission(self, request, view):
         u = request.user
@@ -18,4 +18,9 @@ class IsHrmTenantAdmin(BasePermission):
             return True
         if role not in ("tenant_admin", "staff"):
             return False
-        return user_belongs_to_workspace_tenant(u, t)
+        if not user_belongs_to_workspace_tenant(u, t):
+            return False
+        if role == "tenant_admin":
+            return True
+        required = getattr(view, "required_permission", "hrm.api.admin")
+        return u.has_tenant_permission(required)

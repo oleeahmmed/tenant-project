@@ -34,5 +34,6 @@ urlpatterns = [
 
     # Super Admin
     path('dashboard/tenants/',     views.tenant_list_view,     name='tenant_list'),
+    path('dashboard/tenants/<int:tenant_id>/access/', views.tenant_access_matrix_view, name='tenant_access_matrix'),
     path('dashboard/permissions/', views.permission_list_view, name='permission_list'),
 ]

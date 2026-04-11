@@ -14,6 +14,16 @@ urlpatterns = [
         name="stock_adjustment_detail",
     ),
     path(
+        "stock-adjustments/<int:pk>/print/",
+        views.StockAdjustmentPrintView.as_view(),
+        name="stock_adjustment_print",
+    ),
+    path(
+        "stock-adjustments/<int:pk>/pdf/",
+        views.StockAdjustmentPrintView.as_view(),
+        name="stock_adjustment_pdf",
+    ),
+    path(
         "stock-adjustments/<int:pk>/edit/",
         views.StockAdjustmentUpdateView.as_view(),
         name="stock_adjustment_update",
@@ -31,6 +41,16 @@ urlpatterns = [
     path("goods-issues/", views.GoodsIssueListView.as_view(), name="goods_issue_list"),
     path("goods-issues/add/", views.GoodsIssueCreateView.as_view(), name="goods_issue_create"),
     path("goods-issues/<int:pk>/", views.GoodsIssueDetailView.as_view(), name="goods_issue_detail"),
+    path(
+        "goods-issues/<int:pk>/print/",
+        views.GoodsIssuePrintView.as_view(),
+        name="goods_issue_print",
+    ),
+    path(
+        "goods-issues/<int:pk>/pdf/",
+        views.GoodsIssuePrintView.as_view(),
+        name="goods_issue_pdf",
+    ),
     path("goods-issues/<int:pk>/edit/", views.GoodsIssueUpdateView.as_view(), name="goods_issue_update"),
     path("goods-issues/<int:pk>/release/", views.GoodsIssuePostView.as_view(), name="goods_issue_release"),
     path("goods-issues/<int:pk>/delete/", views.GoodsIssueDeleteView.as_view(), name="goods_issue_delete"),
@@ -48,6 +68,16 @@ urlpatterns = [
         "inventory-transfers/<int:pk>/",
         views.InventoryTransferDetailView.as_view(),
         name="inventory_transfer_detail",
+    ),
+    path(
+        "inventory-transfers/<int:pk>/print/",
+        views.InventoryTransferPrintView.as_view(),
+        name="inventory_transfer_print",
+    ),
+    path(
+        "inventory-transfers/<int:pk>/pdf/",
+        views.InventoryTransferPrintView.as_view(),
+        name="inventory_transfer_pdf",
     ),
     path(
         "inventory-transfers/<int:pk>/edit/",

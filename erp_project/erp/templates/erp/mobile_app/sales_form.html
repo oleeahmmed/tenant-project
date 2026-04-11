@@ -1,0 +1,237 @@
+{% extends 'erp/mobile_app/base_app.html' %}
+{% block title %}{% if order %}Edit Order{% else %}New Order{% endif %} - ERP Mobile{% endblock %}
+{% block page_title %}{% if order %}Edit Sales Order{% else %}New Sales Order{% endif %}{% endblock %}
+{% block extra_styles %}
+<style>
+.container{padding:0 20px 20px;max-width:800px;margin:0 auto}
+.header-actions{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:12px}
+.btn{padding:12px 24px;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px}
+.btn-primary{background:var(--accent-primary);color:#000}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(196,255,13,0.3)}
+.btn-secondary{background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-color)}
+.btn-secondary:hover{background:var(--bg-primary)}
+.tabs{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:8px}
+.tab{padding:12px 20px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;color:var(--text-secondary);font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;font-size:14px}
+.tab.active{background:var(--accent-primary);color:#000;border-color:var(--accent-primary)}
+.tab:hover:not(.active){border-color:var(--accent-primary)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.form-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:16px;padding:20px}
+.section-title{font-size:14px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:8px}
+.form-label.required::after{content:'*';color:#ef4444;margin-left:4px}
+.form-input,.form-select,.form-textarea{width:100%;padding:12px 16px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:12px;color:var(--text-primary);font-size:14px;outline:none;transition:all 0.2s;font-family:inherit}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent-primary);box-shadow:0 0 0 3px rgba(196,255,13,0.1)}
+.form-textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-hint{font-size:11px;color:var(--text-muted);margin-top:4px}
+.alert{padding:12px 16px;border-radius:12px;margin-bottom:20px;font-size:14px}
+.alert-error{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3)}
+.item-row{background:var(--bg-primary);padding:12px;border-radius:8px;margin-bottom:12px;border:1px solid var(--border-color)}
+.item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.item-name{font-weight:600;color:var(--text-primary)}
+.remove-btn{background:#ef4444;color:#fff;border:none;padding:4px 12px;border-radius:6px;font-size:12px;cursor:pointer}
+.add-item-btn{width:100%;padding:12px;background:var(--bg-card);border:1px dashed var(--border-color);border-radius:8px;color:var(--text-primary);font-weight:600;cursor:pointer;transition:all 0.2s;margin-top:12px}
+.add-item-btn:hover{border-color:var(--accent-primary);color:var(--accent-primary)}
+.summary-box{background:var(--bg-primary);padding:16px;border-radius:12px;margin-top:16px}
+.summary-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px}
+.summary-total{font-size:18px;font-weight:700;color:var(--accent-primary);padding-top:8px;border-top:1px solid var(--border-color)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container">
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }}">{{ message }}</div>
+{% endfor %}
+{% endif %}
+
+<div class="header-actions">
+<button type="button" class="btn btn-secondary" onclick="history.back()">← Back</button>
+<button type="submit" form="salesForm" class="btn btn-primary">✓ {% if order %}Update{% else %}Create{% endif %}</button>
+</div>
+
+<div class="tabs">
+<div class="tab active" onclick="switchTab('basic')">📋 Basic Info</div>
+<div class="tab" onclick="switchTab('customer')">👤 Customer</div>
+<div class="tab" onclick="switchTab('items')">📦 Items</div>
+<div class="tab" onclick="switchTab('notes')">📝 Notes</div>
+</div>
+
+<form method="post" id="salesForm">
+{% csrf_token %}
+
+<div id="tab-basic" class="tab-content active">
+<div class="form-card">
+<div class="form-row">
+<div class="form-group">
+<label class="form-label required">Order Date</label>
+<input type="date" name="order_date" class="form-input" value="{% if order %}{{order.order_date|date:'Y-m-d'}}{% else %}{{today|date:'Y-m-d'}}{% endif %}" required>
+</div>
+<div class="form-group">
+<label class="form-label">Status</label>
+<select name="status" class="form-select">
+<option value="draft" {% if not order or order.status == 'draft' %}selected{% endif %}>Draft</option>
+<option value="confirmed" {% if order.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+<option value="processing" {% if order.status == 'processing' %}selected{% endif %}>Processing</option>
+<option value="completed" {% if order.status == 'completed' %}selected{% endif %}>Completed</option>
+<option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+
+<div id="tab-customer" class="tab-content">
+<div class="form-card">
+<div class="form-group">
+<label class="form-label required">Customer</label>
+<select name="customer" class="form-select" required>
+<option value="">-- Select Customer --</option>
+{% for cust in customers %}
+<option value="{{cust.id}}" {% if order.customer_id == cust.id %}selected{% endif %}>{{cust.name}}</option>
+{% endfor %}
+</select>
+</div>
+<div class="form-group">
+<label class="form-label">Salesperson</label>
+<select name="salesperson" class="form-select">
+<option value="">-- Select Salesperson --</option>
+{% for sp in salespersons %}
+<option value="{{sp.id}}" {% if order.salesperson_id == sp.id %}selected{% endif %}>{{sp.name}}</option>
+{% endfor %}
+</select>
+</div>
+</div>
+</div>
+
+<div id="tab-items" class="tab-content">
+<div class="form-card">
+<div id="itemsContainer"></div>
+<button type="button" class="add-item-btn" onclick="addItem()">➕ Add Item</button>
+
+<div class="summary-box">
+<div class="summary-row">
+<span>Subtotal:</span>
+<span id="subtotal">৳0.00</span>
+</div>
+<div class="summary-row">
+<span>Discount:</span>
+<input type="number" name="discount_amount" id="discountInput" value="{{order.discount_amount|default:'0.00'}}" step="0.01" min="0" style="width:120px;padding:4px 8px;border:1px solid var(--border-color);border-radius:6px;text-align:right;background:var(--bg-card);color:var(--text-primary)" onchange="calculateTotal()">
+</div>
+<div class="summary-row">
+<span>Tax (%):</span>
+<input type="number" name="tax_rate" id="taxRateInput" value="{{order.tax_rate|default:'0.00'}}" step="0.01" min="0" max="100" style="width:120px;padding:4px 8px;border:1px solid var(--border-color);border-radius:6px;text-align:right;background:var(--bg-card);color:var(--text-primary)" onchange="calculateTotal()">
+</div>
+<div class="summary-row">
+<span>Tax Amount:</span>
+<span id="taxAmount">৳0.00</span>
+</div>
+<div class="summary-row summary-total">
+<span>Total:</span>
+<span id="total">৳0.00</span>
+</div>
+</div>
+</div>
+</div>
+
+<div id="tab-notes" class="tab-content">
+<div class="form-card">
+<div class="form-group">
+<label class="form-label">Notes</label>
+<textarea name="notes" class="form-textarea" rows="6">{{order.notes|default:''}}</textarea>
+</div>
+</div>
+</div>
+</form>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+// Tab switching
+function switchTab(tabName) {
+document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+event.target.classList.add('active');
+document.getElementById('tab-' + tabName).classList.add('active');
+}
+
+let itemCounter = 0;
+const products = {{ products_json|safe }};
+
+function addItem(productId='', quantity='1', price='') {
+itemCounter++;
+const container = document.getElementById('itemsContainer');
+const div = document.createElement('div');
+div.className = 'item-row';
+div.id = `item-${itemCounter}`;
+div.innerHTML = `
+<div class="item-header">
+<span class="item-name">Item #${itemCounter}</span>
+<button type="button" class="remove-btn" onclick="removeItem(${itemCounter})">✕</button>
+</div>
+<div class="form-group">
+<select name="items[${itemCounter}][product]" class="form-select" onchange="updatePrice(${itemCounter})" required>
+<option value="">-- Select Product --</option>
+${products.map(p => `<option value="${p.id}" data-price="${p.selling_price}" ${p.id==productId?'selected':''}>${p.name} (${p.sku})</option>`).join('')}
+</select>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label class="form-label">Quantity</label>
+<input type="number" name="items[${itemCounter}][quantity]" class="form-input" value="${quantity}" step="0.01" min="0.01" onchange="calculateTotal()" required>
+</div>
+<div class="form-group">
+<label class="form-label">Price</label>
+<input type="number" name="items[${itemCounter}][price]" id="price-${itemCounter}" class="form-input" value="${price}" step="0.01" min="0" onchange="calculateTotal()" required>
+</div>
+</div>
+`;
+container.appendChild(div);
+calculateTotal();
+}
+
+function removeItem(id) {
+document.getElementById(`item-${id}`).remove();
+calculateTotal();
+}
+
+function updatePrice(id) {
+const select = document.querySelector(`#item-${id} select`);
+const priceInput = document.getElementById(`price-${id}`);
+const option = select.options[select.selectedIndex];
+if (option.dataset.price) {
+priceInput.value = option.dataset.price;
+calculateTotal();
+}
+}
+
+function calculateTotal() {
+let subtotal = 0;
+document.querySelectorAll('.item-row').forEach(row => {
+const qty = parseFloat(row.querySelector('input[name*="quantity"]').value) || 0;
+const price = parseFloat(row.querySelector('input[name*="price"]').value) || 0;
+subtotal += qty * price;
+});
+
+const discount = parseFloat(document.getElementById('discountInput').value) || 0;
+const taxRate = parseFloat(document.getElementById('taxRateInput').value) || 0;
+const taxAmount = (subtotal - discount) * (taxRate / 100);
+const total = subtotal - discount + taxAmount;
+
+document.getElementById('subtotal').textContent = `৳${subtotal.toFixed(2)}`;
+document.getElementById('taxAmount').textContent = `৳${taxAmount.toFixed(2)}`;
+document.getElementById('total').textContent = `৳${total.toFixed(2)}`;
+}
+
+// Load existing items if editing
+{% if order %}
+{% for item in order.items.all %}
+addItem('{{item.product_id}}', '{{item.quantity}}', '{{item.unit_price}}');
+{% endfor %}
+{% else %}
+addItem(); // Add one empty item for new orders
+{% endif %}
+</script>
+{% endblock %}

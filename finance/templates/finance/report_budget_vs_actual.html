@@ -1,15 +1,26 @@
 {% extends "auth_tenants/base.html" %}
+{% load static %}
 {% block title %}Budget vs Actual{% endblock %}
 {% block page_title %}Finance · Budget vs Actual{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css" rel="stylesheet"/>
+<link href="{% static 'foundation/css/tom_select_inv.css' %}" rel="stylesheet"/>
+{% endblock %}
 {% block content %}
 <div class="w-full px-1 md:px-2">
   <div class="simple-card rounded-xl border border-border bg-card shadow-card p-5 space-y-4">
-    <form class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <select name="budget_id" class="rounded-lg border border-border bg-background px-3 py-2 text-sm">
+    <div class="flex items-center justify-between gap-2">
+      <p class="text-xs text-muted-foreground">Choose a budget to compare with actuals.</p>
+      <a href="{% url 'finance:report_budget_vs_actual' %}" class="rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-accent">Reset</a>
+    </div>
+    <form class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <select name="budget_id" class="rounded-lg border border-border bg-background px-3 py-2 text-sm inv-ts-local">
         <option value="">Select budget</option>
         {% for b in budgets %}<option value="{{ b.id }}" {% if filter_budget_id == b.id|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>{% endfor %}
       </select>
       <button class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Apply</button>
+      <a href="{% url 'finance:report_budget_vs_actual' %}" class="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Reset</a>
     </form>
     <div class="ui-table-wrap overflow-x-auto">
       <table class="w-full text-sm">
@@ -21,5 +32,11 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script src="{% static 'foundation/js/tom_select_local.js' %}"></script>
 {% endblock %}
 

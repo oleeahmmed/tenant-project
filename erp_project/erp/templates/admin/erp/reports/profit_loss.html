@@ -1,0 +1,232 @@
+{% extends "unfold/layouts/base_simple.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="p-6 md:p-8">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-font-important-light dark:text-font-important-dark mb-2">{{ title }}</h1>
+        <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark">{{ subtitle }}</p>
+    </div>
+    
+    <!-- Progress Bar -->
+    <div id="progressContainer" class="hidden mb-6 bg-gradient-to-br from-[#e8f4f8] to-white dark:from-[#1a4d6d] dark:to-[#0d2d45] border-2 border-[#c4d82e]/30 rounded-default p-5 shadow-lg">
+        <div class="flex items-center justify-between mb-3">
+            <span id="progressText" class="text-sm font-semibold text-[#1a4d6d] dark:text-white">Processing...</span>
+            <span id="progressPercent" class="text-sm font-bold text-[#c4d82e] bg-[#1a4d6d]/10 dark:bg-[#c4d82e]/10 px-3 py-1 rounded-full">0%</span>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden shadow-inner">
+            <div id="progressBar" class="h-3 rounded-full transition-all duration-300 shadow-md" style="width: 0%; background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%);"></div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="bg-base-50 dark:bg-base-900 border border-base-200 dark:border-base-800 rounded-default p-6 mb-6">
+        <form id="filterForm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">From Date</label>
+                    <input type="date" name="from_date" value="{{ filters.from_date }}" class="w-full px-3 py-2 border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 rounded-default text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">To Date</label>
+                    <input type="date" name="to_date" value="{{ filters.to_date }}" class="w-full px-3 py-2 border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 rounded-default text-sm">
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <button type="button" onclick="loadReport()" style="background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%); color: white;" class="px-5 py-2.5 font-semibold rounded-default text-sm shadow-md hover:shadow-lg transition-all transform hover:scale-105">Apply Filters</button>
+                <button type="button" onclick="window.location.href='{% url 'erp:profit-loss-report' %}'" style="background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%); color: white;" class="px-5 py-2.5 font-semibold rounded-default text-sm shadow-md hover:shadow-lg transition-all">Clear</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Stats -->
+    <div id="statsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div class="relative overflow-hidden rounded-xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+            <div class="relative z-10">
+                <div id="statRevenue" class="text-4xl font-extrabold text-white mb-2 drop-shadow-lg">৳0.00</div>
+                <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Total Revenue</div>
+            </div>
+        </div>
+        <div class="relative overflow-hidden rounded-xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+            <div class="relative z-10">
+                <div id="statExpense" class="text-4xl font-extrabold text-white mb-2 drop-shadow-lg">৳0.00</div>
+                <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Total Expense</div>
+            </div>
+        </div>
+        <div class="relative overflow-hidden rounded-xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #c4d82e 0%, #b8cc2a 100%);">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+            <div class="relative z-10">
+                <div id="statProfit" class="text-4xl font-extrabold text-white mb-2 drop-shadow-lg">৳0.00</div>
+                <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Net Profit</div>
+            </div>
+        </div>
+        <div class="relative overflow-hidden rounded-xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+            <div class="relative z-10">
+                <div id="statMargin" class="text-4xl font-extrabold text-white mb-2 drop-shadow-lg">0%</div>
+                <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Profit Margin</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Revenue & Expense Tables -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Revenue Section -->
+        <div class="bg-white dark:bg-base-900 border border-base-200 dark:border-base-800 rounded-default overflow-hidden shadow-sm">
+            <div class="border-b border-base-200 dark:border-base-800 bg-green-50 dark:bg-green-900/20 px-6 py-4">
+                <h3 class="text-lg font-bold text-green-700 dark:text-green-400">Revenue</h3>
+            </div>
+            <div class="overflow-x-auto overflow-y-auto" style="max-height: 400px;">
+                <table class="w-full text-sm border-collapse">
+                    <thead class="sticky top-0 bg-green-100 dark:bg-green-900/30">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold border border-base-200 dark:border-base-800">Account</th>
+                            <th class="px-4 py-3 text-right font-semibold border border-base-200 dark:border-base-800">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="revenueBody">
+                        <tr><td colspan="2" class="px-4 py-8 text-center text-font-subtle-light">No data</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Expense Section -->
+        <div class="bg-white dark:bg-base-900 border border-base-200 dark:border-base-800 rounded-default overflow-hidden shadow-sm">
+            <div class="border-b border-base-200 dark:border-base-800 bg-red-50 dark:bg-red-900/20 px-6 py-4">
+                <h3 class="text-lg font-bold text-red-700 dark:text-red-400">Expenses</h3>
+            </div>
+            <div class="overflow-x-auto overflow-y-auto" style="max-height: 400px;">
+                <table class="w-full text-sm border-collapse">
+                    <thead class="sticky top-0 bg-red-100 dark:bg-red-900/30">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold border border-base-200 dark:border-base-800">Account</th>
+                            <th class="px-4 py-3 text-right font-semibold border border-base-200 dark:border-base-800">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenseBody">
+                        <tr><td colspan="2" class="px-4 py-8 text-center text-font-subtle-light">No data</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+let currentTaskId = null;
+let pollInterval = null;
+let currentData = null;
+
+function loadReport() {
+    document.getElementById('progressContainer').classList.remove('hidden');
+    document.getElementById('progressText').textContent = 'Checking cache...';
+    document.getElementById('progressBar').style.width = '5%';
+    
+    const formData = new FormData(document.getElementById('filterForm'));
+    const params = new URLSearchParams(formData);
+    
+    fetch(`/erp/api/reports/financial/profit-loss/start/?${params}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.cached) {
+                document.getElementById('progressText').textContent = 'Loaded from cache (instant!)';
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressPercent').textContent = '100%';
+                setTimeout(() => {
+                    displayResults(data.data);
+                }, 500);
+            } else {
+                currentTaskId = data.task_id;
+                pollTaskStatus();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to start report generation');
+            document.getElementById('progressContainer').classList.add('hidden');
+        });
+}
+
+function pollTaskStatus() {
+    if (!currentTaskId) return;
+    
+    pollInterval = setInterval(() => {
+        fetch(`/erp/api/reports/financial/profit-loss/status/${currentTaskId}/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('progressBar').style.width = data.progress + '%';
+                document.getElementById('progressPercent').textContent = data.progress + '%';
+                document.getElementById('progressText').textContent = data.status;
+                
+                if (data.state === 'SUCCESS') {
+                    clearInterval(pollInterval);
+                    displayResults(data.data);
+                } else if (data.state === 'FAILURE') {
+                    clearInterval(pollInterval);
+                    alert('Report generation failed: ' + data.error);
+                    document.getElementById('progressContainer').classList.add('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                clearInterval(pollInterval);
+            });
+    }, 1000);
+}
+
+function displayResults(data) {
+    document.getElementById('progressContainer').classList.add('hidden');
+    currentData = data;
+    
+    document.getElementById('statRevenue').textContent = '৳' + data.totals.total_revenue.toFixed(2);
+    document.getElementById('statExpense').textContent = '৳' + data.totals.total_expense.toFixed(2);
+    document.getElementById('statProfit').textContent = '৳' + data.totals.net_profit.toFixed(2);
+    document.getElementById('statMargin').textContent = data.totals.profit_margin.toFixed(2) + '%';
+    
+    // Display revenues
+    const revenueBody = document.getElementById('revenueBody');
+    revenueBody.innerHTML = '';
+    
+    if (data.revenues.length === 0) {
+        revenueBody.innerHTML = '<tr><td colspan="2" class="px-4 py-8 text-center text-font-subtle-light">No revenue data</td></tr>';
+    } else {
+        data.revenues.forEach(item => {
+            const row = `
+                <tr class="hover:bg-base-50 dark:hover:bg-base-800">
+                    <td class="px-4 py-3 border border-base-200 dark:border-base-800">${item.account_code} - ${item.account_name}</td>
+                    <td class="px-4 py-3 text-right font-semibold border border-base-200 dark:border-base-800">৳${item.amount.toFixed(2)}</td>
+                </tr>
+            `;
+            revenueBody.innerHTML += row;
+        });
+    }
+    
+    // Display expenses
+    const expenseBody = document.getElementById('expenseBody');
+    expenseBody.innerHTML = '';
+    
+    if (data.expenses.length === 0) {
+        expenseBody.innerHTML = '<tr><td colspan="2" class="px-4 py-8 text-center text-font-subtle-light">No expense data</td></tr>';
+    } else {
+        data.expenses.forEach(item => {
+            const row = `
+                <tr class="hover:bg-base-50 dark:hover:bg-base-800">
+                    <td class="px-4 py-3 border border-base-200 dark:border-base-800">${item.account_code} - ${item.account_name}</td>
+                    <td class="px-4 py-3 text-right font-semibold border border-base-200 dark:border-base-800">৳${item.amount.toFixed(2)}</td>
+                </tr>
+            `;
+            expenseBody.innerHTML += row;
+        });
+    }
+}
+</script>
+{% endblock %}

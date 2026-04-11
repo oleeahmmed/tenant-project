@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, Tenant, OTPVerification, Role, Invitation, Permission
+from .models import User, Tenant, OTPVerification, Role, Invitation, Permission, TenantPermissionGrant
 
 
 @admin.register(User)
@@ -23,6 +23,8 @@ class UserAdmin(BaseUserAdmin):
 class TenantAdmin(admin.ModelAdmin):
     list_display  = ("name", "slug", "is_active", "created_at")
     search_fields = ("name",)
+    fields = ("name", "slug", "logo", "is_active", "created_at")
+    readonly_fields = ("created_at",)
 
 
 @admin.register(Role)
@@ -47,3 +49,10 @@ class PermissionAdmin(admin.ModelAdmin):
     list_display  = ("codename", "label", "category", "is_active")
     list_filter   = ("category", "is_active")
     search_fields = ("codename", "label")
+
+
+@admin.register(TenantPermissionGrant)
+class TenantPermissionGrantAdmin(admin.ModelAdmin):
+    list_display = ("tenant", "permission", "is_enabled", "updated_at")
+    list_filter = ("tenant", "is_enabled", "permission__category")
+    search_fields = ("tenant__name", "permission__codename", "permission__label")

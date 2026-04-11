@@ -1,0 +1,126 @@
+{% if not request.is_ajax %}
+{% extends 'erp/mobile_app/base_app.html' %}
+{% block title %}PO #{{order.order_number}} - ERP Mobile{% endblock %}
+{% block page_title %}Purchase Order Details{% endblock %}
+{% block content %}
+{% endif %}
+
+<div class="modal-body">
+<div class="detail-section">
+<div class="detail-title">🛒 Purchase Order Information</div>
+<div class="detail-grid">
+<div class="detail-item">
+<div class="detail-label">Order Number</div>
+<div class="detail-value">#{{order.order_number}}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">Order Date</div>
+<div class="detail-value">{{order.order_date|date:"M d, Y"}}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">Status</div>
+<div class="detail-value" style="color:{% if order.status == 'completed' %}#10b981{% elif order.status == 'received' %}#22c55e{% elif order.status == 'confirmed' %}#3b82f6{% elif order.status == 'sent' %}#6366f1{% elif order.status == 'draft' %}#6b7280{% else %}#ef4444{% endif %}">{{order.status|upper}}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">Expected Date</div>
+<div class="detail-value">{{order.expected_date|date:"M d, Y"|default:"N/A"}}</div>
+</div>
+</div>
+</div>
+
+<div class="detail-section">
+<div class="detail-title">🏢 Supplier Information</div>
+<div class="detail-grid">
+<div class="detail-item">
+<div class="detail-label">Supplier Name</div>
+<div class="detail-value">{{order.supplier.name|default:"Unknown Supplier"}}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">Phone</div>
+<div class="detail-value">{{order.supplier.phone|default:"N/A"}}</div>
+</div>
+{% if order.supplier.email %}
+<div class="detail-item">
+<div class="detail-label">Email</div>
+<div class="detail-value">{{order.supplier.email}}</div>
+</div>
+{% endif %}
+{% if order.supplier.address %}
+<div class="detail-item" style="grid-column:1/-1">
+<div class="detail-label">Address</div>
+<div class="detail-value">{{order.supplier.address}}</div>
+</div>
+{% endif %}
+</div>
+</div>
+
+<div class="detail-section">
+<div class="detail-title">📦 Order Items</div>
+<table class="items-table">
+<thead>
+<tr>
+<th>Product</th>
+<th>Qty</th>
+<th>Price</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody>
+{% for item in order.items.all %}
+<tr>
+<td>
+<div style="font-weight:600">{{item.product.name}}</div>
+<div style="font-size:11px;color:var(--text-secondary)">{{item.product.sku}}</div>
+</td>
+<td>{{item.quantity|floatformat:0}}</td>
+<td>৳{{item.unit_price|floatformat:2}}</td>
+<td style="font-weight:600;color:#3b82f6">৳{{item.line_total|floatformat:2}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<div class="detail-section">
+<div class="detail-title">💰 Order Summary</div>
+<div style="background:var(--bg-primary);padding:16px;border-radius:12px">
+<div style="display:flex;justify-content:space-between;margin-bottom:8px">
+<span>Subtotal:</span>
+<span style="font-weight:600">৳{{order.subtotal|floatformat:2}}</span>
+</div>
+{% if order.discount_amount %}
+<div style="display:flex;justify-content:space-between;margin-bottom:8px;color:#ef4444">
+<span>Discount:</span>
+<span style="font-weight:600">-৳{{order.discount_amount|floatformat:2}}</span>
+</div>
+{% endif %}
+{% if order.tax_amount %}
+<div style="display:flex;justify-content:space-between;margin-bottom:8px">
+<span>Tax ({{order.tax_rate}}%):</span>
+<span style="font-weight:600">৳{{order.tax_amount|floatformat:2}}</span>
+</div>
+{% endif %}
+<div style="border-top:1px solid var(--border-color);padding-top:8px;display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:#3b82f6">
+<span>Total:</span>
+<span>৳{{order.total_amount|floatformat:2}}</span>
+</div>
+</div>
+</div>
+
+{% if order.notes %}
+<div class="detail-section">
+<div class="detail-title">📝 Notes</div>
+<div style="background:var(--bg-primary);padding:12px;border-radius:12px;color:var(--text-secondary);font-size:14px;line-height:1.6">
+{{order.notes}}
+</div>
+</div>
+{% endif %}
+
+<div class="detail-section">
+<a href="{% url 'erp:erp-mobile-purchase-edit' order.id %}" style="display:block;width:100%;padding:14px;background:var(--accent-primary);color:#000;text-align:center;border-radius:12px;font-weight:600;text-decoration:none;transition:all 0.2s">✏️ Edit Order</a>
+</div>
+</div>
+
+{% if not request.is_ajax %}
+{% endblock %}
+{% endif %}

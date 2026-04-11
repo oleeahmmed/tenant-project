@@ -1,0 +1,410 @@
+/* Custom Tabs & Form Styling for Unfold Admin */
+
+/* ==================== TABS STYLING ==================== */
+
+/* Tab container background - light blue/gray */
+ul.bg-base-100 {
+    background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f0 100%) !important;
+    border: 1px solid rgba(26, 77, 109, 0.1) !important;
+}
+
+/* Tab buttons - default state */
+ul.bg-base-100 li a {
+    color: #1a4d6d !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Tab buttons - hover state */
+ul.bg-base-100 li a:hover {
+    background: rgba(196, 216, 46, 0.15) !important;
+    color: #1a4d6d !important;
+}
+
+/* Active tab button - lime green background with white text */
+ul.bg-base-100 li a.bg-white,
+ul.bg-base-100 li a[class*="bg-white"] {
+    background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Active tab button hover - slightly lighter */
+ul.bg-base-100 li a.bg-white:hover,
+ul.bg-base-100 li a[class*="bg-white"]:hover {
+    background: linear-gradient(90deg, #d0e038 0%, #c4d82e 100%) !important;
+    color: #ffffff !important;
+}
+
+/* Dark mode tabs */
+.dark ul.bg-base-100 {
+    background: linear-gradient(135deg, #1a4d6d 0%, #0d2d45 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark ul.bg-base-100 li a {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.dark ul.bg-base-100 li a:hover {
+    background: rgba(196, 216, 46, 0.2) !important;
+    color: #ffffff !important;
+}
+
+.dark ul.bg-base-100 li a.bg-white,
+.dark ul.bg-base-100 li a[class*="bg-white"] {
+    background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%) !important;
+    color: #ffffff !important;
+}
+
+/* ==================== FORM STYLING ==================== */
+
+/* Hide fieldset section descriptions */
+fieldset .leading-relaxed {
+    display: none !important;
+}
+
+/* Form field containers */
+.field-row {
+    transition: background-color 0.2s ease !important;
+}
+
+.field-row:hover {
+    background-color: rgba(196, 216, 46, 0.03) !important;
+}
+
+/* Form labels */
+label.required::after {
+    color: #c4d82e !important;
+}
+
+/* Input fields focus state */
+input:focus,
+textarea:focus,
+select:focus {
+    outline-color: #c4d82e !important;
+    border-color: #c4d82e !important;
+}
+
+/* Checkbox/Toggle switches */
+input[type="checkbox"]:checked {
+    background-color: #c4d82e !important;
+}
+
+.dark input[type="checkbox"]:checked {
+    background-color: #b8cc2a !important;
+}
+
+/* Fieldset borders */
+fieldset.module {
+    border-radius: 8px !important;
+}
+
+fieldset .border-base-200 {
+    border-color: rgba(26, 77, 109, 0.1) !important;
+}
+
+.dark fieldset .border-base-200 {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Submit buttons and primary actions */
+button[type="submit"],
+.submit-row input[type="submit"] {
+/* background: #ffffff !important; */
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
+
+button[type="submit"]:hover,
+.submit-row input[type="submit"]:hover {
+    /* background: linear-gradient(90deg, #d0e038 0%, #c4d82e 100%) !important; */
+    box-shadow: 0 4px 6px rgba(196, 216, 46, 0.3) !important;
+}
+
+/* Required field asterisk */
+.text-red-600 {
+    color: #c4d82e !important;
+}
+
+/* Help text */
+.help,
+.helptext {
+    color: #1a4d6d !important;
+    opacity: 0.7;
+}
+
+.dark .help,
+.dark .helptext {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* ==================== SIDEBAR ACTIVE LINK HOVER ==================== */
+
+/* Sidebar active link hover - primary gradient background with white text */
+aside nav a.bg-base-100:hover,
+aside nav a.text-primary-600:hover,
+aside nav a.active:hover,
+aside nav a[aria-current="page"]:hover,
+aside nav a.bg-primary-50:hover,
+aside nav a[class*="bg-primary"]:hover,
+aside nav button.bg-base-100:hover,
+aside nav button.text-primary-600:hover,
+aside nav button.active:hover,
+aside nav button[aria-current="page"]:hover,
+aside nav button.bg-primary-50:hover,
+aside nav button[class*="bg-primary"]:hover {
+    background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%) !important;
+    color: #ffffff !important;
+}
+
+/* Sidebar active link hover - icon and text color */
+aside nav a.bg-base-100:hover svg,
+aside nav a.text-primary-600:hover svg,
+aside nav a.active:hover svg,
+aside nav a[aria-current="page"]:hover svg,
+aside nav a.bg-primary-50:hover svg,
+aside nav a[class*="bg-primary"]:hover svg,
+aside nav a.bg-base-100:hover span,
+aside nav a.text-primary-600:hover span,
+aside nav a.active:hover span,
+aside nav a[aria-current="page"]:hover span,
+aside nav a.bg-primary-50:hover span,
+aside nav a[class*="bg-primary"]:hover span,
+aside nav button.bg-base-100:hover svg,
+aside nav button.text-primary-600:hover svg,
+aside nav button.active:hover svg,
+aside nav button[aria-current="page"]:hover svg,
+aside nav button.bg-primary-50:hover svg,
+aside nav button[class*="bg-primary"]:hover svg,
+aside nav button.bg-base-100:hover span,
+aside nav button.text-primary-600:hover span,
+aside nav button.active:hover span,
+aside nav button[aria-current="page"]:hover span,
+aside nav button.bg-primary-50:hover span,
+aside nav button[class*="bg-primary"]:hover span {
+    color: #ffffff !important;
+}
+
+/* Dark mode sidebar active link hover */
+.dark aside nav a.bg-base-100:hover,
+.dark aside nav a.text-primary-600:hover,
+.dark aside nav a.active:hover,
+.dark aside nav a[aria-current="page"]:hover,
+.dark aside nav a.bg-primary-50:hover,
+.dark aside nav a[class*="bg-primary"]:hover,
+.dark aside nav button.bg-base-100:hover,
+.dark aside nav button.text-primary-600:hover,
+.dark aside nav button.active:hover,
+.dark aside nav button[aria-current="page"]:hover,
+.dark aside nav button.bg-primary-50:hover,
+.dark aside nav button[class*="bg-primary"]:hover {
+    background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%) !important;
+    color: #ffffff !important;
+}
+
+.dark aside nav a.bg-base-100:hover svg,
+.dark aside nav a.text-primary-600:hover svg,
+.dark aside nav a.active:hover svg,
+.dark aside nav a[aria-current="page"]:hover svg,
+.dark aside nav a.bg-primary-50:hover svg,
+.dark aside nav a[class*="bg-primary"]:hover svg,
+.dark aside nav a.bg-base-100:hover span,
+.dark aside nav a.text-primary-600:hover span,
+.dark aside nav a.active:hover span,
+.dark aside nav a[aria-current="page"]:hover span,
+.dark aside nav a.bg-primary-50:hover span,
+.dark aside nav a[class*="bg-primary"]:hover span,
+.dark aside nav button.bg-base-100:hover svg,
+.dark aside nav button.text-primary-600:hover svg,
+.dark aside nav button.active:hover svg,
+.dark aside nav button[aria-current="page"]:hover svg,
+.dark aside nav button.bg-primary-50:hover svg,
+.dark aside nav button[class*="bg-primary"]:hover svg,
+.dark aside nav button.bg-base-100:hover span,
+.dark aside nav button.text-primary-600:hover span,
+.dark aside nav button.active:hover span,
+.dark aside nav button[aria-current="page"]:hover span,
+.dark aside nav button.bg-primary-50:hover span,
+.dark aside nav button[class*="bg-primary"]:hover span {
+    color: #ffffff !important;
+}
+
+/* Additional specificity for nested elements */
+aside nav a.bg-base-100:hover > *,
+aside nav a.text-primary-600:hover > *,
+aside nav a.active:hover > *,
+aside nav a[aria-current="page"]:hover > *,
+aside nav a.bg-primary-50:hover > *,
+aside nav a[class*="bg-primary"]:hover > *,
+aside nav button.bg-base-100:hover > *,
+aside nav button.text-primary-600:hover > *,
+aside nav button.active:hover > *,
+aside nav button[aria-current="page"]:hover > *,
+aside nav button.bg-primary-50:hover > *,
+aside nav button[class*="bg-primary"]:hover > * {
+    color: #ffffff !important;
+}
+
+.dark aside nav a.bg-base-100:hover > *,
+.dark aside nav a.text-primary-600:hover > *,
+.dark aside nav a.active:hover > *,
+.dark aside nav a[aria-current="page"]:hover > *,
+.dark aside nav a.bg-primary-50:hover > *,
+.dark aside nav a[class*="bg-primary"]:hover > *,
+.dark aside nav button.bg-base-100:hover > *,
+.dark aside nav button.text-primary-600:hover > *,
+.dark aside nav button.active:hover > *,
+.dark aside nav button[aria-current="page"]:hover > *,
+.dark aside nav button.bg-primary-50:hover > *,
+.dark aside nav button[class*="bg-primary"]:hover > * {
+    color: #ffffff !important;
+}
+
+
+/* ==================== ADDITIONAL SIDEBAR HOVER FIXES ==================== */
+
+/* Force white color on all child elements when hovering active link */
+aside nav a.bg-base-100:hover *,
+aside nav a.text-primary-600:hover *,
+aside nav a.active:hover *,
+aside nav a[aria-current="page"]:hover *,
+aside nav a.bg-primary-50:hover *,
+aside nav button.bg-base-100:hover *,
+aside nav button.text-primary-600:hover *,
+aside nav button.active:hover *,
+aside nav button[aria-current="page"]:hover *,
+aside nav button.bg-primary-50:hover * {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+}
+
+.dark aside nav a.bg-base-100:hover *,
+.dark aside nav a.text-primary-600:hover *,
+.dark aside nav a.active:hover *,
+.dark aside nav a[aria-current="page"]:hover *,
+.dark aside nav a.bg-primary-50:hover *,
+.dark aside nav button.bg-base-100:hover *,
+.dark aside nav button.text-primary-600:hover *,
+.dark aside nav button.active:hover *,
+.dark aside nav button[aria-current="page"]:hover *,
+.dark aside nav button.bg-primary-50:hover * {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+}
+
+/* Ensure gradient background takes precedence */
+aside nav a.bg-base-100:hover,
+aside nav a.text-primary-600:hover,
+aside nav a.active:hover,
+aside nav a[aria-current="page"]:hover,
+aside nav a.bg-primary-50:hover,
+aside nav button.bg-base-100:hover,
+aside nav button.text-primary-600:hover,
+aside nav button.active:hover,
+aside nav button[aria-current="page"]:hover,
+aside nav button.bg-primary-50:hover {
+    background-color: transparent !important;
+    background-image: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%) !important;
+}
+
+.dark aside nav a.bg-base-100:hover,
+.dark aside nav a.text-primary-600:hover,
+.dark aside nav a.active:hover,
+.dark aside nav a[aria-current="page"]:hover,
+.dark aside nav a.bg-primary-50:hover,
+.dark aside nav button.bg-base-100:hover,
+.dark aside nav button.text-primary-600:hover,
+.dark aside nav button.active:hover,
+.dark aside nav button[aria-current="page"]:hover,
+.dark aside nav button.bg-primary-50:hover {
+    background-color: transparent !important;
+    background-image: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%) !important;
+}
+
+
+/* ==================== SUPER SPECIFIC SIDEBAR HOVER RULES ==================== */
+
+/* Target the exact structure from your HTML */
+aside ol li a.bg-base-100:hover,
+aside ol li a.text-primary-600:hover,
+aside ol li a.active:hover {
+    background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%) !important;
+    background-color: transparent !important;
+    color: #ffffff !important;
+}
+
+/* Force white on all children */
+aside ol li a.bg-base-100:hover *,
+aside ol li a.text-primary-600:hover *,
+aside ol li a.active:hover * {
+    color: #ffffff !important;
+}
+
+/* Material icons */
+aside ol li a.bg-base-100:hover .material-symbols-outlined,
+aside ol li a.text-primary-600:hover .material-symbols-outlined,
+aside ol li a.active:hover .material-symbols-outlined {
+    color: #ffffff !important;
+}
+
+/* Dark mode */
+.dark aside ol li a.bg-base-100:hover,
+.dark aside ol li a.text-primary-600:hover,
+.dark aside ol li a.active:hover {
+    background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%) !important;
+    background-color: transparent !important;
+    color: #ffffff !important;
+}
+
+.dark aside ol li a.bg-base-100:hover *,
+.dark aside ol li a.text-primary-600:hover *,
+.dark aside ol li a.active:hover * {
+    color: #ffffff !important;
+}
+
+/* Override any hover text color */
+aside ol li a.bg-base-100:hover.hover\:text-primary-600,
+aside ol li a.text-primary-600:hover.hover\:text-primary-600 {
+    color: #ffffff !important;
+}
+
+.dark aside ol li a.bg-base-100:hover.hover\:text-primary-500,
+.dark aside ol li a.text-primary-600:hover.hover\:text-primary-500 {
+    color: #ffffff !important;
+}
+
+
+/* ==================== CUSTOM MENU ITEM STYLING ==================== */
+
+/* Style specific menu items by their title */
+/* Example: Highlight "Employees" menu item */
+aside nav a[href*="/hrm/employee/"]:not([href*="personal"]):not([href*="education"]):not([href*="salary"]):not([href*="skill"]) {
+    /* Add custom styling here if needed */
+}
+
+/* Style menu items with specific icons */
+aside nav a .material-symbols-outlined:contains("badge") {
+    /* Custom icon styling */
+}
+
+/* Add badge-like indicator to specific menu items */
+aside nav a[href*="/hrm/attendancelog/"]::after {
+    content: "New";
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 6px;
+    background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    border-radius: 10px;
+    text-transform: uppercase;
+}
+
+/* Highlight important menu items */
+aside nav a[href*="/hrm/employee/"].important-menu {
+    border-left: 3px solid #c4d82e !important;
+    background: rgba(196, 216, 46, 0.05) !important;
+}

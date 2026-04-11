@@ -48,10 +48,10 @@
           </td>
           <td class="px-4 py-3 text-right">
             <div class="flex items-center justify-end gap-1">
-              <a href="{% url 'hrm:employee_edit' e.pk %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Edit">
+              <a href="{% url 'hrm:employee_edit' e.pk %}" class="table-action-btn" title="Edit">
                 <i data-lucide="pencil" class="h-4 w-4"></i>
               </a>
-              <button type="button" onclick="openDeleteModal('{% url 'hrm:employee_delete' e.pk %}', 'Remove {{ e.full_name|escapejs }} from the directory?')" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" title="Remove">
+              <button type="button" onclick="openDeleteModal('{% url 'hrm:employee_delete' e.pk %}', 'Remove {{ e.full_name|escapejs }} from the directory?')" class="table-action-btn table-action-btn--danger" title="Remove">
                 <i data-lucide="trash-2" class="h-4 w-4"></i>
               </button>
             </div>

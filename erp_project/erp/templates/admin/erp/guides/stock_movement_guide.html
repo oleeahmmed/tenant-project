@@ -1,0 +1,160 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Stock Movement Guide" %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+    &rsaquo; {% trans "Stock Movement Guide" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1 style="margin-bottom: 30px; color: #1f2937;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 32px;">swap_horiz</span>
+        {% trans "Stock Movement Guide" %}
+    </h1>
+    
+    <p style="color: #6b7280; margin-bottom: 30px; font-size: 16px;">
+        এই guide এ দেখানো হয়েছে কোন কোন transaction এ stock movement হয় এবং কিভাবে হয়।
+    </p>
+
+    <!-- Stock IN Section -->
+    <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #166534; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #22c55e;">arrow_downward</span>
+            Stock IN (স্টক বাড়ে)
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px;">
+            {% for item in stock_in_transactions %}
+            <div style="background: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <span class="material-symbols-outlined" style="color: #22c55e; font-size: 28px;">{{ item.icon }}</span>
+                    <div>
+                        <h3 style="margin: 0; color: #1f2937; font-size: 16px;">{{ item.document }}</h3>
+                        <code style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px; font-size: 12px;">{{ item.reference_prefix }}</code>
+                    </div>
+                </div>
+                <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px;">{{ item.description }}</p>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="background: #22c55e; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;">
+                        Status: {{ item.trigger_status }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Stock OUT Section -->
+    <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #991b1b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #ef4444;">arrow_upward</span>
+            Stock OUT (স্টক কমে)
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px;">
+            {% for item in stock_out_transactions %}
+            <div style="background: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <span class="material-symbols-outlined" style="color: #ef4444; font-size: 28px;">{{ item.icon }}</span>
+                    <div>
+                        <h3 style="margin: 0; color: #1f2937; font-size: 16px;">{{ item.document }}</h3>
+                        <code style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-size: 12px;">{{ item.reference_prefix }}</code>
+                    </div>
+                </div>
+                <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px;">{{ item.description }}</p>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="background: #ef4444; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;">
+                        Status: {{ item.trigger_status }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- No Stock Movement Section -->
+    <div style="background: #f9fafb; border: 1px solid #d1d5db; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #374151; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #9ca3af;">block</span>
+            No Stock Movement (স্টক affect করে না)
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+            {% for item in no_stock_transactions %}
+            <div style="background: white; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid #9ca3af;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                    <span class="material-symbols-outlined" style="color: #9ca3af; font-size: 24px;">{{ item.icon }}</span>
+                    <h3 style="margin: 0; color: #1f2937; font-size: 15px;">{{ item.document }}</h3>
+                </div>
+                <p style="margin: 0; color: #6b7280; font-size: 13px;">{{ item.description }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Important Notes -->
+    <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b;">info</span>
+            গুরুত্বপূর্ণ তথ্য
+        </h2>
+        
+        <ul style="margin: 0; padding-left: 20px; color: #78350f;">
+            {% for note in important_notes %}
+            <li style="margin-bottom: 8px; font-size: 14px;">{{ note }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Flow Diagram -->
+    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-top: 24px;">
+        <h2 style="color: #1f2937; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1;">account_tree</span>
+            Stock Flow Summary
+        </h2>
+        
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-items: center;">
+            <!-- Purchase Flow -->
+            <div style="text-align: center; padding: 16px; background: #f0fdf4; border-radius: 8px; min-width: 200px;">
+                <div style="font-weight: 600; color: #166534; margin-bottom: 8px;">📦 Purchase Flow</div>
+                <div style="font-size: 13px; color: #374151;">
+                    PO → Goods Receipt (PO) → <span style="color: #22c55e; font-weight: 600;">Stock IN ↑</span>
+                </div>
+            </div>
+            
+            <!-- Sales Flow -->
+            <div style="text-align: center; padding: 16px; background: #fef2f2; border-radius: 8px; min-width: 200px;">
+                <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">🛒 Sales Flow</div>
+                <div style="font-size: 13px; color: #374151;">
+                    SO → Delivery → <span style="color: #ef4444; font-weight: 600;">Stock OUT ↓</span>
+                </div>
+            </div>
+            
+            <!-- Production Flow -->
+            <div style="text-align: center; padding: 16px; background: #f5f3ff; border-radius: 8px; min-width: 200px;">
+                <div style="font-weight: 600; color: #5b21b6; margin-bottom: 8px;">🏭 Production Flow</div>
+                <div style="font-size: 13px; color: #374151;">
+                    BOM → Prod Order → Receipt →<br>
+                    <span style="color: #22c55e;">Finished IN ↑</span> + <span style="color: #ef4444;">Components OUT ↓</span>
+                </div>
+            </div>
+            
+            <!-- Return Flow -->
+            <div style="text-align: center; padding: 16px; background: #fefce8; border-radius: 8px; min-width: 200px;">
+                <div style="font-weight: 600; color: #854d0e; margin-bottom: 8px;">↩️ Return Flow</div>
+                <div style="font-size: 13px; color: #374151;">
+                    Sales Return → <span style="color: #22c55e;">Stock IN ↑</span><br>
+                    Purchase Return → <span style="color: #ef4444;">Stock OUT ↓</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ action }} Category - ERP System{% endblock %}
+
+{% block content %}
+<!-- Page header section -->
+<div class="block-header">
+    <div class="row clearfix">
+        <div class="col-lg-6 col-md-12 col-sm-12">
+            <h1>{{ action }} Category</h1>
+            <span>{% if category %}Edit existing category{% else %}Create a new category{% endif %}</span>
+        </div>
+        <div class="col-lg-6 col-md-12 col-sm-12 text-lg-right">
+            <a href="{% url 'erp:category_list' %}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Messages -->
+{% if messages %}
+<div class="row clearfix">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Category Form -->
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>Category Information</h2>
+                <small class="text-muted">Fill in the category details below</small>
+            </div>
+            <div class="body">
+                <form method="post" action="">
+                    {% csrf_token %}
+                    
+                    <div class="row clearfix">
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Category Name <span class="text-danger">*</span></label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="name" 
+                                       name="name" 
+                                       placeholder="Enter category name" 
+                                       value="{{ category.name|default:'' }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Status <span class="text-danger">*</span></label>
+                                <select class="form-control show-tick" id="is_active" name="is_active">
+                                    <option value="on" {% if not category or category.is_active %}selected{% endif %}>Active</option>
+                                    <option value="off" {% if category and not category.is_active %}selected{% endif %}>Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <div class="form-group mt-3">
+                                <label>Description</label>
+                                <textarea rows="4" 
+                                          class="form-control no-resize" 
+                                          id="description" 
+                                          name="description" 
+                                          placeholder="Enter category description (optional)">{{ category.description|default:'' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row clearfix">
+                        <div class="col-sm-12">
+                            <button type="submit" class="btn btn-primary theme-bg gradient">
+                                <i class="fa fa-save"></i> {{ action }} Category
+                            </button>
+                            <a href="{% url 'erp:category_list' %}" class="btn btn-default">
+                                <i class="fa fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {% if category %}
+        <!-- Additional Info Card -->
+        <div class="card">
+            <div class="header">
+                <h2>Additional Information</h2>
+            </div>
+            <div class="body">
+                <div class="row clearfix">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Created Date</label>
+                            <p class="form-control-static">{{ category.created_at|date:"d M, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Last Updated</label>
+                            <p class="form-control-static">{{ category.updated_at|date:"d M, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Total Products</label>
+                            <p class="form-control-static">{{ category.products.count }} products</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Current Status</label>
+                            <p class="form-control-static">
+                                {% if category.is_active %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-focus on name field
+document.getElementById('name').focus();
+</script>
+{% endblock %}

@@ -1,0 +1,395 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Inventory Management Guide" %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+    &rsaquo; {% trans "Inventory Management Guide" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1 style="margin-bottom: 30px; color: #1f2937;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 32px;">inventory_2</span>
+        {% trans "Inventory Management Guide" %}
+    </h1>
+    
+    <p style="color: #6b7280; margin-bottom: 30px; font-size: 16px;">
+        এই guide এ দেখানো হয়েছে একটি Garments Manufacturing Company তে কিভাবে inventory management করতে হয়, stock movement track করতে হয়, এবং কোন module ব্যবহার করতে হয়।
+    </p>
+
+    <!-- Company Example -->
+    <div style="background: linear-gradient(135deg, #c4d82e 0%, #b8cc2a 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">factory</span>
+            Example Company: "Fashion Tex Ltd"
+        </h2>
+        <p style="margin: 0; font-size: 15px; opacity: 0.95;">
+            একটি garments manufacturing company যাদের 3টি warehouse আছে: Main Warehouse (raw materials), Production Floor (WIP), এবং Finished Goods Warehouse। 
+            তারা প্রতিদিন 500+ products এর stock movement handle করে।
+        </p>
+    </div>
+
+    <!-- Warehouse Setup -->
+    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #3b82f6; font-size: 32px;">warehouse</span>
+            Step 1: Warehouse Setup (প্রথমে Warehouse তৈরি করুন)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <code style="background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">Foundation & Setup → Warehouses → Add</code>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                    <div style="font-weight: 600; color: #065f46; margin-bottom: 8px;">📦 Main Warehouse</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Name: Main Warehouse</li>
+                        <li>Code: WH-MAIN</li>
+                        <li>Location: Dhaka</li>
+                        <li>Type: Raw Materials</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">🏭 Production Floor</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Name: Production Floor</li>
+                        <li>Code: WH-PROD</li>
+                        <li>Location: Factory</li>
+                        <li>Type: Work in Progress</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #e0e7ff; padding: 16px; border-radius: 8px; border-left: 4px solid #6366f1;">
+                    <div style="font-weight: 600; color: #3730a3; margin-bottom: 8px;">✅ Finished Goods</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Name: FG Warehouse</li>
+                        <li>Code: WH-FG</li>
+                        <li>Location: Dhaka</li>
+                        <li>Type: Finished Products</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Type 1: Stock Adjustment -->
+    <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #991b1b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #ef4444; font-size: 32px;">tune</span>
+            Type 1: Stock Adjustment (স্টক সমন্বয়)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📊 Opening Stock Entry (প্রথম Stock Entry)</h3>
+            <div style="background: #fef2f2; padding: 16px; border-left: 4px solid #ef4444; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #991b1b;">Scenario:</strong> Fashion Tex Ltd নতুন ERP system শুরু করছে। তাদের existing stock entry করতে হবে।
+            </div>
+            
+            <code style="background: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">Inventory → Stock Adjustments → Add</code>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #065f46; margin-bottom: 8px;">Cotton Fabric</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Warehouse: Main Warehouse</li>
+                        <li>Adjustment Type: Increase</li>
+                        <li>Quantity: 5000 meter</li>
+                        <li>Reason: Opening Stock</li>
+                        <li>✅ Stock: 0 → 5000</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">Thread (সুতা)</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Warehouse: Main Warehouse</li>
+                        <li>Adjustment Type: Increase</li>
+                        <li>Quantity: 200 cone</li>
+                        <li>Reason: Opening Stock</li>
+                        <li>✅ Stock: 0 → 200</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #e0e7ff; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #3730a3; margin-bottom: 8px;">Buttons (বোতাম)</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Warehouse: Main Warehouse</li>
+                        <li>Adjustment Type: Increase</li>
+                        <li>Quantity: 10000 pcs</li>
+                        <li>Reason: Opening Stock</li>
+                        <li>✅ Stock: 0 → 10000</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Decrease -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📉 Stock Decrease (ক্ষতি/নষ্ট)</h3>
+            <div style="background: #fef2f2; padding: 16px; border-left: 4px solid #ef4444; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #991b1b;">Scenario:</strong> Production floor এ 50 meter fabric নষ্ট হয়ে গেছে (cutting mistake)
+            </div>
+            
+            <div style="background: #fef2f2; padding: 16px; border-radius: 8px;">
+                <code style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-block; margin-bottom: 8px;">Inventory → Stock Adjustments → Add</code>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                    <li>Product: Cotton Fabric</li>
+                    <li>Warehouse: Production Floor</li>
+                    <li>Adjustment Type: <strong style="color: #dc2626;">Decrease</strong></li>
+                    <li>Quantity: 50 meter</li>
+                    <li>Reason: Damaged in cutting</li>
+                    <li>Status: Approved</li>
+                    <li>❌ Stock: 1000 → 950</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Type 2: Inventory Transfer -->
+    <div style="background: #f0fdfa; border: 2px solid #14b8a6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #115e59; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #14b8a6; font-size: 32px;">compare_arrows</span>
+            Type 2: Inventory Transfer (এক warehouse থেকে অন্য warehouse এ)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🚚 Raw Material to Production</h3>
+            <div style="background: #f0fdfa; padding: 16px; border-left: 4px solid #14b8a6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #115e59;">Scenario:</strong> Production শুরু করার জন্য Main Warehouse থেকে Production Floor এ fabric transfer করতে হবে
+            </div>
+            
+            <code style="background: #ccfbf1; color: #115e59; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">Inventory → Inventory Transfers → Add</code>
+            
+            <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin-top: 16px;">
+                <div style="background: #dbeafe; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-weight: 600; color: #1e40af; margin-bottom: 8px;">📦 From: Main Warehouse</div>
+                    <div style="font-size: 13px; color: #374151;">Cotton Fabric</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #dc2626; margin-top: 8px;">5000 → 4000</div>
+                    <div style="font-size: 12px; color: #6b7280;">(-1000 meter)</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <span class="material-symbols-outlined" style="font-size: 48px; color: #14b8a6;">arrow_forward</span>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Transfer</div>
+                </div>
+                
+                <div style="background: #dcfce7; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-weight: 600; color: #065f46; margin-bottom: 8px;">🏭 To: Production Floor</div>
+                    <div style="font-size: 13px; color: #374151;">Cotton Fabric</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #10b981; margin-top: 8px;">0 → 1000</div>
+                    <div style="font-size: 12px; color: #6b7280;">(+1000 meter)</div>
+                </div>
+            </div>
+            
+            <div style="background: #dbeafe; padding: 12px; border-radius: 6px; margin-top: 16px;">
+                <strong style="color: #1e40af;">📊 Result:</strong> 
+                <span style="color: #374151;">Main Warehouse এর stock কমবে এবং Production Floor এর stock বাড়বে। Total company stock same থাকবে।</span>
+            </div>
+        </div>
+
+        <!-- Finished Goods Transfer -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">✅ Production to Finished Goods</h3>
+            <div style="background: #f0fdfa; padding: 16px; border-left: 4px solid #14b8a6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #115e59;">Scenario:</strong> 500 pcs T-Shirt production complete হয়েছে, এখন Finished Goods Warehouse এ transfer করতে হবে
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center;">
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">🏭 From: Production Floor</div>
+                    <div style="font-size: 13px; color: #374151;">T-Shirt (Finished)</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #dc2626; margin-top: 8px;">500 → 0</div>
+                    <div style="font-size: 12px; color: #6b7280;">(-500 pcs)</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <span class="material-symbols-outlined" style="font-size: 48px; color: #14b8a6;">arrow_forward</span>
+                </div>
+                
+                <div style="background: #dcfce7; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-weight: 600; color: #065f46; margin-bottom: 8px;">📦 To: FG Warehouse</div>
+                    <div style="font-size: 13px; color: #374151;">T-Shirt (Finished)</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #10b981; margin-top: 8px;">1000 → 1500</div>
+                    <div style="font-size: 12px; color: #6b7280;">(+500 pcs)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Type 3: Goods Issue -->
+    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 32px;">outbox</span>
+            Type 3: Goods Issue (Material Issue for Production)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🏭 Production Material Issue</h3>
+            <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #92400e;">Scenario:</strong> Production Order PO-001 এর জন্য materials issue করতে হবে (fabric, thread, buttons)
+            </div>
+            
+            <code style="background: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">Inventory → Goods Issues → Add</code>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #fef2f2; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">Cotton Fabric</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>From: Production Floor</li>
+                        <li>Quantity: 200 meter</li>
+                        <li>Purpose: PO-001</li>
+                        <li>❌ Stock: 1000 → 800</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef2f2; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">Thread</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>From: Production Floor</li>
+                        <li>Quantity: 20 cone</li>
+                        <li>Purpose: PO-001</li>
+                        <li>❌ Stock: 100 → 80</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef2f2; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">Buttons</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>From: Production Floor</li>
+                        <li>Quantity: 1000 pcs</li>
+                        <li>Purpose: PO-001</li>
+                        <li>❌ Stock: 5000 → 4000</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="background: #fef3c7; padding: 12px; border-radius: 6px; margin-top: 16px;">
+                <strong style="color: #92400e;">📊 Result:</strong> 
+                <span style="color: #374151;">Materials production এ use হয়ে গেছে, stock থেকে বের হয়ে গেছে। এটা COGS এর part।</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Type 4: Stock Tracking -->
+    <div style="background: #e0e7ff; border: 2px solid #6366f1; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #3730a3; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1; font-size: 32px;">swap_horiz</span>
+            Type 4: Stock Tracking & Reports (স্টক ট্র্যাকিং)
+        </h2>
+
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📊 View Current Stock</h3>
+            <div style="background: #e0e7ff; padding: 16px; border-left: 4px solid #6366f1; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #3730a3;">Module:</strong> Inventory → Warehouse Stock / Variant Warehouse Stock
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #065f46; margin-bottom: 8px;">📦 Product Warehouse Stock</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Product wise stock</li>
+                        <li>Warehouse wise breakdown</li>
+                        <li>Available quantity</li>
+                        <li>Reserved quantity</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">🎨 Variant Stock</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Size/Color wise stock</li>
+                        <li>Warehouse location</li>
+                        <li>Real-time tracking</li>
+                        <li>Low stock alerts</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #e0e7ff; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #3730a3; margin-bottom: 8px;">📈 Stock Transactions</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>All movements history</li>
+                        <li>Date wise tracking</li>
+                        <li>Transaction type</li>
+                        <li>Reference documents</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Section -->
+    <div style="background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">checklist</span>
+            Quick Summary (সংক্ষিপ্ত সারাংশ)
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <div style="font-size: 24px; margin-bottom: 8px;">📦</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Stock Adjustment</div>
+                <div style="font-size: 13px; opacity: 0.9;">Opening stock, damage, loss</div>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <div style="font-size: 24px; margin-bottom: 8px;">🔄</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Inventory Transfer</div>
+                <div style="font-size: 13px; opacity: 0.9;">Warehouse to warehouse</div>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <div style="font-size: 24px; margin-bottom: 8px;">📤</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Goods Issue</div>
+                <div style="font-size: 13px; opacity: 0.9;">Production material issue</div>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <div style="font-size: 24px; margin-bottom: 8px;">📊</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Stock Tracking</div>
+                <div style="font-size: 13px; opacity: 0.9;">Real-time reports</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Best Practices -->
+    <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; padding: 24px;">
+        <h2 style="color: #065f46; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">tips_and_updates</span>
+            Best Practices (সেরা পদ্ধতি)
+        </h2>
+        
+        <div style="display: grid; gap: 12px;">
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Daily Stock Count:</strong>
+                <span style="color: #374151;">প্রতিদিন important items এর physical count করুন এবং system এর সাথে match করুন</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Proper Documentation:</strong>
+                <span style="color: #374151;">প্রতিটি stock movement এর জন্য proper reason এবং reference document maintain করুন</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Approval Process:</strong>
+                <span style="color: #374151;">Stock adjustment এবং transfer এর জন্য approval workflow use করুন</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Regular Reconciliation:</strong>
+                <span style="color: #374151;">মাসিক physical inventory count করে system stock reconcile করুন</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Warehouse Organization:</strong>
+                <span style="color: #374151;">প্রতিটি warehouse এর জন্য clear location এবং bin management করুন</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

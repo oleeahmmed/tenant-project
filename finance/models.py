@@ -218,6 +218,15 @@ class APInvoice(FinanceTimestampedModel):
         ordering = ["-posting_date", "-id"]
         unique_together = [("tenant", "doc_no")]
 
+    @property
+    def applied_amount(self):
+        return sum((row.amount for row in self.payment_allocations.all()), Decimal("0"))
+
+    @property
+    def outstanding_amount(self):
+        v = self.total_amount - self.applied_amount
+        return v if v > Decimal("0") else Decimal("0")
+
 
 class APInvoiceLine(models.Model):
     tenant = models.ForeignKey("auth_tenants.Tenant", on_delete=models.CASCADE, related_name="finance_ap_invoice_lines")
@@ -238,8 +247,10 @@ class APPayment(FinanceTimestampedModel):
     tenant = models.ForeignKey("auth_tenants.Tenant", on_delete=models.CASCADE, related_name="finance_ap_payments")
     doc_no = models.CharField(max_length=40)
     supplier = models.ForeignKey("foundation.Supplier", on_delete=models.PROTECT, related_name="ap_payments")
+    ap_invoice = models.ForeignKey("finance.APInvoice", null=True, blank=True, on_delete=models.SET_NULL, related_name="direct_payments")
     posting_date = models.DateField(default=timezone.localdate)
     amount = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0"))
+    unapplied_amount = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0"))
     payment_method = models.ForeignKey("foundation.PaymentMethod", null=True, blank=True, on_delete=models.SET_NULL)
     bank_account = models.ForeignKey("finance.BankAccount", null=True, blank=True, on_delete=models.SET_NULL, related_name="ap_payments")
     ap_account = models.ForeignKey(Account, null=True, blank=True, on_delete=models.SET_NULL, related_name="ap_payment_control_docs")
@@ -250,6 +261,20 @@ class APPayment(FinanceTimestampedModel):
     class Meta:
         ordering = ["-posting_date", "-id"]
         unique_together = [("tenant", "doc_no")]
+
+
+class APPaymentAllocation(models.Model):
+    tenant = models.ForeignKey("auth_tenants.Tenant", on_delete=models.CASCADE, related_name="finance_ap_payment_allocations")
+    payment = models.ForeignKey(APPayment, on_delete=models.CASCADE, related_name="allocations")
+    invoice = models.ForeignKey(APInvoice, on_delete=models.CASCADE, related_name="payment_allocations")
+    amount = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0"))
+
+    class Meta:
+        unique_together = [("payment", "invoice")]
+
+    def clean(self):
+        if self.amount <= 0:
+            raise ValidationError("Allocation amount must be greater than zero.")
 
 
 class ARInvoice(FinanceTimestampedModel):
@@ -280,6 +305,15 @@ class ARInvoice(FinanceTimestampedModel):
         ordering = ["-posting_date", "-id"]
         unique_together = [("tenant", "doc_no")]
 
+    @property
+    def applied_amount(self):
+        return sum((row.amount for row in self.receipt_allocations.all()), Decimal("0"))
+
+    @property
+    def outstanding_amount(self):
+        v = self.total_amount - self.applied_amount
+        return v if v > Decimal("0") else Decimal("0")
+
 
 class ARInvoiceLine(models.Model):
     tenant = models.ForeignKey("auth_tenants.Tenant", on_delete=models.CASCADE, related_name="finance_ar_invoice_lines")
@@ -300,8 +334,10 @@ class ARReceipt(FinanceTimestampedModel):
     tenant = models.ForeignKey("auth_tenants.Tenant", on_delete=models.CASCADE, related_name="finance_ar_receipts")
     doc_no = models.CharField(max_length=40)
     customer = models.ForeignKey("foundation.Customer", on_delete=models.PROTECT, related_name="ar_receipts")
+    ar_invoice = models.ForeignKey("finance.ARInvoice", null=True, blank=True, on_delete=models.SET_NULL, related_name="direct_receipts")
     posting_date = models.DateField(default=timezone.localdate)
     amount = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0"))
+    unapplied_amount = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0"))
     payment_method = models.ForeignKey("foundation.PaymentMethod", null=True, blank=True, on_delete=models.SET_NULL)
     bank_account = models.ForeignKey("finance.BankAccount", null=True, blank=True, on_delete=models.SET_NULL, related_name="ar_receipts")
     ar_account = models.ForeignKey(Account, null=True, blank=True, on_delete=models.SET_NULL, related_name="ar_receipt_control_docs")
@@ -312,6 +348,20 @@ class ARReceipt(FinanceTimestampedModel):
     class Meta:
         ordering = ["-posting_date", "-id"]
         unique_together = [("tenant", "doc_no")]
+
+
+class ARReceiptAllocation(models.Model):
+    tenant = models.ForeignKey("auth_tenants.Tenant", on_delete=models.CASCADE, related_name="finance_ar_receipt_allocations")
+    receipt = models.ForeignKey(ARReceipt, on_delete=models.CASCADE, related_name="allocations")
+    invoice = models.ForeignKey(ARInvoice, on_delete=models.CASCADE, related_name="receipt_allocations")
+    amount = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0"))
+
+    class Meta:
+        unique_together = [("receipt", "invoice")]
+
+    def clean(self):
+        if self.amount <= 0:
+            raise ValidationError("Allocation amount must be greater than zero.")
 
 
 class BankAccount(FinanceTimestampedModel):

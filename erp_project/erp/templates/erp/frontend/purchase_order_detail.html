@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Purchase Order: {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="block-header">
+        <div class="row clearfix">
+            <div class="col-md-6">
+                <h2>Purchase Order: {{ order.order_number }}</h2>
+            </div>
+            <div class="col-md-6 text-right">
+                <a href="{% url 'erp:purchaseorder_update' order.pk %}" class="btn btn-warning"><i class="fa fa-edit"></i> Edit</a>
+                <a href="{% url 'erp:purchaseorder_list' %}" class="btn btn-default"><i class="fa fa-arrow-left"></i> Back to List</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row clearfix">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="header"><h2>Order Information</h2></div>
+                <div class="body">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Order Number</th>
+                            <td>{{ order.order_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Supplier</th>
+                            <td>{{ order.supplier.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Branch</th>
+                            <td>{{ order.branch.name|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Order Date</th>
+                            <td>{{ order.order_date|date:"M d, Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Expected Delivery Date</th>
+                            <td>{{ order.expected_date|date:"M d, Y"|default:"—" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status</th>
+                            <td>
+                                {% if order.status == 'draft' %}
+                                <span class="badge badge-default">Draft</span>
+                                {% elif order.status == 'sent' %}
+                                <span class="badge badge-info">Sent</span>
+                                {% elif order.status == 'confirmed' %}
+                                <span class="badge badge-primary">Confirmed</span>
+                                {% elif order.status == 'received' %}
+                                <span class="badge badge-warning">Received</span>
+                                {% elif order.status == 'completed' %}
+                                <span class="badge badge-success">Completed</span>
+                                {% else %}
+                                <span class="badge badge-danger">Cancelled</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Notes</th>
+                            <td>{{ order.notes|default:"—" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="header"><h2>Order Items</h2></div>
+                <div class="body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th class="text-right">Quantity</th>
+                                    <th class="text-right">Unit Price</th>
+                                    <th class="text-right">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ item.product.name }}</td>
+                                    <td class="text-right">{{ item.quantity }}</td>
+                                    <td class="text-right">৳{{ item.unit_price|floatformat:2 }}</td>
+                                    <td class="text-right">৳{{ item.line_total|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="header"><h2>Order Summary</h2></div>
+                <div class="body">
+                    <table class="table">
+                        <tr>
+                            <th>Subtotal:</th>
+                            <td class="text-right">৳{{ order.subtotal|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <th>Discount:</th>
+                            <td class="text-right">৳{{ order.discount_amount|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tax:</th>
+                            <td class="text-right">৳{{ order.tax_amount|floatformat:2 }}</td>
+                        </tr>
+                        <tr class="table-success">
+                            <th><h4>Total:</h4></th>
+                            <td class="text-right"><h4>৳{{ order.total_amount|floatformat:2 }}</h4></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

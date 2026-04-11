@@ -17,6 +17,7 @@
             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Slug</th>
             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Created</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Modules</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-border">
@@ -34,12 +35,32 @@
               {% endif %}
             </td>
             <td class="px-4 py-3 text-xs text-muted-foreground">{{ tenant.created_at|date:"M d, Y" }}</td>
+            <td class="px-4 py-3">
+              <div class="flex flex-wrap justify-end gap-1.5">
+                <span class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                  Enabled {{ tenant.module_enabled_count }}/{{ tenant.module_total_count }}
+                </span>
+                {% for b in tenant.module_badges %}
+                  {% if b.enabled %}
+                    <span class="inline-flex items-center rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-400">{{ b.label }} ON</span>
+                  {% else %}
+                    <span class="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{{ b.label }} OFF</span>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </td>
+            <td class="px-4 py-3 text-right">
+              <a href="{% url 'tenant_access_matrix' tenant.id %}" class="rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-accent">
+                Open Access Center
+              </a>
+            </td>
           </tr>
           {% empty %}
-          <tr><td colspan="4" class="px-4 py-12 text-center text-sm text-muted-foreground">No tenants yet.</td></tr>
+          <tr><td colspan="6" class="px-4 py-12 text-center text-sm text-muted-foreground">No tenants yet.</td></tr>
           {% endfor %}
         </tbody>
       </table>
   </div>
 </div>
+
 {% endblock %}

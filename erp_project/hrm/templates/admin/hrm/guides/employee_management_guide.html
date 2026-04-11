@@ -1,0 +1,242 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Employee Management Guide" %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+    &rsaquo; {% trans "Employee Management Guide" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1 style="margin-bottom: 30px; color: #1f2937;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 32px;">people</span>
+        {% trans "Employee Management Guide" %}
+    </h1>
+    
+    <p style="color: #6b7280; margin-bottom: 30px; font-size: 16px;">
+        এই guide এ দেখানো হয়েছে কিভাবে employee management system ব্যবহার করে employee তথ্য manage করবেন, 
+        department, designation, shift setup করবেন এবং employee records maintain করবেন।
+    </p>
+
+    <!-- Company Example -->
+    <div style="background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">business</span>
+            Example Company: "Tech Solutions Ltd"
+        </h2>
+        <p style="margin: 0; font-size: 15px; opacity: 0.95;">
+            একটি IT company যেখানে 50+ employees আছে। তারা attendance device ব্যবহার করে employee attendance track করে 
+            এবং automated payroll system ব্যবহার করে।
+        </p>
+    </div>
+
+
+    <!-- Step 1: Department Setup -->
+    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #3b82f6; font-size: 32px;">corporate_fare</span>
+            Step 1: Department Setup (বিভাগ তৈরি)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Department কি?</h3>
+            <div style="background: #dbeafe; padding: 16px; border-left: 4px solid #3b82f6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #1e40af;">Department</strong> হলো company র বিভিন্ন কাজের ভাগ। যেমন: IT, HR, Sales, Accounts ইত্যাদি।
+            </div>
+            
+            <code style="background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Organization → Departments → Add</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example: IT Department</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Code:</strong> IT
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Name:</strong> Information Technology
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Description:</strong> Software development and IT support
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Status:</strong> Active ✅
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Departments -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📊 Common Departments</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div style="background: #e0e7ff; padding: 12px; border-radius: 6px;">
+                    <div style="font-weight: 600; color: #3730a3;">IT</div>
+                    <div style="font-size: 12px; color: #6b7280;">Information Technology</div>
+                </div>
+                <div style="background: #dbeafe; padding: 12px; border-radius: 6px;">
+                    <div style="font-weight: 600; color: #1e40af;">HR</div>
+                    <div style="font-size: 12px; color: #6b7280;">Human Resources</div>
+                </div>
+                <div style="background: #dcfce7; padding: 12px; border-radius: 6px;">
+                    <div style="font-weight: 600; color: #065f46;">SALES</div>
+                    <div style="font-size: 12px; color: #6b7280;">Sales & Marketing</div>
+                </div>
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px;">
+                    <div style="font-weight: 600; color: #92400e;">ACC</div>
+                    <div style="font-size: 12px; color: #6b7280;">Accounts</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Designation Setup -->
+    <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #991b1b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #ef4444; font-size: 32px;">work</span>
+            Step 2: Designation Setup (পদবি তৈরি)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Designation কি?</h3>
+            <div style="background: #fee2e2; padding: 16px; border-left: 4px solid #ef4444; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #991b1b;">Designation</strong> হলো employee এর পদবি বা position। যেমন: Manager, Developer, Executive ইত্যাদি।
+            </div>
+            
+            <code style="background: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Organization → Designations → Add</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example: Senior Developer</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Code:</strong> SR-DEV
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Name:</strong> Senior Developer
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Level:</strong> 7 (hierarchy level)
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Status:</strong> Active ✅
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Shift Setup -->
+    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 32px;">schedule</span>
+            Step 3: Shift Setup (শিফট তৈরি)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Shift কি?</h3>
+            <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #92400e;">Shift</strong> হলো employee এর কাজের সময়সূচী। যেমন: Day Shift (9AM-6PM), Night Shift (9PM-6AM) ইত্যাদি।
+            </div>
+            
+            <code style="background: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Organization → Shifts → Add</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example: Day Shift</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Code:</strong> DAY
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Name:</strong> Day Shift
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Time:</strong> 09:00 - 18:00
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Break:</strong> 60 minutes
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Grace Time:</strong> 15 minutes
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Add Employee -->
+    <div style="background: #dcfce7; border: 2px solid #10b981; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #065f46; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">person_add</span>
+            Step 4: Add Employee (কর্মচারী যোগ করুন)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Employee Information</h3>
+            
+            <code style="background: #dcfce7; color: #065f46; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Employee Management → Employees → Add</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example: New Employee</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">User ID:</strong> 001 (device এ এই ID দিয়ে enroll করতে হবে)
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Employee ID:</strong> EMP001
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Name:</strong> John Doe
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Department:</strong> IT
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Designation:</strong> Senior Developer
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Shift:</strong> Day Shift
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Status:</strong> Active ✅
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Important Note -->
+        <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+            <strong style="color: #92400e;">⚠️ Important:</strong> User ID অবশ্যই attendance device এর সাথে match করতে হবে। 
+            Device এ যে ID দিয়ে employee enroll করবেন, এখানেও সেই ID দিতে হবে।
+        </div>
+    </div>
+
+    <!-- Next Steps -->
+    <div style="background: #e0e7ff; border: 2px solid #6366f1; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #3730a3; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1; font-size: 32px;">arrow_forward</span>
+            Next Steps
+        </h2>
+        
+        <div style="display: grid; gap: 12px;">
+            <a href="{% url 'hrm:device-setup-guide' %}" style="background: white; padding: 16px; border-radius: 8px; text-decoration: none; display: block; border-left: 4px solid #6366f1;">
+                <div style="font-weight: 600; color: #3730a3; margin-bottom: 4px;">Device Setup Guide →</div>
+                <div style="font-size: 14px; color: #6b7280;">Device setup করুন এবং employee enroll করুন</div>
+            </a>
+            
+            <a href="{% url 'hrm:attendance-management-guide' %}" style="background: white; padding: 16px; border-radius: 8px; text-decoration: none; display: block; border-left: 4px solid #6366f1;">
+                <div style="font-weight: 600; color: #3730a3; margin-bottom: 4px;">Attendance Management Guide →</div>
+                <div style="font-size: 14px; color: #6b7280;">Attendance track এবং manage করুন</div>
+            </a>
+            
+            <a href="{% url 'hrm:salary-payroll-guide' %}" style="background: white; padding: 16px; border-radius: 8px; text-decoration: none; display: block; border-left: 4px solid #6366f1;">
+                <div style="font-weight: 600; color: #3730a3; margin-bottom: 4px;">Salary & Payroll Guide →</div>
+                <div style="font-size: 14px; color: #6b7280;">Salary setup এবং payroll process করুন</div>
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ warehouse.name }} - Warehouse Details{% endblock %}
+
+{% block content %}
+<!-- Page header section -->
+<div class="block-header">
+    <div class="row clearfix">
+        <div class="col-lg-6 col-md-12 col-sm-12">
+            <h1>{{ warehouse.name }}</h1>
+            <span>Warehouse Details</span>
+        </div>
+        <div class="col-lg-6 col-md-12 col-sm-12 text-lg-right">
+            <a href="{% url 'erp:warehouse_update' warehouse.pk %}" class="btn btn-warning">
+                <i class="fa fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'erp:warehouse_list' %}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Warehouse Info -->
+<div class="row clearfix">
+    <div class="col-lg-8 col-md-12">
+        <div class="card">
+            <div class="header">
+                <h2>Warehouse Information</h2>
+            </div>
+            <div class="body">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <th width="200">Name:</th>
+                            <td><strong>{{ warehouse.name }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Code:</th>
+                            <td>{{ warehouse.code }}</td>
+                        </tr>
+                        <tr>
+                            <th>Address:</th>
+                            <td>{{ warehouse.address|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>City:</th>
+                            <td>{{ warehouse.city|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Country:</th>
+                            <td>{{ warehouse.country|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Phone:</th>
+                            <td>{{ warehouse.phone|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Manager:</th>
+                            <td>{{ warehouse.manager|default:"Not assigned" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                {% if warehouse.is_active %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ warehouse.created_at|date:"d M, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Updated:</th>
+                            <td>{{ warehouse.updated_at|date:"d M, Y H:i" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Products in this Warehouse -->
+        {% if products %}
+        <div class="card">
+            <div class="header">
+                <h2>Products in this Warehouse</h2>
+                <small class="text-muted">Showing {{ products|length }} of {{ total_products }} products</small>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product Name</th>
+                                <th>SKU</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ product.name }}</td>
+                                <td>{{ product.sku }}</td>
+                                <td>
+                                    {% if product.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if total_products > 10 %}
+                <div class="mt-3 text-center">
+                    <a href="{% url 'admin:erp_product_changelist' %}?default_warehouse__id__exact={{ warehouse.pk }}" class="btn btn-sm btn-primary">
+                        View All {{ total_products }} Products
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-lg-4 col-md-12">
+        <!-- Quick Stats -->
+        <div class="card">
+            <div class="header">
+                <h2>Quick Stats</h2>
+            </div>
+            <div class="body">
+                <div class="text-center mb-3">
+                    <h1 class="mb-0">{{ total_products }}</h1>
+                    <small class="text-muted">Total Products</small>
+                </div>
+                <hr>
+                <div class="text-center">
+                    {% if warehouse.is_active %}
+                    <i class="fa fa-check-circle fa-3x text-success"></i>
+                    <p class="mt-2 mb-0">Warehouse is Active</p>
+                    {% else %}
+                    <i class="fa fa-times-circle fa-3x text-danger"></i>
+                    <p class="mt-2 mb-0">Warehouse is Inactive</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="card">
+            <div class="header">
+                <h2>Actions</h2>
+            </div>
+            <div class="body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'erp:warehouse_update' warehouse.pk %}" class="btn btn-warning btn-block mb-2">
+                        <i class="fa fa-edit"></i> Edit Warehouse
+                    </a>
+                    <button type="button" class="btn btn-danger btn-block" onclick="confirmDelete()">
+                        <i class="fa fa-trash"></i> Delete Warehouse
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete warehouse "<strong>{{ warehouse.name }}</strong>"?</p>
+                {% if total_products > 0 %}
+                <div class="alert alert-warning">
+                    <i class="fa fa-exclamation-triangle"></i> 
+                    This warehouse has {{ total_products }} product(s). Deleting it may affect those products.
+                </div>
+                {% endif %}
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'erp:warehouse_delete' warehouse.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete() {
+    $('#deleteModal').modal('show');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,499 @@
+{% extends "unfold/layouts/base_simple.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="p-6 md:p-8">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-font-important-light dark:text-font-important-dark mb-2">Daily Attendance Report</h1>
+        <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark">Generated from AttendanceLog with work day rules (4:30 AM - 4:00 AM)</p>
+    </div>
+    
+    <!-- Filters -->
+    <div class="bg-base-50 dark:bg-base-900 border border-base-200 dark:border-base-800 rounded-default p-6 mb-6">
+        <form method="get" id="filterForm">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2">From Date</label>
+                    <input type="date" name="from_date" value="{{ request.GET.from_date|default:'' }}" class="w-full px-3 py-2 border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 rounded-default text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">To Date</label>
+                    <input type="date" name="to_date" value="{{ request.GET.to_date|default:'' }}" class="w-full px-3 py-2 border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 rounded-default text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Employee</label>
+                    <select name="employee" class="w-full px-3 py-2 border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 rounded-default text-sm">
+                        <option value="">All Employees</option>
+                        {% for emp in all_employees %}
+                        <option value="{{ emp.user_id }}" {% if request.GET.employee == emp.user_id %}selected{% endif %}>
+                            {{ emp.employee_id }} - {{ emp.get_full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2">Break Time (minutes)</label>
+                    <input type="number" name="break_time_minutes" value="{{ request.GET.break_time_minutes|default:'0' }}" min="0" class="w-full px-3 py-2 border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 rounded-default text-sm">
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <button type="submit" style="background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%); color: white;" class="px-5 py-2.5 font-semibold rounded-default text-sm shadow-md hover:shadow-lg transition-all transform hover:scale-105">Generate Report</button>
+                <a href="{% url 'hrm:daily-attendance-report' %}" style="background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%); color: white;" class="inline-flex items-center px-5 py-2.5 font-semibold rounded-default text-sm shadow-md hover:shadow-lg transition-all">Clear</a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div class="relative overflow-hidden rounded-xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #c4d82e 0%, #b8cc2a 100%);">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+            <div class="relative z-10">
+                <div class="text-4xl font-extrabold text-white mb-2 drop-shadow-lg">{{ total_present }}</div>
+                <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Present Days</div>
+            </div>
+        </div>
+        <div class="relative overflow-hidden rounded-xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #c4d82e 0%, #b8cc2a 100%);">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+            <div class="relative z-10">
+                <div class="text-4xl font-extrabold text-white mb-2 drop-shadow-lg">{{ total_absent }}</div>
+                <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Absent Days</div>
+            </div>
+        </div>
+        <div class="relative overflow-hidden rounded-xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #c4d82e 0%, #b8cc2a 100%);">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+            <div class="relative z-10">
+                <div class="text-4xl font-extrabold text-white mb-2 drop-shadow-lg">{{ total_work_hours_formatted }}</div>
+                <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Total Work Hours</div>
+            </div>
+        </div>
+        <div class="relative overflow-hidden rounded-xl p-6 text-center shadow-xl hover:shadow-2xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #c4d82e 0%, #b8cc2a 100%);">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+            <div class="relative z-10">
+                <div class="text-4xl font-extrabold text-white mb-2 drop-shadow-lg">৳{{ total_amount }}</div>
+                <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Total Amount</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="bg-white dark:bg-base-900 border border-base-200 dark:border-base-800 rounded-default overflow-hidden shadow-sm">
+        <!-- Tab Headers -->
+        <div class="border-b border-base-200 dark:border-base-800 bg-base-50 dark:bg-base-800/50">
+            <div class="flex">
+                <button onclick="switchTab('summary')" id="tab-summary" class="tab-button px-6 py-4 font-semibold text-sm transition-colors border-b-2 border-transparent hover:bg-base-100 dark:hover:bg-base-700" style="border-bottom-color: #c4d82e; color: #c4d82e;">
+                    Employee Summary
+                </button>
+                <button onclick="switchTab('details')" id="tab-details" class="tab-button px-6 py-4 font-semibold text-sm transition-colors border-b-2 border-transparent hover:bg-base-100 dark:hover:bg-base-700">
+                    Detailed Records
+                </button>
+            </div>
+        </div>
+        
+        <!-- Summary Tab Content -->
+        <div id="content-summary" class="tab-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold">Employee Summary</h2>
+                    <div class="flex gap-2">
+                        <button onclick="exportSummaryCSV()" class="px-4 py-2 bg-base-100 dark:bg-base-800 border border-base-200 dark:border-base-700 rounded-default text-sm hover:bg-base-200 dark:hover:bg-base-700">Export CSV</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table id="summaryTable" class="w-full text-sm border-collapse">
+                        <thead style="background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%);">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-semibold border border-white/20" style="color: white;">Employee</th>
+                                <th class="px-4 py-3 text-center font-semibold border border-white/20" style="color: white;">Total Days</th>
+                                <th class="px-4 py-3 text-center font-semibold border border-white/20" style="color: white;">Present</th>
+                                <th class="px-4 py-3 text-center font-semibold border border-white/20" style="color: white;">Absent</th>
+                                <th class="px-4 py-3 text-center font-semibold border border-white/20" style="color: white;">Weekend Days</th>
+                                <th class="px-4 py-3 text-center font-semibold border border-white/20" style="color: white;">Weekend Work</th>
+                                <th class="px-4 py-3 text-center font-semibold border border-white/20" style="color: white;">Work Hours</th>
+                                <th class="px-4 py-3 text-center font-semibold border border-white/20" style="color: white;">Weekend Bonus</th>
+                                <th class="px-4 py-3 text-right font-semibold border border-white/20" style="color: white;">Total Amount</th>
+                                <th class="px-4 py-3 text-center font-semibold border border-white/20" style="color: white;">Attendance %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if employee_summary %}
+                                {% for summary in employee_summary %}
+                                <tr class="hover:bg-base-50 dark:hover:bg-base-800">
+                                    <td class="px-4 py-3 font-semibold border border-base-200 dark:border-base-800">{{ summary.employee.get_full_name }}</td>
+                                    <td class="px-4 py-3 text-center border border-base-200 dark:border-base-800">{{ summary.total_days }}</td>
+                                    <td class="px-4 py-3 text-center border border-base-200 dark:border-base-800">
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">{{ summary.present_days }}</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center border border-base-200 dark:border-base-800">
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">{{ summary.absent_days }}</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center border border-base-200 dark:border-base-800">{{ summary.weekend_days }}</td>
+                                    <td class="px-4 py-3 text-center border border-base-200 dark:border-base-800">{{ summary.weekend_work_days }}</td>
+                                    <td class="px-4 py-3 text-center border border-base-200 dark:border-base-800">{{ summary.work_hours_formatted }}</td>
+                                    <td class="px-4 py-3 text-center border border-base-200 dark:border-base-800">{{ summary.weekend_hours }}h</td>
+                                    <td class="px-4 py-3 text-right font-semibold border border-base-200 dark:border-base-800">৳{{ summary.total_amount }}</td>
+                                    <td class="px-4 py-3 text-center border border-base-200 dark:border-base-800">
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full {% if summary.attendance_percentage >= 90 %}bg-green-100 text-green-800{% elif summary.attendance_percentage >= 75 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">{{ summary.attendance_percentage }}%</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr><td colspan="10" class="px-4 py-8 text-center text-font-subtle-light">No data available</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Details Tab Content -->
+        <div id="content-details" class="tab-content hidden">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold">Detailed Attendance Records</h2>
+                    <div class="flex gap-2">
+                        <input type="text" id="detailsSearch" onkeyup="searchDetails()" placeholder="Search..." class="px-4 py-2 border border-base-200 dark:border-base-700 bg-white dark:bg-base-900 rounded-default text-sm">
+                        <button onclick="exportDetailsCSV()" class="px-4 py-2 bg-base-100 dark:bg-base-800 border border-base-200 dark:border-base-700 rounded-default text-sm hover:bg-base-200 dark:hover:bg-base-700">Export CSV</button>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    {% if attendance_records %}
+                        {% for record in attendance_records %}
+                        <div class="detail-record border border-base-200 dark:border-base-800 rounded-default overflow-hidden">
+                            <!-- Record Header -->
+                            <div class="bg-base-50 dark:bg-base-800/50 px-4 py-3 flex justify-between items-center cursor-pointer hover:bg-base-100 dark:hover:bg-base-700" onclick="toggleDetails(this)">
+                                <div class="flex items-center gap-4">
+                                    <span class="font-bold">{{ record.date|date:"Y-m-d" }}</span>
+                                    <span class="font-semibold">{{ record.employee.get_full_name }}</span>
+                                    {% if record.status == 'present' %}
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Present</span>
+                                    {% elif record.status == 'weekend' %}
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Weekend</span>
+                                    {% else %}
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Absent</span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-sm">Work: <strong>{{ record.work_hours }}h</strong></span>
+                                    <span class="text-sm">Amount: <strong>৳{{ record.daily_amount }}</strong></span>
+                                    <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            
+                            <!-- Record Details (Collapsible) -->
+                            <div class="record-details hidden p-4 bg-white dark:bg-base-900">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <!-- Basic Info -->
+                                    <div class="space-y-2">
+                                        <h4 class="font-semibold text-sm mb-2" style="color: #c4d82e;">Basic Information</h4>
+                                        <div class="text-sm"><span class="font-semibold">Check In:</span> {{ record.check_in_time|date:"H:i:s"|default:"-" }}</div>
+                                        <div class="text-sm"><span class="font-semibold">Check Out:</span> {{ record.check_out_time|date:"H:i:s"|default:"-" }}</div>
+                                        <div class="text-sm"><span class="font-semibold">Total Punches:</span> {{ record.total_punches }}</div>
+                                        <div class="text-sm"><span class="font-semibold">Paired Punches:</span> {{ record.paired_punches }}</div>
+                                        <div class="text-sm"><span class="font-semibold">Unpaired Punches:</span> {{ record.unpaired_punches }}</div>
+                                    </div>
+                                    
+                                    <!-- Time Calculation -->
+                                    <div class="space-y-2">
+                                        <h4 class="font-semibold text-sm mb-2" style="color: #c4d82e;">Time Calculation</h4>
+                                        <div class="text-sm"><span class="font-semibold">Paired Time:</span> {{ record.paired_time_minutes }} min</div>
+                                        <div class="text-sm"><span class="font-semibold">Break Time:</span> {{ record.break_time_minutes }} min</div>
+                                        <div class="text-sm"><span class="font-semibold">Unpaired Penalty:</span> {{ record.unpaired_penalty_minutes }} min</div>
+                                        <div class="text-sm"><span class="font-semibold">Work Hours:</span> {{ record.work_hours }}h</div>
+                                        {% if record.is_weekend_work %}
+                                        <div class="text-sm"><span class="font-semibold">Weekend Bonus:</span> +{{ record.weekend_bonus_hours }}h</div>
+                                        {% endif %}
+                                        <div class="text-sm"><span class="font-semibold">Per Hour Rate:</span> ৳{{ record.per_hour_rate }}</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Punch Pairs -->
+                                {% if record.punch_pairs %}
+                                <div class="mb-4">
+                                    <h4 class="font-semibold text-sm mb-2" style="color: #c4d82e;">Punch Pairs (In-Out)</h4>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-sm border-collapse">
+                                            <thead class="bg-base-100 dark:bg-base-800">
+                                                <tr>
+                                                    <th class="px-3 py-2 text-left border border-base-200 dark:border-base-700">#</th>
+                                                    <th class="px-3 py-2 text-left border border-base-200 dark:border-base-700">In Time</th>
+                                                    <th class="px-3 py-2 text-left border border-base-200 dark:border-base-700">Out Time</th>
+                                                    <th class="px-3 py-2 text-right border border-base-200 dark:border-base-700">Duration (min)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for pair in record.punch_pairs %}
+                                                <tr class="hover:bg-base-50 dark:hover:bg-base-800">
+                                                    <td class="px-3 py-2 border border-base-200 dark:border-base-700">{{ forloop.counter }}</td>
+                                                    <td class="px-3 py-2 border border-base-200 dark:border-base-700">{{ pair.0|date:"H:i:s" }}</td>
+                                                    <td class="px-3 py-2 border border-base-200 dark:border-base-700">{{ pair.1|date:"H:i:s" }}</td>
+                                                    <td class="px-3 py-2 text-right border border-base-200 dark:border-base-700">{{ pair.2 }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Break Periods -->
+                                {% if record.break_periods %}
+                                <div class="mb-4">
+                                    <h4 class="font-semibold text-sm mb-2" style="color: #c4d82e;">Break Periods</h4>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-sm border-collapse">
+                                            <thead class="bg-base-100 dark:bg-base-800">
+                                                <tr>
+                                                    <th class="px-3 py-2 text-left border border-base-200 dark:border-base-700">#</th>
+                                                    <th class="px-3 py-2 text-left border border-base-200 dark:border-base-700">Start</th>
+                                                    <th class="px-3 py-2 text-left border border-base-200 dark:border-base-700">End</th>
+                                                    <th class="px-3 py-2 text-right border border-base-200 dark:border-base-700">Duration (min)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for period in record.break_periods %}
+                                                <tr class="hover:bg-base-50 dark:hover:bg-base-800">
+                                                    <td class="px-3 py-2 border border-base-200 dark:border-base-700">{{ forloop.counter }}</td>
+                                                    <td class="px-3 py-2 border border-base-200 dark:border-base-700">{{ period.0|date:"H:i:s" }}</td>
+                                                    <td class="px-3 py-2 border border-base-200 dark:border-base-700">{{ period.1|date:"H:i:s" }}</td>
+                                                    <td class="px-3 py-2 text-right border border-base-200 dark:border-base-700">{{ period.2 }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Unpaired Punches -->
+                                {% if record.unpaired_punch_times %}
+                                <div class="mb-4">
+                                    <h4 class="font-semibold text-sm mb-2" style="color: #c4d82e;">Unpaired Punches (30 min penalty each)</h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        {% for punch in record.unpaired_punch_times %}
+                                        <span class="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded-full">{{ punch|date:"H:i:s" }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- All Punch Logs -->
+                                {% if record.punch_logs %}
+                                <div>
+                                    <h4 class="font-semibold text-sm mb-2" style="color: #c4d82e;">All Punch Logs</h4>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-sm border-collapse">
+                                            <thead class="bg-base-100 dark:bg-base-800">
+                                                <tr>
+                                                    <th class="px-3 py-2 text-left border border-base-200 dark:border-base-700">#</th>
+                                                    <th class="px-3 py-2 text-left border border-base-200 dark:border-base-700">Time</th>
+                                                    <th class="px-3 py-2 text-left border border-base-200 dark:border-base-700">Type</th>
+                                                    <th class="px-3 py-2 text-left border border-base-200 dark:border-base-700">Verify</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for log in record.punch_logs %}
+                                                <tr class="hover:bg-base-50 dark:hover:bg-base-800">
+                                                    <td class="px-3 py-2 border border-base-200 dark:border-base-700">{{ forloop.counter }}</td>
+                                                    <td class="px-3 py-2 border border-base-200 dark:border-base-700">{{ log.punch_time|date:"H:i:s" }}</td>
+                                                    <td class="px-3 py-2 border border-base-200 dark:border-base-700">{{ log.get_punch_type_display }}</td>
+                                                    <td class="px-3 py-2 border border-base-200 dark:border-base-700">{{ log.get_verify_type_display }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-8 text-font-subtle-light">No attendance records found</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SheetJS Library for Excel Export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+<script>
+// Tab switching
+function switchTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active state from all tabs
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.style.borderBottomColor = 'transparent';
+        button.style.color = '';
+    });
+    
+    // Show selected tab content
+    document.getElementById('content-' + tabName).classList.remove('hidden');
+    
+    // Add active state to selected tab
+    const activeTab = document.getElementById('tab-' + tabName);
+    activeTab.style.borderBottomColor = '#c4d82e';
+    activeTab.style.color = '#c4d82e';
+}
+
+// Toggle details
+function toggleDetails(header) {
+    const details = header.nextElementSibling;
+    const arrow = header.querySelector('svg');
+    
+    if (details.classList.contains('hidden')) {
+        details.classList.remove('hidden');
+        arrow.style.transform = 'rotate(180deg)';
+    } else {
+        details.classList.add('hidden');
+        arrow.style.transform = 'rotate(0deg)';
+    }
+}
+
+// Search details
+function searchDetails() {
+    const input = document.getElementById('detailsSearch');
+    const filter = input.value.toUpperCase();
+    const records = document.querySelectorAll('.detail-record');
+    
+    records.forEach(record => {
+        const text = record.textContent || record.innerText;
+        if (text.toUpperCase().indexOf(filter) > -1) {
+            record.style.display = '';
+        } else {
+            record.style.display = 'none';
+        }
+    });
+}
+
+// Export Summary CSV
+function exportSummaryCSV() {
+    const table = document.getElementById('summaryTable');
+    const rows = table.querySelectorAll('tr');
+    
+    let csv = '';
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('th, td');
+        const rowData = [];
+        cells.forEach(cell => {
+            rowData.push('"' + cell.textContent.trim().replace(/"/g, '""') + '"');
+        });
+        csv += rowData.join(',') + '\n';
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `employee_summary_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+}
+
+// Export Details CSV
+function exportDetailsCSV() {
+    let csv = 'Date,Employee,Status,Check In,Check Out,Work Hours,Total Punches,Paired,Unpaired,Amount\n';
+    
+    const records = document.querySelectorAll('.detail-record');
+    records.forEach(record => {
+        if (record.style.display === 'none') return;
+        
+        const header = record.querySelector('.bg-base-50');
+        const details = record.querySelector('.record-details');
+        
+        const date = header.querySelector('span:nth-child(1)').textContent.trim();
+        const employee = header.querySelector('span:nth-child(2)').textContent.trim();
+        const status = header.querySelector('.px-2').textContent.trim();
+        
+        const detailsText = details.textContent;
+        
+        csv += `"${date}","${employee}","${status}","","","","","","",""\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `attendance_details_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+}
+</script>
+
+<style>
+.tab-button {
+    position: relative;
+}
+.tab-button:hover {
+    background-color: rgba(196, 216, 46, 0.1);
+}
+</style>
+
+{% endblock %}
+
+<!-- Select2 Library for Autocomplete -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+.select2-container--default .select2-selection--single {
+    background-color: var(--bg-white);
+    border-color: var(--border-base-200);
+    height: 38px;
+    padding: 4px 8px;
+}
+.select2-dropdown {
+    background-color: var(--bg-white);
+    border-color: var(--border-base-200);
+    z-index: 9999 !important;
+}
+.select2-container--default .select2-results__option--highlighted[aria-selected],
+.select2-container--default .select2-results__option--highlighted {
+    background-color: #c4d82e !important;
+    color: white !important;
+}
+.select2-container--default .select2-results__option[aria-selected=true] {
+    background-color: #b8cc2a !important;
+    color: white !important;
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    $('select[name="employee"]').select2({
+        ajax: {
+            url: '/hrm/api/autocomplete/employees/',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term,
+                    page: params.page || 1
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results,
+                    pagination: {
+                        more: data.pagination.more
+                    }
+                };
+            },
+            cache: true
+        },
+        placeholder: 'All Employees',
+        allowClear: true,
+        minimumInputLength: 0,
+        width: '100%'
+    });
+});
+</script>

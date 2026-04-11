@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sale Details - {{ sale.sale_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-box {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+    .info-label {
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    .info-value {
+        font-size: 16px;
+        color: #212529;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page header -->
+<div class="block-header">
+    <div class="row clearfix">
+        <div class="col-lg-6 col-md-12">
+            <h1>Sale Details</h1>
+            <span>{{ sale.sale_number }}</span>
+        </div>
+        <div class="col-lg-6 col-md-12 text-lg-right">
+            <a href="{% url 'erp:quicksale_list' %}" class="btn btn-default">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+            <a href="{% url 'erp:print-quick-sale' sale.pk %}" target="_blank" class="btn btn-primary theme-bg gradient">
+                <i class="fa fa-print"></i> Print Receipt
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Sale Information -->
+<div class="row clearfix">
+    <!-- Left Column -->
+    <div class="col-lg-8">
+        <!-- Sale Items -->
+        <div class="card">
+            <div class="header">
+                <h2>Sale Items</h2>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th>Variant</th>
+                                <th class="text-right">Price</th>
+                                <th class="text-right">Qty</th>
+                                <th class="text-right">Discount</th>
+                                <th class="text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <strong>{{ item.product.name }}</strong><br>
+                                    <small class="text-muted">SKU: {{ item.product.sku }}</small>
+                                </td>
+                                <td>
+                                    {% if item.variant %}
+                                    <span class="badge badge-info">{{ item.variant }}</span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-right">৳{{ item.unit_price|floatformat:2 }}</td>
+                                <td class="text-right">{{ item.quantity|floatformat:2 }}</td>
+                                <td class="text-right">
+                                    {% if item.discount_amount > 0 %}
+                                    <span class="text-danger">৳{{ item.discount_amount|floatformat:2 }}</span>
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td class="text-right"><strong>৳{{ item.line_total|floatformat:2 }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" class="text-right"><strong>Subtotal:</strong></td>
+                                <td class="text-right"><strong>৳{{ sale.subtotal|floatformat:2 }}</strong></td>
+                            </tr>
+                            {% if sale.discount_amount > 0 %}
+                            <tr>
+                                <td colspan="6" class="text-right text-danger">Discount:</td>
+                                <td class="text-right text-danger">-৳{{ sale.discount_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if sale.tax_amount > 0 %}
+                            <tr>
+                                <td colspan="6" class="text-right">Tax ({{ sale.tax_percentage }}%):</td>
+                                <td class="text-right">৳{{ sale.tax_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if sale.shipping_charge > 0 %}
+                            <tr>
+                                <td colspan="6" class="text-right">Shipping:</td>
+                                <td class="text-right">৳{{ sale.shipping_charge|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr class="table-active">
+                                <td colspan="6" class="text-right"><h5 class="mb-0">Total Amount:</h5></td>
+                                <td class="text-right"><h5 class="mb-0 text-primary">৳{{ sale.total_amount|floatformat:2 }}</h5></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notes -->
+        {% if sale.notes %}
+        <div class="card">
+            <div class="header">
+                <h2>Notes</h2>
+            </div>
+            <div class="body">
+                <p>{{ sale.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Right Column -->
+    <div class="col-lg-4">
+        <!-- Sale Status -->
+        <div class="card">
+            <div class="header">
+                <h2>Sale Status</h2>
+            </div>
+            <div class="body text-center">
+                {% if sale.status == 'completed' %}
+                <span class="badge badge-success" style="font-size: 16px; padding: 10px 20px;">Completed</span>
+                {% elif sale.status == 'draft' %}
+                <span class="badge badge-warning" style="font-size: 16px; padding: 10px 20px;">Draft</span>
+                {% elif sale.status == 'cancelled' %}
+                <span class="badge badge-danger" style="font-size: 16px; padding: 10px 20px;">Cancelled</span>
+                {% elif sale.status == 'refunded' %}
+                <span class="badge badge-info" style="font-size: 16px; padding: 10px 20px;">Refunded</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Sale Information -->
+        <div class="card">
+            <div class="header">
+                <h2>Sale Information</h2>
+            </div>
+            <div class="body">
+                <div class="info-box">
+                    <div class="info-label">Sale Number</div>
+                    <div class="info-value">{{ sale.sale_number }}</div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-label">Sale Date</div>
+                    <div class="info-value">{{ sale.sale_date|date:"d M, Y" }}</div>
+                </div>
+                
+                <div class="info-box">
+                    <div class="info-label">Cashier</div>
+                    <div class="info-value">{{ sale.user.username }}</div>
+                </div>
+                
+                {% if sale.branch %}
+                <div class="info-box">
+                    <div class="info-label">Branch/Warehouse</div>
+                    <div class="info-value">{{ sale.branch.name }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Customer Information -->
+        <div class="card">
+            <div class="header">
+                <h2>Customer Information</h2>
+            </div>
+            <div class="body">
+                {% if sale.customer %}
+                <div class="info-box">
+                    <div class="info-label">Customer</div>
+                    <div class="info-value">{{ sale.customer.name }}</div>
+                </div>
+                {% elif sale.customer_name %}
+                <div class="info-box">
+                    <div class="info-label">Customer Name</div>
+                    <div class="info-value">{{ sale.customer_name }}</div>
+                </div>
+                {% else %}
+                <div class="info-box">
+                    <div class="info-label">Customer</div>
+                    <div class="info-value text-muted">Walk-in Customer</div>
+                </div>
+                {% endif %}
+                
+                {% if sale.customer_phone %}
+                <div class="info-box">
+                    <div class="info-label">Phone</div>
+                    <div class="info-value">{{ sale.customer_phone }}</div>
+                </div>
+                {% endif %}
+                
+                {% if sale.shipping_area %}
+                <div class="info-box">
+                    <div class="info-label">Shipping Area</div>
+                    <div class="info-value">{{ sale.shipping_area.area_name }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Payment Information -->
+        <div class="card">
+            <div class="header">
+                <h2>Payment Information</h2>
+            </div>
+            <div class="body">
+                {% if sale.payment_method %}
+                <div class="info-box">
+                    <div class="info-label">Payment Method</div>
+                    <div class="info-value">{{ sale.payment_method.name }}</div>
+                </div>
+                {% endif %}
+                
+                <div class="info-box">
+                    <div class="info-label">Amount Received</div>
+                    <div class="info-value text-success">৳{{ sale.amount_received|floatformat:2 }}</div>
+                </div>
+                
+                {% if sale.change_amount > 0 %}
+                <div class="info-box">
+                    <div class="info-label">Change</div>
+                    <div class="info-value">৳{{ sale.change_amount|floatformat:2 }}</div>
+                </div>
+                {% endif %}
+                
+                {% if sale.due_amount > 0 %}
+                <div class="info-box bg-warning">
+                    <div class="info-label">Due Amount</div>
+                    <div class="info-value text-danger"><strong>৳{{ sale.due_amount|floatformat:2 }}</strong></div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Summary -->
+        <div class="card">
+            <div class="header">
+                <h2>Summary</h2>
+            </div>
+            <div class="body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Items:</span>
+                    <strong>{{ total_items }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Quantity:</span>
+                    <strong>{{ total_quantity|floatformat:2 }}</strong>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span><strong>Total Amount:</strong></span>
+                    <h5 class="mb-0 text-primary">৳{{ sale.total_amount|floatformat:2 }}</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

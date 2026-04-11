@@ -1,0 +1,31 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block page_title %}Finance · {{ page_title }}{% endblock %}
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <h2 class="text-lg font-semibold text-foreground">{{ page_title }}</h2>
+      <a href="{{ list_url }}" class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        Back
+      </a>
+    </div>
+    <div class="p-5">
+      <div class="ui-table-wrap overflow-x-auto">
+        <table class="w-full text-sm">
+          <tbody class="divide-y divide-border">
+            <tr><td class="px-4 py-3 font-medium text-muted-foreground">Document</td><td class="px-4 py-3">{{ object }}</td></tr>
+            {% if object.status %}<tr><td class="px-4 py-3 font-medium text-muted-foreground">Status</td><td class="px-4 py-3">{{ object.status }}</td></tr>{% endif %}
+            {% if object.posting_date %}<tr><td class="px-4 py-3 font-medium text-muted-foreground">Posting date</td><td class="px-4 py-3">{{ object.posting_date }}</td></tr>{% endif %}
+            {% if object.amount %}<tr><td class="px-4 py-3 font-medium text-muted-foreground">Amount</td><td class="px-4 py-3">{{ object.amount }}</td></tr>{% endif %}
+            {% if object.total_amount %}<tr><td class="px-4 py-3 font-medium text-muted-foreground">Total amount</td><td class="px-4 py-3">{{ object.total_amount }}</td></tr>{% endif %}
+            {% if page_title == 'AP payment details' or page_title == 'AR receipt details' %}<tr><td class="px-4 py-3 font-medium text-muted-foreground">Unapplied amount</td><td class="px-4 py-3">{{ object.unapplied_amount }}</td></tr>{% endif %}
+            {% if object.journal_entry %}<tr><td class="px-4 py-3 font-medium text-muted-foreground">Journal entry</td><td class="px-4 py-3">{{ object.journal_entry }}</td></tr>{% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

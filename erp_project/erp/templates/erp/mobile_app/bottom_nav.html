@@ -1,0 +1,28 @@
+<style>
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg-secondary);border-top:1px solid var(--border-color);padding:12px 20px 24px;display:flex;justify-content:space-around;align-items:center;z-index:100;box-shadow:0 -2px 10px var(--shadow)}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--text-muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;transition:color 0.2s}
+.nav-item.active{color:var(--accent-primary)}
+.nav-icon{font-size:22px}
+.fab{width:56px;height:56px;background:var(--accent-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;color:#000;font-weight:700;box-shadow:0 4px 16px rgba(196,255,13,0.4);cursor:pointer;margin-top:-28px;transition:transform 0.2s;text-decoration:none}
+.fab:hover{transform:scale(1.1)}
+.fab:active{transform:scale(0.95)}
+</style>
+<div class="bottom-nav">
+<a href="{% url 'erp:erp-mobile-dashboard' %}" class="nav-item {% if 'dashboard' in request.resolver_match.url_name %}active{% endif %}">
+<span class="nav-icon">🏠</span>
+<span>Home</span>
+</a>
+<a href="{% url 'erp:erp-mobile-products' %}" class="nav-item {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+<span class="nav-icon">📦</span>
+<span>Products</span>
+</a>
+<a href="{% url 'erp:erp-mobile-sales' %}" class="fab">+</a>
+<a href="{% url 'erp:erp-mobile-orders' %}" class="nav-item {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
+<span class="nav-icon">📋</span>
+<span>Orders</span>
+</a>
+<a href="{% url 'erp:erp-mobile-more' %}" class="nav-item {% if 'more' in request.resolver_match.url_name %}active{% endif %}">
+<span class="nav-icon">⚙️</span>
+<span>More</span>
+</a>
+</div>

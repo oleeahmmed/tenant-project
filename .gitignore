@@ -41,7 +41,7 @@ htmlcov/
 .pytest_cache/
 
 # Exclude erp_project folder
-erp_project/
+# erp_project/
 
 # Exclude ui reference folder
 ui/

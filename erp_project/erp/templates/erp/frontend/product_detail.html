@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ product.name }} - Product Details{% endblock %}
+
+{% block content %}
+<!-- Page header section -->
+<div class="block-header">
+    <div class="row clearfix">
+        <div class="col-lg-6 col-md-12 col-sm-12">
+            <h1>{{ product.name }}</h1>
+            <span>Product Details</span>
+        </div>
+        <div class="col-lg-6 col-md-12 col-sm-12 text-lg-right">
+            <a href="{% url 'erp:product_update' product.pk %}" class="btn btn-warning">
+                <i class="fa fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'erp:product_list' %}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Product Info -->
+<div class="row clearfix">
+    <div class="col-lg-8 col-md-12">
+        <div class="card">
+            <div class="header">
+                <h2>Product Information</h2>
+            </div>
+            <div class="body">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <th width="200">Name:</th>
+                            <td><strong>{{ product.name }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>SKU:</th>
+                            <td>{{ product.sku }}</td>
+                        </tr>
+                        <tr>
+                            <th>Category:</th>
+                            <td>{{ product.category.name|default:"No Category" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Unit:</th>
+                            <td>{{ product.unit }}</td>
+                        </tr>
+                        <tr>
+                            <th>Description:</th>
+                            <td>{{ product.description|default:"No description provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Purchase Price:</th>
+                            <td>৳{{ product.purchase_price }}</td>
+                        </tr>
+                        <tr>
+                            <th>Selling Price:</th>
+                            <td>৳{{ product.selling_price }}</td>
+                        </tr>
+                        <tr>
+                            <th>Minimum Stock Level:</th>
+                            <td>{{ product.min_stock_level }} {{ product.unit }}</td>
+                        </tr>
+                        <tr>
+                            <th>Default Warehouse:</th>
+                            <td>{{ product.default_warehouse.name|default:"Not assigned" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                {% if product.is_active %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ product.created_at|date:"d M, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Updated:</th>
+                            <td>{{ product.updated_at|date:"d M, Y H:i" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Warehouse Stock -->
+        {% if warehouse_stocks %}
+        <div class="card">
+            <div class="header">
+                <h2>Warehouse Stock</h2>
+                <small class="text-muted">Stock levels across warehouses</small>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Warehouse</th>
+                                <th>Quantity</th>
+                                <th>Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stock in warehouse_stocks %}
+                            <tr>
+                                <td>{{ stock.warehouse.name }}</td>
+                                <td>{{ stock.quantity }}</td>
+                                <td>{{ product.unit }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-lg-4 col-md-12">
+        <!-- Quick Stats -->
+        <div class="card">
+            <div class="header">
+                <h2>Quick Stats</h2>
+            </div>
+            <div class="body">
+                <div class="text-center mb-3">
+                    <h1 class="mb-0">{{ total_stock }}</h1>
+                    <small class="text-muted">Total Stock ({{ product.unit }})</small>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <p class="text-muted mb-1">Purchase Price</p>
+                    <h5 class="mb-0">৳{{ product.purchase_price }}</h5>
+                </div>
+                <div class="mb-3">
+                    <p class="text-muted mb-1">Selling Price</p>
+                    <h5 class="mb-0">৳{{ product.selling_price }}</h5>
+                </div>
+                <hr>
+                <div class="text-center">
+                    {% if product.is_active %}
+                    <i class="fa fa-check-circle fa-3x text-success"></i>
+                    <p class="mt-2 mb-0">Product is Active</p>
+                    {% else %}
+                    <i class="fa fa-times-circle fa-3x text-danger"></i>
+                    <p class="mt-2 mb-0">Product is Inactive</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="card">
+            <div class="header">
+                <h2>Actions</h2>
+            </div>
+            <div class="body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'erp:product_update' product.pk %}" class="btn btn-warning btn-block mb-2">
+                        <i class="fa fa-edit"></i> Edit Product
+                    </a>
+                    <button type="button" class="btn btn-danger btn-block" onclick="confirmDelete()">
+                        <i class="fa fa-trash"></i> Delete Product
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete product "<strong>{{ product.name }}</strong>"?</p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'erp:product_delete' product.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete() {
+    $('#deleteModal').modal('show');
+}
+</script>
+{% endblock %}

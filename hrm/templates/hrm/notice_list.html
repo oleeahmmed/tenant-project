@@ -51,10 +51,10 @@
           <td class="px-4 py-3 hidden lg:table-cell text-muted-foreground text-xs whitespace-nowrap">{{ n.updated_at|date:"M j, Y H:i" }}</td>
           <td class="px-4 py-3 text-right">
             <div class="flex items-center justify-end gap-1">
-              <a href="{% url 'hrm:notice_edit' n.pk %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Edit">
+              <a href="{% url 'hrm:notice_edit' n.pk %}" class="table-action-btn" title="Edit">
                 <i data-lucide="pencil" class="h-4 w-4"></i>
               </a>
-              <button type="button" onclick="openDeleteModal('{% url 'hrm:notice_delete' n.pk %}', 'Delete notice {{ n.title|escapejs }}?')" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" title="Delete">
+              <button type="button" onclick="openDeleteModal('{% url 'hrm:notice_delete' n.pk %}', 'Delete notice {{ n.title|escapejs }}?')" class="table-action-btn table-action-btn--danger" title="Delete">
                 <i data-lucide="trash-2" class="h-4 w-4"></i>
               </button>
             </div>

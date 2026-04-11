@@ -1,0 +1,392 @@
+{% extends "unfold/layouts/base_simple.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="p-6 md:p-8 bg-base-50 dark:bg-base-900 min-h-screen">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-font-important-light dark:text-font-important-dark mb-2">{{ title }}</h1>
+                <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark">{{ subtitle }}</p>
+                {% if default_warehouse %}
+                <p class="text-xs text-primary-600 dark:text-primary-400 font-semibold mt-1">
+                    📦 Warehouse: {{ default_warehouse.name|upper }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <!-- Cashier Selector (Superuser Only) -->
+            {% if is_superuser %}
+            <div class="bg-white dark:bg-base-800 rounded-lg shadow-md border border-base-200 dark:border-base-700 p-3">
+                <label class="text-xs font-semibold text-font-subtle-light dark:text-font-subtle-dark mb-2 block">Select Cashier</label>
+                <select onchange="window.location='?cashier='+this.value" class="px-4 py-2 rounded-lg border border-base-300 dark:border-base-600 bg-white dark:bg-base-700 text-sm font-medium focus:ring-2 focus:ring-primary-500">
+                    {% for cashier in all_cashiers %}
+                    <option value="{{ cashier.id }}" {% if cashier.id == selected_cashier.id %}selected{% endif %}>
+                        {{ cashier.get_full_name|default:cashier.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- KPI Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Sales Today -->
+        <div class="relative overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #c4d82e 0%, #b8cc2a 100%);">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between mb-2">
+                    <svg class="w-8 h-8 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="text-3xl font-extrabold text-white mb-1">৳{{ sales_today|floatformat:0 }}</div>
+                <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Sales Today</div>
+            </div>
+        </div>
+        
+        <!-- Sales 7 Days -->
+        <div class="relative overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between mb-2">
+                    <svg class="w-8 h-8 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <div class="text-3xl font-extrabold text-white mb-1">৳{{ sales_7days|floatformat:0 }}</div>
+                <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">7 Days Sales</div>
+            </div>
+        </div>
+        
+        <!-- Stock Value -->
+        <div class="relative overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between mb-2">
+                    <svg class="w-8 h-8 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                    </svg>
+                </div>
+                <div class="text-3xl font-extrabold text-white mb-1">৳{{ stock_today|floatformat:0 }}</div>
+                <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Stock Value</div>
+            </div>
+        </div>
+        
+        <!-- Total Due -->
+        <div class="relative overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between mb-2">
+                    <svg class="w-8 h-8 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="text-3xl font-extrabold text-white mb-1">৳{{ total_due|floatformat:0 }}</div>
+                <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Total Due</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- LEFT COLUMN (3 cols) -->
+        <div class="lg:col-span-3 space-y-6">
+            <!-- Sales Balance Card (Gradient) -->
+            <div class="relative overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-all" style="background: linear-gradient(135deg, #c4d82e 0%, #b8cc2a 100%);">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+                <div class="relative z-10">
+                    <h3 class="text-center font-bold text-sm mb-3 text-white/90 uppercase tracking-wide">Sales Balance</h3>
+                    <div class="flex items-center justify-between mb-3 bg-white/20 backdrop-blur-sm p-3 rounded-lg">
+                        <span class="text-xs font-semibold text-white/90">TODAY</span>
+                        <span class="text-lg font-extrabold text-white">৳{{ sales_today|floatformat:0 }}</span>
+                    </div>
+                    <div class="bg-white/30 backdrop-blur-sm text-center py-2 text-xs font-bold text-white rounded-lg shadow-md">
+                        7 DAYS: ৳{{ sales_7days|floatformat:0 }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Balance Card (Gradient) -->
+            <div class="relative overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-all" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+                <div class="relative z-10">
+                    <h3 class="text-center font-bold text-sm mb-3 text-white/90 uppercase tracking-wide">Stock Balance</h3>
+                    <div class="flex items-center justify-between mb-3 bg-white/20 backdrop-blur-sm p-3 rounded-lg">
+                        <span class="text-xs font-semibold text-white/90">TODAY</span>
+                        <span class="text-lg font-extrabold text-white">৳{{ stock_today|floatformat:0 }}</span>
+                    </div>
+                    <div class="bg-white/30 backdrop-blur-sm text-center py-2 text-xs font-bold text-white rounded-lg shadow-md">
+                        LIVE STOCK VALUE
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expense Card (Gradient) -->
+            <div class="relative overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-all" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+                <div class="relative z-10">
+                    <h3 class="text-center font-bold text-sm mb-3 text-white/90 uppercase tracking-wide">Expense (COGS)</h3>
+                    <div class="flex items-center justify-between mb-3 bg-white/20 backdrop-blur-sm p-3 rounded-lg">
+                        <span class="text-xs font-semibold text-white/90">TODAY</span>
+                        <span class="text-lg font-extrabold text-white">৳{{ expenses_today|floatformat:0 }}</span>
+                    </div>
+                    <div class="bg-white/30 backdrop-blur-sm text-center py-2 text-xs font-bold text-white rounded-lg shadow-md">
+                        COST OF GOODS SOLD
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expense Details Table -->
+            <div class="bg-white dark:bg-base-800 rounded-xl shadow-lg border border-base-200 dark:border-base-700 overflow-hidden">
+                <div class="p-4 bg-gradient-to-r from-blue-500 to-blue-600 border-b border-blue-400">
+                    <h3 class="text-sm font-bold text-white flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        Expense Details
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead class="bg-base-100 dark:bg-base-700">
+                            <tr>
+                                <th class="px-3 py-2 text-left font-semibold text-font-subtle-light dark:text-font-subtle-dark">Item</th>
+                                <th class="px-3 py-2 text-left font-semibold text-font-subtle-light dark:text-font-subtle-dark">By</th>
+                                <th class="px-3 py-2 text-left font-semibold text-font-subtle-light dark:text-font-subtle-dark">Time</th>
+                                <th class="px-3 py-2 text-right font-semibold text-font-subtle-light dark:text-font-subtle-dark">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-base-200 dark:divide-base-700">
+                            {% for expense in expenses_list|slice:":10" %}
+                            <tr class="hover:bg-base-50 dark:hover:bg-base-700 transition-colors">
+                                <td class="px-3 py-2 truncate">{{ expense.expense_type|truncatewords:3 }}</td>
+                                <td class="px-3 py-2">{{ expense.created_by.username|upper }}</td>
+                                <td class="px-3 py-2">{{ expense.created_at|date:"g:i A" }}</td>
+                                <td class="px-3 py-2 text-right font-semibold text-red-600 dark:text-red-400">৳{{ expense.amount|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="px-3 py-6 text-center text-font-subtle-light dark:text-font-subtle-dark">No expenses today</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-3 bg-base-100 dark:bg-base-700 border-t-2 border-base-300 dark:border-base-600 flex justify-between items-center">
+                    <span class="text-xs font-bold text-font-important-light dark:text-font-important-dark">TOTAL EXPENSE</span>
+                    <span class="text-sm font-extrabold text-red-600 dark:text-red-400">৳{{ total_expenses|floatformat:0 }}</span>
+                </div>
+            </div>
+            
+            <!-- Payment Methods Card -->
+            <div class="bg-white dark:bg-base-800 rounded-xl shadow-md border border-base-200 dark:border-base-700 p-6">
+                <h3 class="text-lg font-bold text-font-important-light dark:text-font-important-dark mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                    </svg>
+                    Payment Records
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-3 bg-base-50 dark:bg-base-700 rounded-lg">
+                        <span class="text-sm font-medium text-font-subtle-light dark:text-font-subtle-dark">Mobile</span>
+                        <span class="text-sm font-bold text-font-important-light dark:text-font-important-dark">৳{{ bkash_payment|floatformat:0 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-base-50 dark:bg-base-700 rounded-lg">
+                        <span class="text-sm font-medium text-font-subtle-light dark:text-font-subtle-dark">Card</span>
+                        <span class="text-sm font-bold text-font-important-light dark:text-font-important-dark">৳{{ card_payment|floatformat:0 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-base-50 dark:bg-base-700 rounded-lg">
+                        <span class="text-sm font-medium text-font-subtle-light dark:text-font-subtle-dark">Cash</span>
+                        <span class="text-sm font-bold text-font-important-light dark:text-font-important-dark">৳{{ cash_payment|floatformat:0 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-base-50 dark:bg-base-700 rounded-lg">
+                        <span class="text-sm font-medium text-font-subtle-light dark:text-font-subtle-dark">Mixed</span>
+                        <span class="text-sm font-bold text-font-important-light dark:text-font-important-dark">৳{{ mixed_payment|floatformat:0 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-primary-100 dark:bg-primary-900/30 rounded-lg border-2 border-primary-500">
+                        <span class="text-sm font-bold text-primary-700 dark:text-primary-300">Total</span>
+                        <span class="text-lg font-extrabold text-primary-700 dark:text-primary-300">৳{{ total_payment|floatformat:0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER COLUMN (6 cols) -->
+        <div class="lg:col-span-6 space-y-6">
+            <!-- Due Customers Card -->
+            <div class="bg-white dark:bg-base-800 rounded-xl shadow-md border border-base-200 dark:border-base-700">
+                <div class="p-6 border-b border-base-200 dark:border-base-700">
+                    <h3 class="text-lg font-bold text-font-important-light dark:text-font-important-dark flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        Due Customers
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-base-100 dark:bg-base-700">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-font-subtle-light dark:text-font-subtle-dark uppercase tracking-wider">Customer</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-font-subtle-light dark:text-font-subtle-dark uppercase tracking-wider">Date</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-font-subtle-light dark:text-font-subtle-dark uppercase tracking-wider">Amount</th>
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-font-subtle-light dark:text-font-subtle-dark uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-base-200 dark:divide-base-700">
+                            {% for sale in due_customers %}
+                            <tr class="hover:bg-base-50 dark:hover:bg-base-700 transition-colors">
+                                <td class="px-4 py-3 text-sm font-medium text-font-important-light dark:text-font-important-dark">
+                                    {% if sale.customer %}
+                                        {{ sale.customer.name }}
+                                    {% elif sale.customer_name %}
+                                        {{ sale.customer_name }}
+                                    {% else %}
+                                        <span class="text-font-subtle-light dark:text-font-subtle-dark">Walk-in</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3 text-sm text-font-subtle-light dark:text-font-subtle-dark">{{ sale.sale_date|date:"d/m/Y" }}</td>
+                                <td class="px-4 py-3 text-sm font-bold text-right text-amber-600 dark:text-amber-400">৳{{ sale.due_amount|floatformat:0 }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    <button onclick="showCustomerDetails({{ sale.id }}, '{% if sale.customer %}{{ sale.customer.name }}{% elif sale.customer_name %}{{ sale.customer_name }}{% else %}WALK-IN{% endif %}', '{% if sale.customer %}{{ sale.customer.phone }}{% elif sale.customer_phone %}{{ sale.customer_phone }}{% else %}N/A{% endif %}', '{{ sale.due_amount|floatformat:0 }}', '{{ sale.sale_date|date:"d F Y" }}', '{{ sale.sale_number }}', '{{ sale.notes|escapejs }}')" 
+                                            class="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-lg text-xs font-semibold hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-colors">
+                                        Details
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="px-4 py-8 text-center text-sm text-font-subtle-light dark:text-font-subtle-dark">
+                                    No due customers
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Customer Details (Hidden by default) -->
+            <div id="customer-details-section" class="bg-white dark:bg-base-800 rounded-xl shadow-md border border-base-200 dark:border-base-700 p-6" style="display: none;">
+                <h3 class="text-lg font-bold text-primary-600 dark:text-primary-400 mb-4">
+                    Customer: <span id="detail-customer-name"></span>
+                </h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-font-subtle-light dark:text-font-subtle-dark">Mobile:</span>
+                        <span id="detail-customer-phone" class="ml-2 font-semibold text-font-important-light dark:text-font-important-dark"></span>
+                    </div>
+                    <div id="reference-section" style="display: none;">
+                        <span class="text-font-subtle-light dark:text-font-subtle-dark">Reference:</span>
+                        <span id="detail-reference" class="ml-2 font-semibold text-font-important-light dark:text-font-important-dark"></span>
+                    </div>
+                    <div>
+                        <span class="text-font-subtle-light dark:text-font-subtle-dark">Sale #:</span>
+                        <span id="detail-sale-number" class="ml-2 font-semibold text-font-important-light dark:text-font-important-dark"></span>
+                    </div>
+                    <div>
+                        <span class="text-font-subtle-light dark:text-font-subtle-dark">Date:</span>
+                        <span id="detail-sale-date" class="ml-2 font-semibold text-font-important-light dark:text-font-important-dark"></span>
+                    </div>
+                    <div class="col-span-2">
+                        <span class="text-font-subtle-light dark:text-font-subtle-dark">Due Amount:</span>
+                        <span id="detail-due-amount" class="ml-2 text-xl font-bold text-amber-600 dark:text-amber-400">৳0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN (3 cols) -->
+        <div class="lg:col-span-3 space-y-6">
+            <!-- Stock & Sales Card -->
+            <div class="bg-white dark:bg-base-800 rounded-xl shadow-md border border-base-200 dark:border-base-700">
+                <div class="p-4 border-b border-base-200 dark:border-base-700">
+                    <h3 class="text-sm font-bold text-font-important-light dark:text-font-important-dark text-center">PRODUCT STOCK & SALES</h3>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2 p-2">
+                    <!-- STOCK Column -->
+                    <div class="border border-base-200 dark:border-base-700 rounded-lg overflow-hidden">
+                        <div class="bg-primary-600 text-white text-center py-2 text-xs font-bold">STOCK</div>
+                        <div class="max-h-96 overflow-y-auto">
+                            {% for product in products_stock %}
+                            <div class="p-2 border-b border-base-100 dark:border-base-700 hover:bg-base-50 dark:hover:bg-base-700 transition-colors">
+                                <div class="text-xs font-medium text-font-important-light dark:text-font-important-dark">{{ product.name|truncatechars:20 }}</div>
+                                <div class="text-xs font-bold text-primary-600 dark:text-primary-400">{{ product.stock|floatformat:0 }} {{ product.unit|upper }}</div>
+                            </div>
+                            {% empty %}
+                            <div class="p-4 text-center text-xs text-font-subtle-light dark:text-font-subtle-dark">No stock</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- SALES Column -->
+                    <div class="border border-base-200 dark:border-base-700 rounded-lg overflow-hidden">
+                        <div class="bg-blue-600 text-white text-center py-2 text-xs font-bold">SALES</div>
+                        <div class="max-h-96 overflow-y-auto">
+                            {% for product in products_stock %}
+                            <div class="p-2 border-b border-base-100 dark:border-base-700 hover:bg-base-50 dark:hover:bg-base-700 transition-colors">
+                                <div class="text-xs font-medium text-font-important-light dark:text-font-important-dark">{{ product.name|truncatechars:20 }}</div>
+                                <div class="text-xs font-bold text-blue-600 dark:text-blue-400">{{ product.sales|floatformat:0 }} {{ product.unit|upper }}</div>
+                            </div>
+                            {% empty %}
+                            <div class="p-4 text-center text-xs text-font-subtle-light dark:text-font-subtle-dark">No sales</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showCustomerDetails(saleId, customerName, customerPhone, dueAmount, saleDate, saleNumber, notes) {
+    document.getElementById('customer-details-section').style.display = 'block';
+    document.getElementById('detail-customer-name').textContent = customerName.toUpperCase();
+    document.getElementById('detail-customer-phone').textContent = customerPhone;
+    document.getElementById('detail-due-amount').textContent = '৳' + dueAmount;
+    document.getElementById('detail-sale-date').textContent = saleDate;
+    document.getElementById('detail-sale-number').textContent = saleNumber;
+    
+    if (notes && notes.trim() !== '') {
+        document.getElementById('reference-section').style.display = 'block';
+        document.getElementById('detail-reference').textContent = notes.toUpperCase();
+    } else {
+        document.getElementById('reference-section').style.display = 'none';
+    }
+    
+    document.getElementById('customer-details-section').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+
+<style>
+/* Custom scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+}
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #c4d82e;
+    border-radius: 3px;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #b8cc2a;
+}
+</style>
+{% endblock %}

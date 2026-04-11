@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 
@@ -29,6 +30,44 @@ from .services.stock import (
 )
 
 
+def _inventory_company_context(request):
+    tenant = getattr(request, "hrm_tenant", None)
+    logo_url = ""
+    if tenant is not None and getattr(tenant, "logo", None):
+        logo_url = tenant.logo.url
+    return {
+        "name": getattr(tenant, "name", "") or "Company",
+        "address": "Address not configured",
+        "phone": "Phone not configured",
+        "email": "Email not configured",
+        "logo_url": logo_url,
+    }
+
+
+def _stock_adjustment_perm_context(user):
+    return {
+        "perm_sa_view": user.has_tenant_permission("inventory.stockadjustment.view"),
+        "perm_sa_change": user.has_tenant_permission("inventory.stockadjustment.change"),
+        "perm_sa_delete": user.has_tenant_permission("inventory.stockadjustment.delete"),
+    }
+
+
+def _goods_issue_perm_context(user):
+    return {
+        "perm_gi_view": user.has_tenant_permission("inventory.goodsissue.view"),
+        "perm_gi_change": user.has_tenant_permission("inventory.goodsissue.change"),
+        "perm_gi_delete": user.has_tenant_permission("inventory.goodsissue.delete"),
+    }
+
+
+def _inventory_transfer_perm_context(user):
+    return {
+        "perm_it_view": user.has_tenant_permission("inventory.inventorytransfer.view"),
+        "perm_it_change": user.has_tenant_permission("inventory.inventorytransfer.change"),
+        "perm_it_delete": user.has_tenant_permission("inventory.inventorytransfer.delete"),
+    }
+
+
 class InventoryDashboardView(
     InventoryDashboardAccessMixin, InventoryPageContextMixin, TemplateView
 ):
@@ -42,7 +81,7 @@ class InventoryDashboardView(
 
 class StockAdjustmentListView(InventoryAdminMixin, InventoryPageContextMixin, ListView):
     model = StockAdjustment
-    template_name = "inventory/stock_adjustment_list.html"
+    template_name = "inventory/stock_adjustment/list.html"
     context_object_name = "documents"
     page_title = "Stock adjustments"
     paginate_by = 15
@@ -123,12 +162,13 @@ class StockAdjustmentListView(InventoryAdminMixin, InventoryPageContextMixin, Li
             "sort": self.request.GET.get("sort", "-adjustment_date"),
             "page_size": self.request.GET.get("page_size", str(self.paginate_by)),
         }
+        ctx.update(_stock_adjustment_perm_context(self.request.user))
         return ctx
 
 
 class StockAdjustmentDetailView(InventoryAdminMixin, InventoryPageContextMixin, DetailView):
     model = StockAdjustment
-    template_name = "inventory/stock_adjustment_detail.html"
+    template_name = "inventory/stock_adjustment/detail.html"
     context_object_name = "doc"
 
     def get_queryset(self):
@@ -137,18 +177,30 @@ class StockAdjustmentDetailView(InventoryAdminMixin, InventoryPageContextMixin, 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["page_title"] = self.object.adjustment_number
-        tenant = getattr(self.request, "hrm_tenant", None)
-        ctx["company"] = {
-            "name": getattr(tenant, "name", "") or "Company",
-            "address": "Address not configured",
-            "phone": "Phone not configured",
-            "email": "Email not configured",
-        }
+        ctx["company"] = _inventory_company_context(self.request)
+        ctx.update(_stock_adjustment_perm_context(self.request.user))
+        return ctx
+
+
+class StockAdjustmentPrintView(InventoryAdminMixin, InventoryPageContextMixin, DetailView):
+    """Print-friendly HTML (browser print / PDF save). Uses inventory.stockadjustment.view."""
+
+    model = StockAdjustment
+    template_name = "inventory/stock_adjustment/prints/print.html"
+    context_object_name = "doc"
+
+    def get_queryset(self):
+        return StockAdjustment.objects.filter(tenant=self.request.hrm_tenant).prefetch_related("items")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["company"] = _inventory_company_context(self.request)
+        ctx["print_generated_at"] = timezone.now()
         return ctx
 
 
 class StockAdjustmentCreateView(InventoryAdminMixin, InventoryPageContextMixin, View):
-    template_name = "inventory/stock_adjustment_form.html"
+    template_name = "inventory/stock_adjustment/form.html"
     page_title = "New stock adjustment"
 
     def get(self, request):
@@ -201,7 +253,7 @@ class StockAdjustmentCreateView(InventoryAdminMixin, InventoryPageContextMixin, 
 
 
 class StockAdjustmentUpdateView(InventoryAdminMixin, InventoryPageContextMixin, View):
-    template_name = "inventory/stock_adjustment_form.html"
+    template_name = "inventory/stock_adjustment/form.html"
 
     def _can_override_status(self, request):
         return getattr(request.user, "role", "") == "tenant_admin"
@@ -303,7 +355,7 @@ class StockAdjustmentDeleteView(InventoryAdminMixin, View):
 
 class GoodsIssueListView(InventoryAdminMixin, InventoryPageContextMixin, ListView):
     model = GoodsIssue
-    template_name = "inventory/goods_issue_list.html"
+    template_name = "inventory/goods_issue/list.html"
     context_object_name = "documents"
     page_title = "Goods issues"
     paginate_by = 15
@@ -375,12 +427,19 @@ class GoodsIssueListView(InventoryAdminMixin, InventoryPageContextMixin, ListVie
             "sort": self.request.GET.get("sort", "-issue_date"),
             "page_size": self.request.GET.get("page_size", str(self.paginate_by)),
         }
+        base_qs = GoodsIssue.objects.filter(tenant=self.request.hrm_tenant)
+        ctx["summary"] = {
+            "total_docs": base_qs.count(),
+            "draft_docs": base_qs.filter(status="draft").count(),
+            "released_docs": base_qs.filter(status="released").count(),
+        }
+        ctx.update(_goods_issue_perm_context(self.request.user))
         return ctx
 
 
 class GoodsIssueDetailView(InventoryAdminMixin, InventoryPageContextMixin, DetailView):
     model = GoodsIssue
-    template_name = "inventory/goods_issue_detail.html"
+    template_name = "inventory/goods_issue/detail.html"
     context_object_name = "doc"
 
     def get_queryset(self):
@@ -390,11 +449,29 @@ class GoodsIssueDetailView(InventoryAdminMixin, InventoryPageContextMixin, Detai
         ctx = super().get_context_data(**kwargs)
         ctx["page_title"] = self.object.issue_number
         ctx["total_amount"] = self.object.items.aggregate(v=Sum("line_total"))["v"] or 0
+        ctx["company"] = _inventory_company_context(self.request)
+        ctx.update(_goods_issue_perm_context(self.request.user))
+        return ctx
+
+
+class GoodsIssuePrintView(InventoryAdminMixin, InventoryPageContextMixin, DetailView):
+    model = GoodsIssue
+    template_name = "inventory/goods_issue/prints/print.html"
+    context_object_name = "doc"
+
+    def get_queryset(self):
+        return GoodsIssue.objects.filter(tenant=self.request.hrm_tenant).prefetch_related("items__product")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["company"] = _inventory_company_context(self.request)
+        ctx["print_generated_at"] = timezone.now()
+        ctx["total_amount"] = self.object.items.aggregate(v=Sum("line_total"))["v"] or 0
         return ctx
 
 
 class GoodsIssueCreateView(InventoryAdminMixin, InventoryPageContextMixin, View):
-    template_name = "inventory/goods_issue_form.html"
+    template_name = "inventory/goods_issue/form.html"
     page_title = "New goods issue"
 
     def get(self, request):
@@ -445,7 +522,7 @@ class GoodsIssueCreateView(InventoryAdminMixin, InventoryPageContextMixin, View)
 
 
 class GoodsIssueUpdateView(InventoryAdminMixin, InventoryPageContextMixin, View):
-    template_name = "inventory/goods_issue_form.html"
+    template_name = "inventory/goods_issue/form.html"
 
     def _can_override_status(self, request):
         return getattr(request.user, "role", "") == "tenant_admin"
@@ -533,7 +610,7 @@ class GoodsIssueDeleteView(InventoryAdminMixin, View):
 
 class InventoryTransferListView(InventoryAdminMixin, InventoryPageContextMixin, ListView):
     model = InventoryTransfer
-    template_name = "inventory/inventory_transfer_list.html"
+    template_name = "inventory/inventory_transfer/list.html"
     context_object_name = "documents"
     page_title = "Inventory transfers"
     paginate_by = 15
@@ -600,12 +677,19 @@ class InventoryTransferListView(InventoryAdminMixin, InventoryPageContextMixin, 
             "sort": self.request.GET.get("sort", "-transfer_date"),
             "page_size": self.request.GET.get("page_size", str(self.paginate_by)),
         }
+        base_qs = InventoryTransfer.objects.filter(tenant=self.request.hrm_tenant)
+        ctx["summary"] = {
+            "total_docs": base_qs.count(),
+            "draft_docs": base_qs.filter(status="draft").count(),
+            "completed_docs": base_qs.filter(status="completed").count(),
+        }
+        ctx.update(_inventory_transfer_perm_context(self.request.user))
         return ctx
 
 
 class InventoryTransferDetailView(InventoryAdminMixin, InventoryPageContextMixin, DetailView):
     model = InventoryTransfer
-    template_name = "inventory/inventory_transfer_detail.html"
+    template_name = "inventory/inventory_transfer/detail.html"
     context_object_name = "doc"
 
     def get_queryset(self):
@@ -615,11 +699,31 @@ class InventoryTransferDetailView(InventoryAdminMixin, InventoryPageContextMixin
         ctx = super().get_context_data(**kwargs)
         ctx["page_title"] = self.object.transfer_number
         ctx["total_amount"] = self.object.items.aggregate(v=Sum("line_total"))["v"] or 0
+        ctx["company"] = _inventory_company_context(self.request)
+        ctx.update(_inventory_transfer_perm_context(self.request.user))
+        return ctx
+
+
+class InventoryTransferPrintView(InventoryAdminMixin, InventoryPageContextMixin, DetailView):
+    model = InventoryTransfer
+    template_name = "inventory/inventory_transfer/prints/print.html"
+    context_object_name = "doc"
+
+    def get_queryset(self):
+        return InventoryTransfer.objects.filter(tenant=self.request.hrm_tenant).prefetch_related(
+            "items__product", "from_warehouse", "to_warehouse"
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["company"] = _inventory_company_context(self.request)
+        ctx["print_generated_at"] = timezone.now()
+        ctx["total_amount"] = self.object.items.aggregate(v=Sum("line_total"))["v"] or 0
         return ctx
 
 
 class InventoryTransferCreateView(InventoryAdminMixin, InventoryPageContextMixin, View):
-    template_name = "inventory/inventory_transfer_form.html"
+    template_name = "inventory/inventory_transfer/form.html"
     page_title = "New inventory transfer"
 
     def get(self, request):
@@ -670,7 +774,7 @@ class InventoryTransferCreateView(InventoryAdminMixin, InventoryPageContextMixin
 
 
 class InventoryTransferUpdateView(InventoryAdminMixin, InventoryPageContextMixin, View):
-    template_name = "inventory/inventory_transfer_form.html"
+    template_name = "inventory/inventory_transfer/form.html"
 
     def _can_override_status(self, request):
         return getattr(request.user, "role", "") == "tenant_admin"
@@ -751,18 +855,77 @@ class InventoryTransferPostView(InventoryAdminMixin, View):
 
 class WarehouseStockListView(InventoryAdminMixin, InventoryPageContextMixin, ListView):
     model = WarehouseStock
-    template_name = "inventory/warehouse_stock_list.html"
+    template_name = "inventory/warehouse_stock/list.html"
     context_object_name = "rows"
     page_title = "Warehouse stock"
-    paginate_by = 50
+    paginate_by = 15
+
+    def _warehouse_stock_filtered_qs(self):
+        qs = WarehouseStock.objects.filter(tenant=self.request.hrm_tenant).select_related(
+            "product", "warehouse"
+        )
+        q = (self.request.GET.get("q") or "").strip()
+        warehouse = (self.request.GET.get("warehouse") or "").strip()
+        include_zero = (self.request.GET.get("include_zero") or "").strip().lower() in (
+            "1",
+            "on",
+            "true",
+            "yes",
+        )
+        if not include_zero:
+            qs = qs.filter(quantity__gt=0)
+        if q:
+            qs = qs.filter(
+                Q(product__sku__icontains=q)
+                | Q(product__name__icontains=q)
+                | Q(warehouse__code__icontains=q)
+                | Q(warehouse__name__icontains=q)
+            )
+        if warehouse:
+            qs = qs.filter(warehouse__code__icontains=warehouse)
+        return qs
 
     def get_queryset(self):
-        return (
-            WarehouseStock.objects.filter(tenant=self.request.hrm_tenant)
-            .select_related("product", "warehouse")
-            .filter(quantity__gt=0)
-            .order_by("warehouse", "product")
-        )
+        qs = self._warehouse_stock_filtered_qs()
+        ordering = (self.request.GET.get("sort") or "warehouse__code").strip()
+        allowed_ordering = {
+            "warehouse__code": ("warehouse__code", "product__sku"),
+            "-warehouse__code": ("-warehouse__code", "product__sku"),
+            "product__sku": ("product__sku", "warehouse__code"),
+            "-product__sku": ("-product__sku", "warehouse__code"),
+            "quantity": ("quantity", "warehouse__code", "product__sku"),
+            "-quantity": ("-quantity", "warehouse__code", "product__sku"),
+        }
+        order_fields = allowed_ordering.get(ordering, ("warehouse__code", "product__sku"))
+        return qs.order_by(*order_fields)
+
+    def get_paginate_by(self, queryset):
+        raw = (self.request.GET.get("page_size") or "").strip()
+        try:
+            size = int(raw)
+        except ValueError:
+            size = self.paginate_by
+        return 100 if size > 100 else (5 if size < 5 else size)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        params = self.request.GET.copy()
+        params.pop("page", None)
+        ctx["qs_no_page"] = params.urlencode()
+        full_qs = self._warehouse_stock_filtered_qs()
+        ctx["summary"] = {
+            "total_rows": full_qs.count(),
+            "total_qty": full_qs.aggregate(v=Sum("quantity"))["v"] or 0,
+        }
+        ctx["selected"] = {
+            "q": self.request.GET.get("q", ""),
+            "warehouse": self.request.GET.get("warehouse", ""),
+            "sort": self.request.GET.get("sort", "warehouse__code"),
+            "page_size": self.request.GET.get("page_size", str(self.paginate_by)),
+            "include_zero": (self.request.GET.get("include_zero") or "").strip().lower()
+            in ("1", "on", "true", "yes"),
+        }
+        return ctx
 
 
 class InventoryTransferDeleteView(InventoryAdminMixin, View):

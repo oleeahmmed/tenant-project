@@ -1,0 +1,244 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Tenant Access Matrix{% endblock %}
+{% block page_title %}Tenant Access Matrix{% endblock %}
+{% load static %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-7xl space-y-5 p-2 sm:p-4">
+  <div class="simple-card rounded-xl border border-border p-5 shadow-card">
+    <div class="mb-4 flex flex-col gap-3 border-b border-border pb-4 lg:flex-row lg:items-end lg:justify-between">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'tenant_list' %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        </a>
+        <div>
+          <h2 class="text-lg font-semibold text-foreground">{{ tenant_obj.name }}</h2>
+          <p class="text-xs text-muted-foreground">Enable modules and grant exact permissions for this tenant.</p>
+        </div>
+      </div>
+      <div class="w-full max-w-md">
+        <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Switch Tenant (Autocomplete)</label>
+        <select id="tenant-switcher" class="inv-ts-local w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">
+          {% for t in all_tenants %}
+          <option value="{% url 'tenant_access_matrix' t.id %}" {% if t.id == tenant_obj.id %}selected{% endif %}>
+            {{ t.name }} ({{ t.slug }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      <section>
+        <div class="mb-2 flex items-center justify-between">
+          <h3 class="text-sm font-semibold text-foreground">Modules</h3>
+          <span id="module-count" class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary"></span>
+        </div>
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {% for code, label in module_codes %}
+          <label class="flex items-center gap-2 rounded-lg border border-border px-3 py-2 hover:bg-accent module-row" data-module="{{ code }}">
+            <input type="checkbox" name="modules" value="{{ code }}" data-module-checkbox="{{ code }}" {% if code in enabled_modules %}checked{% endif %}
+                   class="h-4 w-4 rounded border-border text-primary focus:ring-ring" />
+            <span class="text-sm text-foreground">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section>
+        <div class="mb-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h3 class="mb-1 text-sm font-semibold text-foreground">Permission Matrix</h3>
+            <p class="text-xs text-muted-foreground">Select a module to manage resource-wise CRUD permissions.</p>
+          </div>
+          <div class="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+            <input id="permission-search" type="text" placeholder="Search permission label/codename..."
+                   class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+            <button type="button" id="select-visible" class="rounded-lg border border-border px-3 py-2 text-xs hover:bg-accent">Select visible</button>
+            <button type="button" id="clear-visible" class="rounded-lg border border-border px-3 py-2 text-xs hover:bg-accent">Clear visible</button>
+          </div>
+        </div>
+        <div class="mb-3 flex flex-wrap gap-2" id="module-tabs">
+          {% for panel in module_panels %}
+          <button type="button"
+                  class="module-tab rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-accent {% if forloop.first %}bg-accent{% endif %}"
+                  data-module-tab="{{ panel.code }}">
+            {{ panel.label }}
+          </button>
+          {% endfor %}
+        </div>
+        {% for panel in module_panels %}
+        <div class="module-panel rounded-lg border border-border p-3 {% if not forloop.first %}hidden{% endif %}" data-module-panel="{{ panel.code }}">
+          <div class="mb-2 flex items-center justify-between">
+            <p class="text-xs font-bold uppercase tracking-wider text-muted-foreground">{{ panel.label }} CRUD Matrix</p>
+            <div class="flex items-center gap-2">
+              <button type="button" class="panel-select rounded-md border border-border px-2 py-0.5 text-[10px] hover:bg-accent">All</button>
+              <button type="button" class="panel-clear rounded-md border border-border px-2 py-0.5 text-[10px] hover:bg-accent">None</button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto rounded-lg border border-border">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="border-b border-border bg-muted/40">
+                  <th class="px-3 py-2 text-left font-semibold uppercase tracking-wide text-muted-foreground">Resource</th>
+                  {% for hdr in action_headers %}
+                  <th class="px-3 py-2 text-center font-semibold uppercase tracking-wide text-muted-foreground">{{ hdr.label }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border">
+                {% for row in panel.rows %}
+                <tr class="perm-row" data-text="{{ row.title|lower }}">
+                  <td class="px-3 py-2 font-medium text-foreground">{{ row.title }}</td>
+                  {% for cell in row.action_cells %}
+                  <td class="px-3 py-2 text-center">
+                    {% with perm=cell.permission %}
+                      {% if perm %}
+                      <input type="checkbox" name="permission_ids" value="{{ perm.id }}" data-perm-checkbox
+                             data-text="{{ perm.label|lower }} {{ perm.codename|lower }}"
+                             {% if perm.id in granted_ids %}checked{% endif %}
+                             class="h-4 w-4 rounded border-border text-primary focus:ring-ring" />
+                      {% else %}
+                      <span class="text-muted-foreground">-</span>
+                      {% endif %}
+                    {% endwith %}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-3 py-4 text-center text-muted-foreground">No CRUD resources found.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          {% if panel.custom_permissions %}
+          <div class="mt-4 rounded-lg border border-border p-3">
+            <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Custom Workflow Permissions</p>
+            <div class="grid grid-cols-1 gap-1.5 md:grid-cols-2">
+              {% for perm in panel.custom_permissions %}
+              <label class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent perm-row"
+                     data-text="{{ perm.label|lower }} {{ perm.codename|lower }}">
+                <input type="checkbox" name="permission_ids" value="{{ perm.id }}" data-perm-checkbox
+                       {% if perm.id in granted_ids %}checked{% endif %}
+                       class="h-4 w-4 rounded border-border text-primary focus:ring-ring" />
+                <span class="flex-1 text-xs text-foreground">{{ perm.label }}</span>
+                <span class="text-[10px] text-muted-foreground">{{ perm.codename }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+          {% endfor %}
+      </section>
+
+      <div class="flex items-center justify-end gap-2 border-t border-border pt-4">
+        <a href="{% url 'tenant_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+          Save Access Matrix
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'foundation/css/tom_select_inv.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
+<script src="{% static 'foundation/js/tom_select_local.js' %}"></script>
+<script>
+  (function () {
+    function activateModule(code) {
+      document.querySelectorAll(".module-tab").forEach(function (btn) {
+        if (btn.getAttribute("data-module-tab") === code) {
+          btn.classList.add("bg-accent");
+        } else {
+          btn.classList.remove("bg-accent");
+        }
+      });
+      document.querySelectorAll(".module-panel").forEach(function (panel) {
+        panel.classList.toggle("hidden", panel.getAttribute("data-module-panel") !== code);
+      });
+    }
+    document.querySelectorAll(".module-tab").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        activateModule(btn.getAttribute("data-module-tab"));
+      });
+    });
+
+    function updateModuleCount() {
+      var all = document.querySelectorAll('input[name="modules"]');
+      var checked = document.querySelectorAll('input[name="modules"]:checked');
+      var chip = document.getElementById("module-count");
+      if (chip) chip.textContent = "Enabled " + checked.length + "/" + all.length;
+    }
+    document.querySelectorAll('input[name="modules"]').forEach(function (el) {
+      el.addEventListener("change", updateModuleCount);
+    });
+    updateModuleCount();
+
+    var switcher = document.getElementById("tenant-switcher");
+    if (switcher) {
+      switcher.addEventListener("change", function () {
+        if (switcher.value) window.location.href = switcher.value;
+      });
+    }
+
+    var searchInput = document.getElementById("permission-search");
+    function applySearch() {
+      var q = (searchInput.value || "").trim().toLowerCase();
+      document.querySelectorAll(".perm-row").forEach(function (row) {
+        var text = (row.getAttribute("data-text") || "").toLowerCase();
+        var inner = (row.textContent || "").toLowerCase();
+        row.style.display = (!q || text.indexOf(q) !== -1 || inner.indexOf(q) !== -1) ? "" : "none";
+      });
+    }
+    if (searchInput) searchInput.addEventListener("input", applySearch);
+
+    function getVisiblePermissionCheckboxes() {
+      var activePanel = document.querySelector(".module-panel:not(.hidden)");
+      if (!activePanel) return [];
+      return Array.from(activePanel.querySelectorAll(".perm-row")).filter(function (row) {
+        return row.style.display !== "none";
+      }).map(function (row) {
+        return Array.from(row.querySelectorAll('input[data-perm-checkbox]'));
+      }).flat().filter(Boolean);
+    }
+    var selectVisible = document.getElementById("select-visible");
+    if (selectVisible) {
+      selectVisible.addEventListener("click", function () {
+        getVisiblePermissionCheckboxes().forEach(function (cb) { cb.checked = true; });
+      });
+    }
+    var clearVisible = document.getElementById("clear-visible");
+    if (clearVisible) {
+      clearVisible.addEventListener("click", function () {
+        getVisiblePermissionCheckboxes().forEach(function (cb) { cb.checked = false; });
+      });
+    }
+
+    document.querySelectorAll(".module-panel").forEach(function (cat) {
+      var selectBtn = cat.querySelector(".panel-select");
+      var clearBtn = cat.querySelector(".panel-clear");
+      if (selectBtn) {
+        selectBtn.addEventListener("click", function () {
+          cat.querySelectorAll('input[data-perm-checkbox]').forEach(function (cb) { cb.checked = true; });
+        });
+      }
+      if (clearBtn) {
+        clearBtn.addEventListener("click", function () {
+          cat.querySelectorAll('input[data-perm-checkbox]').forEach(function (cb) { cb.checked = false; });
+        });
+      }
+    });
+  })();
+</script>
+{% endblock %}

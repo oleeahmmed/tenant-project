@@ -18,10 +18,23 @@ class RecruitmentPageMixin(HrmPageContextMixin):
     active_page = "hrm"
 
 
+class RecruitmentAdminMixin(HrmAdminMixin):
+    permission_codename_read = "recruitment.view"
+    permission_codename_write = "recruitment.manage"
+    permission_codename_delete = "recruitment.delete"
+
+    def dispatch(self, request, *args, **kwargs):
+        tenant = getattr(request, "hrm_tenant", None)
+        if tenant is not None and not tenant.is_module_enabled("recruitment"):
+            messages.error(request, "Recruitment module is disabled for this tenant.")
+            return redirect("dashboard")
+        return super().dispatch(request, *args, **kwargs)
+
+
 # ── Job postings ──────────────────────────────────────────────────────────────
 
 
-class JobPostingListView(HrmAdminMixin, RecruitmentPageMixin, ListView):
+class JobPostingListView(RecruitmentAdminMixin, RecruitmentPageMixin, ListView):
     model = JobPosting
     template_name = "recruitment/job_list.html"
     context_object_name = "jobs"
@@ -40,7 +53,7 @@ class JobPostingListView(HrmAdminMixin, RecruitmentPageMixin, ListView):
         return ctx
 
 
-class JobPostingCreateView(HrmAdminMixin, PostOnlyMixin, CreateView):
+class JobPostingCreateView(RecruitmentAdminMixin, PostOnlyMixin, CreateView):
     model = JobPosting
     form_class = JobPostingForm
     success_url = reverse_lazy("hrm:recruitment_job_list")
@@ -64,7 +77,7 @@ class JobPostingCreateView(HrmAdminMixin, PostOnlyMixin, CreateView):
         return redirect(self.success_url)
 
 
-class JobPostingUpdateView(HrmAdminMixin, RecruitmentPageMixin, UpdateView):
+class JobPostingUpdateView(RecruitmentAdminMixin, RecruitmentPageMixin, UpdateView):
     model = JobPosting
     form_class = JobPostingForm
     template_name = "recruitment/job_edit.html"
@@ -85,7 +98,7 @@ class JobPostingUpdateView(HrmAdminMixin, RecruitmentPageMixin, UpdateView):
         return super().form_valid(form)
 
 
-class JobPostingDeleteView(HrmAdminMixin, PostOnlyMixin, DeleteView):
+class JobPostingDeleteView(RecruitmentAdminMixin, PostOnlyMixin, DeleteView):
     model = JobPosting
     success_url = reverse_lazy("hrm:recruitment_job_list")
 
@@ -103,7 +116,7 @@ class JobPostingDeleteView(HrmAdminMixin, PostOnlyMixin, DeleteView):
 # ── Applications ──────────────────────────────────────────────────────────────
 
 
-class ApplicationListView(HrmAdminMixin, RecruitmentPageMixin, ListView):
+class ApplicationListView(RecruitmentAdminMixin, RecruitmentPageMixin, ListView):
     model = Application
     template_name = "recruitment/application_list.html"
     context_object_name = "applications"
@@ -132,7 +145,7 @@ class ApplicationListView(HrmAdminMixin, RecruitmentPageMixin, ListView):
         return ctx
 
 
-class ApplicationCreateView(HrmAdminMixin, View):
+class ApplicationCreateView(RecruitmentAdminMixin, View):
     """POST from application list — requires job pk in POST."""
 
     http_method_names = ["post"]
@@ -163,7 +176,7 @@ class ApplicationCreateView(HrmAdminMixin, View):
         return redirect("hrm:recruitment_application_list")
 
 
-class ApplicationUpdateView(HrmAdminMixin, RecruitmentPageMixin, UpdateView):
+class ApplicationUpdateView(RecruitmentAdminMixin, RecruitmentPageMixin, UpdateView):
     model = Application
     form_class = ApplicationForm
     template_name = "recruitment/application_edit.html"
@@ -188,7 +201,7 @@ class ApplicationUpdateView(HrmAdminMixin, RecruitmentPageMixin, UpdateView):
         return redirect(self.success_url)
 
 
-class ApplicationDeleteView(HrmAdminMixin, PostOnlyMixin, DeleteView):
+class ApplicationDeleteView(RecruitmentAdminMixin, PostOnlyMixin, DeleteView):
     model = Application
     success_url = reverse_lazy("hrm:recruitment_application_list")
 

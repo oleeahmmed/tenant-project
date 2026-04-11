@@ -3,7 +3,7 @@
 {% block page_title %}Member Permissions{% endblock %}
 
 {% block content %}
-<div class="space-y-5 max-w-2xl">
+<div class="mx-auto w-full max-w-7xl space-y-5 p-2 sm:p-4">
 
   <div class="flex items-center gap-3">
     <a href="{% url 'members' %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent transition-colors">
@@ -29,34 +29,90 @@
     {% endif %}
   </div>
 
-  <!-- Extra permissions form -->
   <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
-    <h3 class="text-sm font-semibold text-foreground mb-1">Extra Permissions</h3>
-    <p class="text-xs text-muted-foreground mb-4">These are in addition to the role's permissions.</p>
+    <div class="mb-3 flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <h3 class="text-sm font-semibold text-foreground mb-1">Extra Permissions</h3>
+        <p class="text-xs text-muted-foreground">These are in addition to the role's permissions.</p>
+      </div>
+      <div class="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
+        <input id="member-perm-search" type="text" placeholder="Search resource/permission..."
+               class="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring" />
+        <button type="button" id="member-select-visible" class="rounded-lg border border-border px-3 py-2 text-xs hover:bg-accent">Select visible</button>
+        <button type="button" id="member-clear-visible" class="rounded-lg border border-border px-3 py-2 text-xs hover:bg-accent">Clear visible</button>
+      </div>
+    </div>
 
     <form method="post" action="{% url 'member_permissions' member.id %}">
       {% csrf_token %}
-      <div class="space-y-4">
-        {% regroup all_permissions by category as perm_groups %}
-        {% for group in perm_groups %}
-        <div>
-          <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">{{ group.grouper }}</p>
-          <div class="space-y-1">
-            {% for perm in group.list %}
-            <label class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-accent cursor-pointer">
-              <input type="checkbox" name="add_ids" value="{{ perm.id }}"
+      <div class="mb-3 flex flex-wrap gap-2">
+        {% for panel in module_panels %}
+        <button type="button"
+                class="member-module-tab rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-accent {% if forloop.first %}bg-accent{% endif %}"
+                data-module-tab="{{ panel.code }}">
+          {{ panel.label }}
+        </button>
+        {% endfor %}
+      </div>
+
+      {% for panel in module_panels %}
+      <div class="member-module-panel {% if not forloop.first %}hidden{% endif %}" data-module-panel="{{ panel.code }}">
+        <div class="overflow-x-auto rounded-lg border border-border">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="border-b border-border bg-muted/40">
+                <th class="px-3 py-2 text-left font-semibold uppercase tracking-wide text-muted-foreground">Resource</th>
+                {% for hdr in action_headers %}
+                <th class="px-3 py-2 text-center font-semibold uppercase tracking-wide text-muted-foreground">{{ hdr.label }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              {% for row in panel.rows %}
+              <tr class="member-perm-row" data-text="{{ row.title|lower }}">
+                <td class="px-3 py-2 font-medium text-foreground">{{ row.title }}</td>
+                {% for cell in row.action_cells %}
+                <td class="px-3 py-2 text-center">
+                  {% with perm=cell.permission %}
+                    {% if perm %}
+                    <input type="checkbox" name="add_ids" value="{{ perm.id }}" data-member-perm-checkbox
+                      data-text="{{ perm.label|lower }} {{ perm.codename|lower }}"
+                      {% if perm.id in extra_perm_ids %}checked{% endif %}
+                      class="h-4 w-4 rounded border-border text-primary focus:ring-ring" />
+                    {% else %}
+                    <span class="text-muted-foreground">-</span>
+                    {% endif %}
+                  {% endwith %}
+                </td>
+                {% endfor %}
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="px-3 py-4 text-center text-muted-foreground">No CRUD resources found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% if panel.custom_permissions %}
+        <div class="mt-4 rounded-lg border border-border p-3">
+          <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Workflow / Special Permissions</p>
+          <div class="grid grid-cols-1 gap-1.5 md:grid-cols-2">
+            {% for perm in panel.custom_permissions %}
+            <label class="member-perm-row flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-accent cursor-pointer"
+                   data-text="{{ perm.label|lower }} {{ perm.codename|lower }}">
+              <input type="checkbox" name="add_ids" value="{{ perm.id }}" data-member-perm-checkbox
                 {% if perm.id in extra_perm_ids %}checked{% endif %}
                 class="h-4 w-4 rounded border-border text-primary focus:ring-ring" />
               <div class="flex-1 flex items-center justify-between">
-                <span class="text-sm text-foreground">{{ perm.label }}</span>
+                <span class="text-xs text-foreground">{{ perm.label }}</span>
                 <span class="text-[10px] text-muted-foreground">{{ perm.codename }}</span>
               </div>
             </label>
             {% endfor %}
           </div>
         </div>
-        {% endfor %}
+        {% endif %}
       </div>
+      {% endfor %}
       <div class="mt-5 flex gap-2">
         <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save Permissions</button>
         <a href="{% url 'members' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
@@ -64,4 +120,57 @@
     </form>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    function activateModule(code) {
+      document.querySelectorAll(".member-module-tab").forEach(function (btn) {
+        btn.classList.toggle("bg-accent", btn.getAttribute("data-module-tab") === code);
+      });
+      document.querySelectorAll(".member-module-panel").forEach(function (panel) {
+        panel.classList.toggle("hidden", panel.getAttribute("data-module-panel") !== code);
+      });
+    }
+    document.querySelectorAll(".member-module-tab").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        activateModule(btn.getAttribute("data-module-tab"));
+      });
+    });
+
+    var search = document.getElementById("member-perm-search");
+    function applySearch() {
+      var q = (search.value || "").trim().toLowerCase();
+      document.querySelectorAll(".member-perm-row").forEach(function (row) {
+        var text = (row.getAttribute("data-text") || "").toLowerCase();
+        var inner = (row.textContent || "").toLowerCase();
+        row.style.display = (!q || text.indexOf(q) !== -1 || inner.indexOf(q) !== -1) ? "" : "none";
+      });
+    }
+    if (search) search.addEventListener("input", applySearch);
+
+    function visibleCheckboxesInActivePanel() {
+      var active = document.querySelector(".member-module-panel:not(.hidden)");
+      if (!active) return [];
+      return Array.from(active.querySelectorAll(".member-perm-row")).filter(function (row) {
+        return row.style.display !== "none";
+      }).map(function (row) {
+        return Array.from(row.querySelectorAll("input[data-member-perm-checkbox]"));
+      }).flat().filter(Boolean);
+    }
+    var selectVisible = document.getElementById("member-select-visible");
+    if (selectVisible) {
+      selectVisible.addEventListener("click", function () {
+        visibleCheckboxesInActivePanel().forEach(function (cb) { cb.checked = true; });
+      });
+    }
+    var clearVisible = document.getElementById("member-clear-visible");
+    if (clearVisible) {
+      clearVisible.addEventListener("click", function () {
+        visibleCheckboxesInActivePanel().forEach(function (cb) { cb.checked = false; });
+      });
+    }
+  })();
+</script>
 {% endblock %}

@@ -1,0 +1,239 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block after_related_objects %}
+{{ block.super }}
+
+{% if original %}
+<style>
+    .warehouse-stock-section {
+        margin-top: 30px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .warehouse-stock-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+    .warehouse-stock-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .warehouse-stock-title::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: #3b82f6;
+        border-radius: 2px;
+    }
+    .total-badge {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    .total-badge .value {
+        font-size: 20px;
+    }
+    .total-badge .label {
+        font-size: 11px;
+        opacity: 0.8;
+        text-transform: uppercase;
+    }
+    
+    .warehouse-stock-table {
+        width: 100%;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+        border-collapse: collapse;
+    }
+    .warehouse-stock-table th {
+        background: #f9fafb;
+        padding: 14px 16px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6b7280;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .warehouse-stock-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 14px;
+    }
+    .warehouse-stock-table tr:last-child td {
+        border-bottom: none;
+    }
+    .warehouse-stock-table tr:hover {
+        background: #f9fafb;
+    }
+    .warehouse-stock-table tfoot tr {
+        background: #f3f4f6;
+        font-weight: 600;
+    }
+    .warehouse-stock-table tfoot tr:hover {
+        background: #f3f4f6;
+    }
+    
+    .wh-name {
+        font-weight: 600;
+        color: #1f2937;
+    }
+    .wh-code {
+        font-size: 12px;
+        color: #9ca3af;
+        font-family: monospace;
+    }
+    .wh-default {
+        display: inline-block;
+        background: #dbeafe;
+        color: #1e40af;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 6px;
+        font-weight: 600;
+    }
+    
+    .qty-value {
+        font-weight: 600;
+        font-size: 16px;
+    }
+    .qty-positive { color: #10b981; }
+    .qty-zero { color: #9ca3af; }
+    .qty-negative { color: #ef4444; }
+    
+    .stock-bar {
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+        min-width: 100px;
+    }
+    .stock-bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    .stock-bar-fill.high { background: #10b981; }
+    .stock-bar-fill.medium { background: #f59e0b; }
+    .stock-bar-fill.low { background: #ef4444; }
+    
+    .stock-status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .status-in-stock { background: #d1fae5; color: #065f46; }
+    .status-low-stock { background: #fef3c7; color: #92400e; }
+    .status-out-of-stock { background: #fee2e2; color: #991b1b; }
+    
+    .empty-stock-state {
+        text-align: center;
+        padding: 40px;
+        color: #9ca3af;
+        background: #f9fafb;
+        border-radius: 10px;
+        border: 1px dashed #e5e7eb;
+    }
+    .empty-stock-state svg {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
+        opacity: 0.5;
+    }
+</style>
+
+<div class="warehouse-stock-section">
+    <div class="warehouse-stock-header">
+        <h2 class="warehouse-stock-title">{% trans "Warehouse Stock" %}</h2>
+        <div class="total-badge">
+            <span class="value">{{ warehouse_stock_data.total_stock }}</span>
+            <span class="label">{{ original.unit }} Total</span>
+        </div>
+    </div>
+    
+    {% if warehouse_stock_data.stocks %}
+    <table class="warehouse-stock-table">
+        <thead>
+            <tr>
+                <th>{% trans "Warehouse" %}</th>
+                <th>{% trans "Location" %}</th>
+                <th style="text-align: right;">{% trans "Quantity" %}</th>
+                <th style="text-align: right;">{% trans "Value" %}</th>
+                <th style="width: 150px;">{% trans "Stock Level" %}</th>
+                <th>{% trans "Status" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock in warehouse_stock_data.stocks %}
+            <tr>
+                <td>
+                    <div class="wh-name">
+                        {{ stock.warehouse.name }}
+                        {% if stock.warehouse == original.default_warehouse %}
+                        <span class="wh-default">DEFAULT</span>
+                        {% endif %}
+                    </div>
+                    <div class="wh-code">{{ stock.warehouse.code }}</div>
+                </td>
+                <td>{{ stock.warehouse.city|default:"-" }}{% if stock.warehouse.country %}, {{ stock.warehouse.country }}{% endif %}</td>
+                <td style="text-align: right;">
+                    <span class="qty-value {% if stock.quantity > 0 %}qty-positive{% elif stock.quantity == 0 %}qty-zero{% else %}qty-negative{% endif %}">
+                        {{ stock.quantity }} {{ original.unit }}
+                    </span>
+                </td>
+                <td style="text-align: right;">
+                    ৳{{ stock.value|floatformat:2 }}
+                </td>
+                <td>
+                    <div class="stock-bar">
+                        <div class="stock-bar-fill {% if stock.percentage >= 50 %}high{% elif stock.percentage >= 20 %}medium{% else %}low{% endif %}" 
+                             style="width: {{ stock.percentage|default:0 }}%"></div>
+                    </div>
+                </td>
+                <td>
+                    {% if stock.quantity <= 0 %}
+                    <span class="stock-status-badge status-out-of-stock">Out of Stock</span>
+                    {% elif stock.quantity <= original.min_stock_level %}
+                    <span class="stock-status-badge status-low-stock">Low Stock</span>
+                    {% else %}
+                    <span class="stock-status-badge status-in-stock">In Stock</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2"><strong>{% trans "Total" %}</strong></td>
+                <td style="text-align: right;"><strong>{{ warehouse_stock_data.total_stock }} {{ original.unit }}</strong></td>
+                <td style="text-align: right;"><strong>৳{{ warehouse_stock_data.total_value|floatformat:2 }}</strong></td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <div class="empty-stock-state">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+        <p>{% trans "No stock records found for this product" %}</p>
+        <p style="font-size: 12px; margin-top: 8px;">{% trans "Stock will appear here after purchase or stock adjustment" %}</p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

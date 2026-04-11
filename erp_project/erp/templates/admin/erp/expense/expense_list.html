@@ -1,0 +1,417 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Recent Expense Entries - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; Recent Expense Entries
+</div>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    /* Admin Change List Styling with Perfect Theme Support */
+    #content-main {
+        padding: 0;
+        background: transparent;
+    }
+    
+    /* Module container matching admin changelist */
+    .module {
+        background: var(--body-bg);
+        border: 1px solid var(--border-color, #ddd);
+        border-radius: 4px;
+        margin: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* Module header */
+    .module h2 {
+        background: var(--primary-bg, #f8f9fa);
+        color: var(--body-fg);
+        padding: 12px 20px;
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color, #ddd);
+        border-radius: 4px 4px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+    }
+    
+    /* Object tools (action buttons) */
+    .object-tools {
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        transform: translateY(-50%);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        gap: 8px;
+    }
+    
+    .object-tools li {
+        margin: 0;
+        padding: 0;
+    }
+    
+    .object-tools a {
+        background: rgb(var(--unfold-color-primary-500));
+        border: 1px solid rgb(var(--unfold-color-primary-600));
+        color: white;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    
+    .object-tools a:hover {
+        background: rgb(var(--unfold-color-primary-600));
+        border-color: rgb(var(--unfold-color-primary-700));
+        color: white;
+        text-decoration: none;
+    }
+    
+    /* Results table container */
+    .results {
+        overflow-x: auto;
+        border-radius: 0 0 4px 4px;
+    }
+    
+    /* Table styling */
+    .results table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--body-bg);
+        font-size: 13px;
+    }
+    
+    .results table th,
+    .results table td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--hairline-color, #e9ecef);
+        vertical-align: middle;
+    }
+    
+    .results table th {
+        background: var(--darkened-bg, #f8f9fa);
+        color: var(--body-fg);
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color, #ddd);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .results table tbody tr {
+        transition: background-color 0.15s ease;
+    }
+    
+    .results table tbody tr:hover {
+        background: var(--selected-bg, #e4edfc);
+    }
+    
+    /* Column-specific styling */
+    .results table .amount {
+        font-weight: 600;
+        color: var(--error-fg, #ba2121);
+        text-align: right;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .results table .date {
+        color: var(--body-quiet-color, #666);
+        font-size: 12px;
+        white-space: nowrap;
+    }
+    
+    .results table .status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .results table .status-posted {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+    
+    .results table .status-draft {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+    
+    .results table .entry-link {
+        color: rgb(var(--unfold-color-primary-500));
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.15s ease;
+    }
+    
+    .results table .entry-link:hover {
+        color: rgb(var(--unfold-color-primary-600));
+        text-decoration: underline;
+    }
+    
+    .results table .description {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    /* Empty state */
+    .no-entries {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--body-quiet-color, #666);
+        background: var(--body-bg);
+        border-radius: 0 0 4px 4px;
+    }
+    
+    .no-entries .icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        display: block;
+        opacity: 0.3;
+    }
+    
+    .no-entries h3 {
+        margin: 0 0 12px 0;
+        color: var(--body-fg);
+        font-size: 18px;
+        font-weight: 600;
+    }
+    
+    .no-entries p {
+        margin: 0 0 25px 0;
+        font-size: 14px;
+        color: var(--body-quiet-color, #666);
+    }
+    
+    .no-entries .btn {
+        background: rgb(var(--unfold-color-primary-500));
+        border: 1px solid rgb(var(--unfold-color-primary-600));
+        color: white;
+        padding: 12px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s ease;
+    }
+    
+    .no-entries .btn:hover {
+        background: rgb(var(--unfold-color-primary-600));
+        border-color: rgb(var(--unfold-color-primary-700));
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    
+    /* Dark mode support */
+    html[data-theme="dark"] .module {
+        background: var(--unfold-body-bg);
+        border-color: var(--unfold-border-color);
+    }
+    
+    html[data-theme="dark"] .module h2 {
+        background: var(--unfold-darkened-bg);
+        color: var(--unfold-body-fg);
+        border-color: var(--unfold-border-color);
+    }
+    
+    html[data-theme="dark"] .results table {
+        background: var(--unfold-body-bg);
+    }
+    
+    html[data-theme="dark"] .results table th {
+        background: var(--unfold-darkened-bg);
+        color: var(--unfold-body-fg);
+        border-color: var(--unfold-border-color);
+    }
+    
+    html[data-theme="dark"] .results table tbody tr:hover {
+        background: var(--unfold-selected-bg);
+    }
+    
+    html[data-theme="dark"] .no-entries {
+        background: var(--unfold-body-bg);
+    }
+    
+    html[data-theme="dark"] .results table .amount {
+        color: #f87171;
+    }
+    
+    html[data-theme="dark"] .results table .status-posted {
+        background: #064e3b;
+        color: #6ee7b7;
+        border-color: #047857;
+    }
+    
+    html[data-theme="dark"] .results table .status-draft {
+        background: #78350f;
+        color: #fbbf24;
+        border-color: #b45309;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .module {
+            margin: 10px;
+        }
+        
+        .module h2 {
+            padding: 15px;
+            font-size: 16px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .object-tools {
+            position: static;
+            transform: none;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+        
+        .object-tools a {
+            text-align: center;
+            padding: 10px 15px;
+            font-size: 13px;
+        }
+        
+        .results {
+            overflow-x: auto;
+        }
+        
+        .results table {
+            min-width: 700px;
+        }
+        
+        .results table th,
+        .results table td {
+            padding: 8px 10px;
+        }
+        
+        .no-entries {
+            padding: 40px 15px;
+        }
+        
+        .no-entries .icon {
+            font-size: 48px;
+        }
+    }
+    
+    /* Loading states */
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    
+    /* Accessibility improvements */
+    .results table th {
+        cursor: default;
+    }
+    
+    .results table .entry-link:focus {
+        outline: 2px solid rgb(var(--unfold-color-primary-500));
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+    
+    .object-tools a:focus,
+    .no-entries .btn:focus {
+        outline: 2px solid rgb(var(--unfold-color-primary-500));
+        outline-offset: 2px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="module">
+        <h2>
+            <span>📋</span>
+            Recent Expense Entries
+            
+            <ul class="object-tools">
+                <li><a href="{% url 'erp:simple-expense-entry' %}">➕ Add New Expense</a></li>
+                <li><a href="{% url 'admin:erp_journalentry_changelist' %}">📖 View All Journal Entries</a></li>
+            </ul>
+        </h2>
+        
+        <div class="results">
+            {% if recent_entries %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Entry Number</th>
+                            <th>Date</th>
+                            <th>Reference</th>
+                            <th>Description</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in recent_entries %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'admin:erp_journalentry_change' entry.id %}" class="entry-link" target="_blank">
+                                    {{ entry.entry_number }}
+                                </a>
+                            </td>
+                            <td class="date">{{ entry.entry_date|date:"M d, Y" }}</td>
+                            <td>{{ entry.reference|default:"-" }}</td>
+                            <td class="description" title="{{ entry.notes }}">{{ entry.notes|truncatechars:50 }}</td>
+                            <td class="amount">৳{{ entry.total_debit|floatformat:2 }}</td>
+                            <td>
+                                <span class="status status-{{ entry.status }}">
+                                    {{ entry.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="date">{{ entry.created_at|date:"M d, Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="no-entries">
+                    <span class="icon">📝</span>
+                    <h3>No expense entries found</h3>
+                    <p>You haven't created any expense entries yet. Start by creating your first expense entry.</p>
+                    <a href="{% url 'erp:simple-expense-entry' %}" class="btn">
+                        Create Your First Expense Entry
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

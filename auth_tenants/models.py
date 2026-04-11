@@ -12,11 +12,17 @@ class Permission(models.Model):
     Tenant Admin শুধু এই list থেকে role বা member এ assign করতে পারবে।
     """
     CATEGORIES = [
-        ("contacts",      "Contacts"),
-        ("campaigns",     "Campaigns"),
-        ("conversations", "Conversations"),
-        ("analytics",     "Analytics"),
-        ("billing",       "Billing"),
+        ("foundation", "Foundation"),
+        ("inventory", "Inventory"),
+        ("finance", "Finance"),
+        ("purchase", "Purchase"),
+        ("sales", "Sales"),
+        ("production", "Production"),
+        ("hrm", "HRM"),
+        ("recruitment", "Recruitment"),
+        ("payroll", "Payroll"),
+        ("auth_tenants", "Tenant Auth"),
+        ("system", "System"),
     ]
 
     codename    = models.CharField(max_length=100, unique=True)
@@ -38,11 +44,69 @@ class Permission(models.Model):
 class Tenant(models.Model):
     name       = models.CharField(max_length=255)
     slug       = models.SlugField(unique=True)
+    logo       = models.ImageField(
+        upload_to="tenant_logos/",
+        blank=True,
+        null=True,
+        help_text="Shown on inventory printouts and similar documents.",
+    )
     is_active  = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
+
+    def is_module_enabled(self, module_code: str) -> bool:
+        code = (module_code or "").strip().lower()
+        if not code:
+            return False
+        if code in ("auth_tenants", "foundation"):
+            return True
+        row = self.module_subscriptions.filter(module_code=code).only("is_enabled").first()
+        # Backward-compatible default: enabled when no explicit subscription row exists.
+        return True if row is None else bool(row.is_enabled)
+
+
+class TenantModuleSubscription(models.Model):
+    class ModuleCode(models.TextChoices):
+        HRM = "hrm", "HRM"
+        RECRUITMENT = "recruitment", "Recruitment"
+        INVENTORY = "inventory", "Inventory"
+        FINANCE = "finance", "Finance"
+        PURCHASE = "purchase", "Purchase"
+        SALES = "sales", "Sales"
+        PRODUCTION = "production", "Production"
+        PAYROLL = "payroll", "Payroll"
+
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="module_subscriptions")
+    module_code = models.CharField(max_length=50, choices=ModuleCode.choices)
+    is_enabled = models.BooleanField(default=True)
+    enabled_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [("tenant", "module_code")]
+
+    def __str__(self):
+        state = "enabled" if self.is_enabled else "disabled"
+        return f"{self.tenant} - {self.module_code} ({state})"
+
+
+class TenantPermissionGrant(models.Model):
+    """Super admin controlled permission allow-list per tenant."""
+
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="permission_grants")
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE, related_name="tenant_grants")
+    is_enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [("tenant", "permission")]
+
+    def __str__(self):
+        state = "enabled" if self.is_enabled else "disabled"
+        return f"{self.tenant} :: {self.permission.codename} ({state})"
 
 
 # ── Role (Tenant-scoped) ──────────────────────────────────────────────────────
@@ -131,9 +195,36 @@ class User(AbstractBaseUser, PermissionsMixin):
         return perms
 
     def has_tenant_permission(self, perm: str) -> bool:
-        if self.role in ("super_admin", "tenant_admin"):
+        if self.role == "super_admin":
             return True
-        return perm in self.get_all_permissions_set()
+        if not self.tenant_id:
+            return False
+
+        grants = TenantPermissionGrant.objects.filter(tenant_id=self.tenant_id).only("id")
+        has_grant_matrix = grants.exists()
+
+        if self.role == "tenant_admin":
+            if not has_grant_matrix:
+                # Backward-compatible fallback when matrix not configured yet.
+                return True
+            return TenantPermissionGrant.objects.filter(
+                tenant_id=self.tenant_id,
+                permission__codename=perm,
+                is_enabled=True,
+            ).exists()
+
+        if self.role != "staff":
+            return False
+        if perm not in self.get_all_permissions_set():
+            return False
+        # Backward-compatible: if no grant rows are configured yet, allow legacy behavior.
+        if not has_grant_matrix:
+            return True
+        return TenantPermissionGrant.objects.filter(
+            tenant_id=self.tenant_id,
+            permission__codename=perm,
+            is_enabled=True,
+        ).exists()
 
     def __str__(self):
         return f"{self.email} ({self.role})"

@@ -29,7 +29,11 @@ class ProductWarehouseContextView(InventorySessionAPIView):
     """
 
     def get(self, request):
-        tenant = _resolve_tenant(request)
+        tenant = _resolve_tenant(
+            request,
+            module_code="inventory",
+            required_permission="inventory.view",
+        )
         if not tenant:
             return Response({"detail": "No workspace tenant."}, status=403)
 

@@ -1,0 +1,295 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Attendance Management Guide" %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+    &rsaquo; {% trans "Attendance Management Guide" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1 style="margin-bottom: 30px; color: #1f2937;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 32px;">fact_check</span>
+        {% trans "Attendance Management Guide" %}
+    </h1>
+    
+    <p style="color: #6b7280; margin-bottom: 30px; font-size: 16px;">
+        এই guide এ দেখানো হয়েছে কিভাবে employee attendance track করবেন, attendance logs দেখবেন, 
+        overtime calculate করবেন এবং attendance reports generate করবেন।
+    </p>
+
+    <!-- Attendance Flow -->
+    <div style="background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">timeline</span>
+            Attendance Flow
+        </h2>
+        <p style="margin: 0; font-size: 15px; opacity: 0.95;">
+            Device → Attendance Logs → Attendance Records → Reports → Payroll
+        </p>
+    </div>
+
+    <!-- Step 1: Attendance Logs -->
+    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #3b82f6; font-size: 32px;">fingerprint</span>
+            Step 1: View Attendance Logs (Raw Data)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Attendance Logs কি?</h3>
+            <div style="background: #dbeafe; padding: 16px; border-left: 4px solid #3b82f6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #1e40af;">Attendance Logs</strong> হলো device থেকে আসা raw punch data। 
+                প্রতিটি punch (in/out) একটি log entry তৈরি করে।
+            </div>
+            
+            <code style="background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Attendance Management → Attendance Logs</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example Log Entry:</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">User ID:</strong> 001
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Employee:</strong> John Doe
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Timestamp:</strong> 2024-03-09 09:15:30
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Punch Type:</strong> Check In (0) / Check Out (1)
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Device:</strong> Main Office Device
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+            <strong style="color: #92400e;">💡 Note:</strong> Attendance Logs automatically process হয়ে Attendance records তৈরি করে। 
+            Manual processing এর দরকার নেই।
+        </div>
+    </div>
+
+    <!-- Step 2: Attendance Records -->
+    <div style="background: #dcfce7; border: 2px solid #10b981; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #065f46; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">event_available</span>
+            Step 2: View Attendance Records (Processed Data)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Attendance Records কি?</h3>
+            <div style="background: #dcfce7; padding: 16px; border-left: 4px solid #10b981; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #065f46;">Attendance Records</strong> হলো processed attendance data। 
+                প্রতিদিনের জন্য একটি record যেখানে check-in, check-out, working hours সব calculate করা থাকে।
+            </div>
+            
+            <code style="background: #dcfce7; color: #065f46; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Attendance Management → Attendance</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example Attendance Record:</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Employee:</strong> John Doe
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Date:</strong> 2024-03-09
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Check In:</strong> 09:15:30
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Check Out:</strong> 18:10:45
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Working Hours:</strong> 8.92 hours
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Status:</strong> Present ✅
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Late:</strong> 15 minutes
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Attendance Status -->
+    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 32px;">info</span>
+            Attendance Status Types
+        </h2>
+        
+        <div style="display: grid; gap: 12px;">
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Present:</strong> Employee সময়মতো এসেছে এবং পূর্ণ সময় কাজ করেছে
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <strong style="color: #92400e;">⏰ Late:</strong> Employee দেরিতে এসেছে (grace time এর পরে)
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                <strong style="color: #991b1b;">❌ Absent:</strong> Employee আসেনি বা punch করেনি
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                <strong style="color: #1e40af;">🏖️ On Leave:</strong> Approved leave আছে
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #6366f1;">
+                <strong style="color: #3730a3;">🏢 Holiday:</strong> Public holiday বা weekly off
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+                <strong style="color: #5b21b6;">⏱️ Half Day:</strong> অর্ধেক সময় কাজ করেছে
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Overtime -->
+    <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #991b1b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #ef4444; font-size: 32px;">more_time</span>
+            Step 4: Overtime Management
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Overtime কি?</h3>
+            <div style="background: #fee2e2; padding: 16px; border-left: 4px solid #ef4444; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #991b1b;">Overtime</strong> হলো shift time এর বাইরে extra কাজের সময়। 
+                Automatically calculate হয় বা manually add করা যায়।
+            </div>
+            
+            <code style="background: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Attendance Management → Overtime</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example Overtime:</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Employee:</strong> John Doe
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Date:</strong> 2024-03-09
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Overtime Hours:</strong> 2.5 hours
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Rate:</strong> 1.5x (time and half)
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Amount:</strong> ৳750 (if hourly rate is ৳200)
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Status:</strong> Approved ✅
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 5: Reports -->
+    <div style="background: #e0e7ff; border: 2px solid #6366f1; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #3730a3; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1; font-size: 32px;">assessment</span>
+            Step 5: Attendance Reports
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📊 Available Reports:</h3>
+            
+            <div style="display: grid; gap: 12px;">
+                <div style="background: #e0e7ff; padding: 16px; border-radius: 8px; border-left: 4px solid #6366f1;">
+                    <strong style="color: #3730a3;">Daily Attendance Report</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">
+                        একটি specific date এর সব employee এর attendance
+                    </div>
+                    <code style="background: white; color: #3730a3; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; font-size: 12px;">
+                        HRM → Reports → Daily Attendance
+                    </code>
+                </div>
+                
+                <div style="background: #dbeafe; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <strong style="color: #1e40af;">Monthly Attendance Report</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">
+                        একটি employee এর পুরো মাসের attendance summary
+                    </div>
+                    <code style="background: white; color: #1e40af; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; font-size: 12px;">
+                        HRM → Reports → Monthly Attendance
+                    </code>
+                </div>
+                
+                <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                    <strong style="color: #065f46;">Attendance Log Report</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">
+                        Raw punch data with all in/out times
+                    </div>
+                    <code style="background: white; color: #065f46; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; font-size: 12px;">
+                        HRM → Reports → Attendance Log
+                    </code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Attendance -->
+    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 32px;">edit</span>
+            Manual Attendance Entry
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 কখন Manual Entry করবেন?</h3>
+            
+            <div style="display: grid; gap: 12px; margin-top: 16px;">
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px;">
+                    ✓ Device malfunction হলে
+                </div>
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px;">
+                    ✓ Employee punch করতে ভুলে গেলে
+                </div>
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px;">
+                    ✓ Field work বা remote work এর জন্য
+                </div>
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px;">
+                    ✓ Correction করার জন্য
+                </div>
+            </div>
+            
+            <code style="background: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-top: 16px;">HRM → Attendance Management → Attendance → Add</code>
+        </div>
+    </div>
+
+    <!-- Next Steps -->
+    <div style="background: #dcfce7; border: 2px solid #10b981; border-radius: 12px; padding: 24px;">
+        <h2 style="color: #065f46; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">arrow_forward</span>
+            Next Steps
+        </h2>
+        
+        <div style="display: grid; gap: 12px;">
+            <a href="{% url 'hrm:leave-management-guide' %}" style="background: white; padding: 16px; border-radius: 8px; text-decoration: none; display: block; border-left: 4px solid #10b981;">
+                <div style="font-weight: 600; color: #065f46; margin-bottom: 4px;">Leave Management Guide →</div>
+                <div style="font-size: 14px; color: #6b7280;">Leave application এবং approval process</div>
+            </a>
+            
+            <a href="{% url 'hrm:salary-payroll-guide' %}" style="background: white; padding: 16px; border-radius: 8px; text-decoration: none; display: block; border-left: 4px solid #10b981;">
+                <div style="font-weight: 600; color: #065f46; margin-bottom: 4px;">Salary & Payroll Guide →</div>
+                <div style="font-size: 14px; color: #6b7280;">Salary setup এবং payroll process করুন</div>
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

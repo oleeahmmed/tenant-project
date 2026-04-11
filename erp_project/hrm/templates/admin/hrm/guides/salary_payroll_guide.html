@@ -1,0 +1,287 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Salary & Payroll Management Guide" %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+    &rsaquo; {% trans "Salary & Payroll Management Guide" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1 style="margin-bottom: 30px; color: #1f2937;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 32px;">payments</span>
+        {% trans "Salary & Payroll Management Guide" %}
+    </h1>
+    
+    <p style="color: #6b7280; margin-bottom: 30px; font-size: 16px;">
+        এই guide এ দেখানো হয়েছে কিভাবে employee salary setup করবেন, payroll process করবেন, 
+        এবং salary reports generate করবেন।
+    </p>
+
+    <!-- Payroll Flow -->
+    <div style="background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">timeline</span>
+            Payroll Process Flow
+        </h2>
+        <p style="margin: 0; font-size: 15px; opacity: 0.95;">
+            Salary Setup → Attendance → Leave → Overtime → Payroll Calculation → Payment
+        </p>
+    </div>
+
+    <!-- Step 1: Salary Setup -->
+    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #3b82f6; font-size: 32px;">account_balance_wallet</span>
+            Step 1: Setup Employee Salary
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Salary Structure:</h3>
+            <div style="background: #dbeafe; padding: 16px; border-left: 4px solid #3b82f6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #1e40af;">Employee Salary</strong> তে basic salary, allowances, deductions সব define করা হয়।
+            </div>
+            
+            <code style="background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Employee Management → Salaries → Add</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example Salary Structure:</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Employee:</strong> John Doe
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Basic Salary:</strong> ৳30,000
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">House Rent:</strong> ৳12,000 (40%)
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Medical:</strong> ৳3,000
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Transport:</strong> ৳2,000
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Gross Salary:</strong> ৳47,000
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Salary Components -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">💰 Common Salary Components:</h3>
+            <div style="display: grid; gap: 12px;">
+                <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                    <strong style="color: #065f46;">Basic Salary</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">মূল বেতন - সাধারণত gross এর 50-60%</div>
+                </div>
+                <div style="background: #dbeafe; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <strong style="color: #1e40af;">House Rent Allowance</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">বাড়ি ভাড়া - basic এর 40-50%</div>
+                </div>
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <strong style="color: #92400e;">Medical Allowance</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">চিকিৎসা ভাতা - fixed amount</div>
+                </div>
+                <div style="background: #e0e7ff; padding: 16px; border-radius: 8px; border-left: 4px solid #6366f1;">
+                    <strong style="color: #3730a3;">Transport Allowance</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">যাতায়াত ভাতা - fixed amount</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Deductions -->
+    <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #991b1b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #ef4444; font-size: 32px;">remove_circle</span>
+            Step 2: Salary Deductions
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Common Deductions:</h3>
+            <div style="display: grid; gap: 12px;">
+                <div style="background: #fee2e2; padding: 16px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                    <strong style="color: #991b1b;">Tax Deduction</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">Income tax - as per tax slab</div>
+                </div>
+                <div style="background: #fee2e2; padding: 16px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                    <strong style="color: #991b1b;">Provident Fund</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">PF contribution - usually 10% of basic</div>
+                </div>
+                <div style="background: #fee2e2; padding: 16px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                    <strong style="color: #991b1b;">Loan Deduction</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">Employee loan installment</div>
+                </div>
+                <div style="background: #fee2e2; padding: 16px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                    <strong style="color: #991b1b;">Absence Deduction</strong>
+                    <div style="color: #374151; margin-top: 8px; font-size: 14px;">Unpaid leave বা absent days এর জন্য</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Payroll Calculation -->
+    <div style="background: #dcfce7; border: 2px solid #10b981; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #065f46; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">calculate</span>
+            Step 3: Payroll Calculation
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Calculation Formula:</h3>
+            <div style="background: #dcfce7; padding: 16px; border-left: 4px solid #10b981; border-radius: 4px; margin-bottom: 16px;">
+                <code style="color: #065f46; font-size: 14px;">
+                    Net Salary = Gross Salary + Overtime + Bonus - Deductions - Absence
+                </code>
+            </div>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example Calculation:</h4>
+                <div style="display: grid; gap: 8px; font-family: monospace; font-size: 14px;">
+                    <div style="background: white; padding: 10px; border-radius: 4px;">
+                        Gross Salary: ৳47,000
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 4px; color: #10b981;">
+                        + Overtime: ৳2,000
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 4px; color: #10b981;">
+                        + Bonus: ৳5,000
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 4px; color: #ef4444;">
+                        - Tax: ৳3,000
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 4px; color: #ef4444;">
+                        - PF: ৳3,000
+                    </div>
+                    <div style="background: white; padding: 10px; border-radius: 4px; color: #ef4444;">
+                        - Absence: ৳1,000
+                    </div>
+                    <div style="background: #10b981; padding: 10px; border-radius: 4px; color: white; font-weight: 600;">
+                        = Net Salary: ৳47,000
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+            <strong style="color: #92400e;">💡 Auto Calculation:</strong> System automatically attendance, leave, overtime 
+            থেকে salary calculate করে। Manual adjustment শুধু special cases এ করতে হয়।
+        </div>
+    </div>
+
+    <!-- Step 4: Payroll Process -->
+    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 32px;">task_alt</span>
+            Step 4: Monthly Payroll Process
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Payroll Steps:</h3>
+            <ol style="margin: 0; padding-left: 20px; color: #374151; line-height: 2;">
+                <li>মাস শেষে attendance finalize করুন</li>
+                <li>সব leave applications approve/reject করুন</li>
+                <li>Overtime entries verify করুন</li>
+                <li>Payroll generate করুন (auto calculation)</li>
+                <li>Individual salary slips review করুন</li>
+                <li>Adjustments করুন (if needed)</li>
+                <li>Payroll approve করুন</li>
+                <li>Bank transfer file generate করুন</li>
+                <li>Payment process করুন</li>
+                <li>Salary slips distribute করুন</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Step 5: Salary Slip -->
+    <div style="background: #e0e7ff; border: 2px solid #6366f1; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #3730a3; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1; font-size: 32px;">receipt_long</span>
+            Step 5: Salary Slip Generation
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Salary Slip Contents:</h3>
+            <div style="display: grid; gap: 12px;">
+                <div style="background: #e0e7ff; padding: 12px; border-radius: 6px;">
+                    ✓ Employee details (Name, ID, Department, Designation)
+                </div>
+                <div style="background: #e0e7ff; padding: 12px; border-radius: 6px;">
+                    ✓ Salary period (Month, Year)
+                </div>
+                <div style="background: #e0e7ff; padding: 12px; border-radius: 6px;">
+                    ✓ Earnings breakdown (Basic, Allowances, Overtime, Bonus)
+                </div>
+                <div style="background: #e0e7ff; padding: 12px; border-radius: 6px;">
+                    ✓ Deductions breakdown (Tax, PF, Loans, Absence)
+                </div>
+                <div style="background: #e0e7ff; padding: 12px; border-radius: 6px;">
+                    ✓ Attendance summary (Present, Absent, Leave, Holidays)
+                </div>
+                <div style="background: #e0e7ff; padding: 12px; border-radius: 6px;">
+                    ✓ Net payable amount
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Best Practices -->
+    <div style="background: #dcfce7; border: 2px solid #10b981; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #065f46; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">tips_and_updates</span>
+            Best Practices
+        </h2>
+        
+        <div style="display: grid; gap: 12px;">
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✓ Fixed Schedule:</strong> প্রতি মাসের একটি fixed date এ payroll process করুন
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✓ Verification:</strong> Payment করার আগে সব calculations verify করুন
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✓ Backup:</strong> Payroll data এর regular backup রাখুন
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✓ Transparency:</strong> Employees কে salary structure clearly বুঝিয়ে দিন
+            </div>
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✓ Compliance:</strong> Labor law এবং tax regulations follow করুন
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Guides -->
+    <div style="background: #e0e7ff; border: 2px solid #6366f1; border-radius: 12px; padding: 24px;">
+        <h2 style="color: #3730a3; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1; font-size: 32px;">arrow_back</span>
+            Other Guides
+        </h2>
+        
+        <div style="display: grid; gap: 12px;">
+            <a href="{% url 'hrm:employee-management-guide' %}" style="background: white; padding: 16px; border-radius: 8px; text-decoration: none; display: block; border-left: 4px solid #6366f1;">
+                <div style="font-weight: 600; color: #3730a3; margin-bottom: 4px;">Employee Management Guide →</div>
+                <div style="font-size: 14px; color: #6b7280;">Employee setup এবং management</div>
+            </a>
+            
+            <a href="{% url 'hrm:attendance-management-guide' %}" style="background: white; padding: 16px; border-radius: 8px; text-decoration: none; display: block; border-left: 4px solid #6366f1;">
+                <div style="font-weight: 600; color: #3730a3; margin-bottom: 4px;">Attendance Management Guide →</div>
+                <div style="font-size: 14px; color: #6b7280;">Attendance track এবং manage করুন</div>
+            </a>
+            
+            <a href="{% url 'hrm:leave-management-guide' %}" style="background: white; padding: 16px; border-radius: 8px; text-decoration: none; display: block; border-left: 4px solid #6366f1;">
+                <div style="font-weight: 600; color: #3730a3; margin-bottom: 4px;">Leave Management Guide →</div>
+                <div style="font-size: 14px; color: #6b7280;">Leave application এবং approval</div>
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

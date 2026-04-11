@@ -1,0 +1,244 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Purchase ব্যবহার গাইড{% endblock %}
+{% block page_title %}Purchase · বাংলা গাইড{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div>
+        <h2 class="text-lg font-semibold text-foreground">একটি কোম্পানির Purchase চালানোর সহজ গল্প</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">Purchase Request থেকে GRN পর্যন্ত — বাস্তব উদাহরণ সহ।</p>
+      </div>
+      <a href="{% url 'purchase:purchase_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        Back
+      </a>
+    </div>
+
+    <div class="p-5 space-y-6">
+
+      <!-- Intro -->
+      <section class="rounded-xl border border-border bg-background p-4">
+        <p class="text-xs font-semibold uppercase tracking-wide text-primary">এন্ড-টু-এন্ড গাইড</p>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          এই গাইড এমনভাবে লেখা যে একজন নতুন Purchase Officer, Store Manager, এমনকি একদম নতুন user-ও
+          শুধুমাত্র এই পেজ দেখে পুরো Purchase cycle সেটআপ ও চালু করতে পারে।
+        </p>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          গল্পে আমাদের company: <strong class="text-foreground">Demo Traders Ltd.</strong>,
+          মালিক: <strong class="text-foreground">রাহাত</strong>,
+          Purchase Officer: <strong class="text-foreground">করিম</strong>,
+          Store Manager: <strong class="text-foreground">সুমাইয়া</strong>।
+        </p>
+      </section>
+
+      <!-- Part A -->
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part A: Purchase cycle কী? (বড় ছবি)</h3>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          Purchase cycle মানে — কোনো পণ্য বা সেবা কেনার পুরো প্রক্রিয়া। চাহিদা থেকে শুরু করে মাল গুদামে ঢোকা পর্যন্ত।
+        </p>
+        <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
+          <span class="rounded-lg bg-primary/10 px-3 py-1.5 font-medium text-primary">Purchase Request (PR)</span>
+          <i data-lucide="arrow-right" class="h-4 w-4 text-muted-foreground"></i>
+          <span class="rounded-lg border border-border px-3 py-1.5 text-foreground">Purchase Order (PO)</span>
+          <i data-lucide="arrow-right" class="h-4 w-4 text-muted-foreground"></i>
+          <span class="rounded-lg border border-border px-3 py-1.5 text-foreground">Goods Receipt (GRN)</span>
+          <i data-lucide="arrow-right" class="h-4 w-4 text-muted-foreground"></i>
+          <span class="rounded-lg border border-border px-3 py-1.5 text-foreground">Purchase Return (যদি দরকার)</span>
+        </div>
+      </section>
+
+      <!-- Part B -->
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part B: শুরু করার আগে যা লাগবে (Prerequisites)</h3>
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">1) Supplier master data</p>
+            <p class="mt-1">Foundation → Suppliers এ কমপক্ষে একটি supplier add করুন। নাম, ঠিকানা, payment terms দিন।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">2) Product / Item master</p>
+            <p class="mt-1">Foundation → Products এ পণ্য add করুন। Unit of measure, category ঠিক করুন।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">3) Warehouse</p>
+            <p class="mt-1">Foundation → Warehouses এ কমপক্ষে একটি warehouse add করুন। GRN post হলে এখানে stock যাবে।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">4) Team access</p>
+            <p class="mt-1">Tenant auth থেকে Purchase Officer ও Store Manager user add করে purchase permission দিন।</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Part C -->
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part C: Purchase Request (PR) — চাহিদা জানানো</h3>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          করিম দেখল গুদামে Laptop কম। সে একটি Purchase Request তৈরি করল।
+        </p>
+        <ol class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>1) Purchase → Requests → <strong class="text-foreground">Add</strong> click করুন</li>
+          <li>2) <strong class="text-foreground">Request date</strong> ও <strong class="text-foreground">Required date</strong> দিন</li>
+          <li>3) Lines এ পণ্য, quantity, estimated price দিন</li>
+          <li>4) <strong class="text-foreground">Save</strong> করুন — status হবে <span class="rounded bg-yellow-500/10 px-1.5 py-0.5 text-xs font-medium text-yellow-700 dark:text-yellow-400">Draft</span></li>
+          <li>5) Manager <strong class="text-foreground">Approve</strong> করলে status হবে <span class="rounded bg-green-500/10 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-400">Approved</span></li>
+        </ol>
+        <div class="mt-3 rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+          💡 PR approve না হলে PO তৈরি করা যাবে না।
+        </div>
+      </section>
+
+      <!-- Part D -->
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part D: Purchase Order (PO) — Supplier কে অর্ডার দেওয়া</h3>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          PR approve হওয়ার পর করিম supplier কে formal order দিল।
+        </p>
+        <ol class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>1) Purchase → Orders → <strong class="text-foreground">Add</strong> click করুন</li>
+          <li>2) <strong class="text-foreground">Supplier</strong> select করুন</li>
+          <li>3) <strong class="text-foreground">Order date</strong> ও <strong class="text-foreground">Expected delivery date</strong> দিন</li>
+          <li>4) Lines এ পণ্য, quantity, unit price, tax দিন</li>
+          <li>5) <strong class="text-foreground">Save</strong> করুন — status: <span class="rounded bg-yellow-500/10 px-1.5 py-0.5 text-xs font-medium text-yellow-700 dark:text-yellow-400">Draft</span></li>
+          <li>6) Manager <strong class="text-foreground">Approve</strong> করলে supplier কে পাঠানো যাবে</li>
+        </ol>
+        <div class="mt-3 rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+          💡 PO approve হলে supplier কে PDF print করে বা email করে পাঠান।
+        </div>
+      </section>
+
+      <!-- Part E -->
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part E: Goods Receipt Note (GRN) — মাল গুদামে ঢোকানো</h3>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          Supplier মাল পাঠাল। সুমাইয়া গুদামে মাল বুঝে নিয়ে GRN তৈরি করল।
+        </p>
+        <ol class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>1) Purchase → Receipts → <strong class="text-foreground">Add</strong> click করুন</li>
+          <li>2) <strong class="text-foreground">Purchase Order</strong> select করুন (PO থেকে lines auto-fill হবে)</li>
+          <li>3) <strong class="text-foreground">Warehouse</strong> select করুন</li>
+          <li>4) <strong class="text-foreground">Received quantity</strong> দিন (PO quantity এর কম বা সমান হতে পারে)</li>
+          <li>5) <strong class="text-foreground">Save</strong> করুন — status: <span class="rounded bg-yellow-500/10 px-1.5 py-0.5 text-xs font-medium text-yellow-700 dark:text-yellow-400">Draft</span></li>
+          <li>6) <strong class="text-foreground">Post</strong> করুন — stock inventory তে যোগ হবে, Finance এ AP Invoice তৈরি হবে</li>
+        </ol>
+        <div class="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
+          ⚡ GRN Post হলে স্বয়ংক্রিয়ভাবে Finance এ <strong class="text-foreground">AP Invoice</strong> তৈরি হয় এবং Inventory stock বাড়ে।
+        </div>
+      </section>
+
+      <!-- Part F -->
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part F: Purchase Return — মাল ফেরত দেওয়া</h3>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          কিছু Laptop defective পাওয়া গেল। করিম supplier কে ফেরত দিল।
+        </p>
+        <ol class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>1) Purchase → Returns → <strong class="text-foreground">Add</strong> click করুন</li>
+          <li>2) <strong class="text-foreground">GRN</strong> select করুন (যে GRN থেকে ফেরত দেবেন)</li>
+          <li>3) Return quantity ও কারণ দিন</li>
+          <li>4) <strong class="text-foreground">Save</strong> → <strong class="text-foreground">Post</strong> করুন</li>
+          <li>5) Post হলে stock কমবে, Finance এ Credit Note তৈরি হবে</li>
+        </ol>
+      </section>
+
+      <!-- Part G: Status table -->
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part G: Document status কিভাবে কাজ করে</h3>
+        <div class="ui-table-wrap overflow-x-auto rounded-lg border border-border mt-3">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-border bg-muted/40">
+                <th class="px-3 py-2 text-left">Document</th>
+                <th class="px-3 py-2 text-left">Draft</th>
+                <th class="px-3 py-2 text-left">Approved</th>
+                <th class="px-3 py-2 text-left">Posted</th>
+                <th class="px-3 py-2 text-left">Effect</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border text-muted-foreground">
+              <tr>
+                <td class="px-3 py-2 font-medium text-foreground">Purchase Request</td>
+                <td class="px-3 py-2">Edit করা যায়</td>
+                <td class="px-3 py-2">PO তৈরি করা যায়</td>
+                <td class="px-3 py-2">—</td>
+                <td class="px-3 py-2">কোনো stock/finance effect নেই</td>
+              </tr>
+              <tr>
+                <td class="px-3 py-2 font-medium text-foreground">Purchase Order</td>
+                <td class="px-3 py-2">Edit করা যায়</td>
+                <td class="px-3 py-2">GRN তৈরি করা যায়</td>
+                <td class="px-3 py-2">—</td>
+                <td class="px-3 py-2">কোনো stock/finance effect নেই</td>
+              </tr>
+              <tr>
+                <td class="px-3 py-2 font-medium text-foreground">Goods Receipt (GRN)</td>
+                <td class="px-3 py-2">Edit করা যায়</td>
+                <td class="px-3 py-2">—</td>
+                <td class="px-3 py-2 text-green-700 dark:text-green-400">Stock ↑ + AP Invoice</td>
+                <td class="px-3 py-2">Inventory ও Finance উভয়ে প্রভাব</td>
+              </tr>
+              <tr>
+                <td class="px-3 py-2 font-medium text-foreground">Purchase Return</td>
+                <td class="px-3 py-2">Edit করা যায়</td>
+                <td class="px-3 py-2">—</td>
+                <td class="px-3 py-2 text-red-600 dark:text-red-400">Stock ↓ + Credit Note</td>
+                <td class="px-3 py-2">Inventory ও Finance উভয়ে প্রভাব</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Part H: Demo scenario -->
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part H: Complete demo scenario (এক সপ্তাহে কী হলো)</h3>
+        <ol class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>1) করিম PR তৈরি করল — 10 Laptop, estimated 45,000 each</li>
+          <li>2) রাহাত PR approve করল</li>
+          <li>3) করিম PO তৈরি করল — Supplier: ABC Electronics, unit price 44,000 + 15% VAT</li>
+          <li>4) রাহাত PO approve করল, supplier কে PDF পাঠাল</li>
+          <li>5) ৩ দিন পর মাল এল — সুমাইয়া GRN তৈরি করল, 10টি received, Post করল</li>
+          <li>6) Inventory তে 10 Laptop যোগ হলো, Finance এ AP Invoice 506,000 টাকা তৈরি হলো</li>
+          <li>7) ২টি Laptop defective — করিম Return তৈরি করল, Post করল</li>
+          <li>8) Inventory থেকে 2টি কমল, Finance এ Credit Note 101,200 টাকা তৈরি হলো</li>
+        </ol>
+      </section>
+
+      <!-- Part I: Troubleshooting -->
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part I: Troubleshooting (common ভুল)</h3>
+        <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>- <strong class="text-foreground">PO তৈরি হচ্ছে না:</strong> PR approve হয়েছে কিনা দেখুন</li>
+          <li>- <strong class="text-foreground">GRN post error:</strong> Warehouse select করা আছে কিনা, Finance এ AP account mapping আছে কিনা দেখুন</li>
+          <li>- <strong class="text-foreground">Stock বাড়ছে না:</strong> GRN Draft এ আছে কিনা — Post করতে হবে</li>
+          <li>- <strong class="text-foreground">Line total ভুল:</strong> quantity ও unit price ঠিক আছে কিনা, tax rate সঠিক কিনা দেখুন</li>
+          <li>- <strong class="text-foreground">Supplier দেখা যাচ্ছে না:</strong> Foundation → Suppliers এ add করা আছে কিনা দেখুন</li>
+          <li>- <strong class="text-foreground">AP Invoice তৈরি হয়নি:</strong> Finance module active আছে কিনা, GRN post হয়েছে কিনা দেখুন</li>
+        </ul>
+      </section>
+
+      <!-- Summary -->
+      <section class="rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <h3 class="text-base font-semibold text-foreground">"বাচ্চাও বুঝবে" short version</h3>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          Purchase মানে কেনাকাটার হিসাব। কী কিনতে চাই (PR) → কাকে কিনব (PO) → মাল পেলাম (GRN) → কিছু ফেরত দিলাম (Return)।
+          GRN post হলে গুদামে মাল ঢোকে আর হিসাবে দেনা তৈরি হয়।
+        </p>
+      </section>
+
+      <!-- Action buttons -->
+      <section class="flex flex-wrap gap-3 pt-1">
+        <a href="{% url 'purchase:purchase_request_create' %}" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Step 1: Purchase Request</a>
+        <a href="{% url 'purchase:purchase_order_create' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Step 2: Purchase Order</a>
+        <a href="{% url 'purchase:goods_receipt_create' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Step 3: Goods Receipt</a>
+        <a href="{% url 'purchase:purchase_return_create' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Step 4: Purchase Return</a>
+        <a href="{% url 'purchase:purchase_dashboard' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Dashboard</a>
+      </section>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

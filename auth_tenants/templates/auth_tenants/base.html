@@ -63,8 +63,12 @@
     .theme-transition main,
     .theme-transition .shadow-card,
     .theme-transition .rounded-xl,
-    .theme-transition .rounded-lg {
-      transition-property: background-color, border-color, color, fill, stroke;
+    .theme-transition .rounded-lg,
+    .theme-transition .inv-list-shell,
+    .theme-transition .inv-list-card,
+    .theme-transition .inv-list-filter,
+    .theme-transition .inv-list-control {
+      transition-property: background-color, border-color, color, fill, stroke, box-shadow;
       transition-duration: 300ms;
       transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -76,8 +80,152 @@
     .simple-sidebar { background: hsl(var(--background)); }
     /* Cards — match ui/index.html + Coderthemes Simple */
     .simple-card { background: hsl(var(--card)); border-color: hsl(var(--border)); }
-    .ui-table-wrap { overflow: hidden; border-radius: var(--radius); border: 1px solid hsl(var(--border)); background: hsl(var(--card)); box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06); }
+    main .simple-card:has(.ui-table-wrap) {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+    main .simple-card:has(.ui-table-wrap) > * {
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+    }
+    /* Tables fill main column (flex layouts need explicit width) */
+    .ui-table-wrap {
+      display: block;
+      width: 100%;
+      max-width: none;
+      min-width: 0;
+      box-sizing: border-box;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      border-radius: var(--radius);
+      border: 1px solid hsl(var(--border));
+      background: hsl(var(--card));
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+    }
+    /* Scrollport must span container width (avoids shrink-to-fit to table min-content) */
+    .ui-table-wrap > table {
+      display: table;
+      width: 100%;
+      min-width: 100%;
+      max-width: none;
+      border-collapse: collapse;
+      table-layout: auto;
+    }
+    main table.w-full,
+    main .ui-table-wrap > table {
+      width: 100%;
+      min-width: 100%;
+    }
     .dark .ui-table-wrap { box-shadow: none; }
+    /* Inventory document lists — layered shell (theme tokens; light + dark) */
+    .inv-list-shell {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      border-radius: 1rem;
+      padding: 0.25rem;
+      background: linear-gradient(
+        to bottom,
+        hsl(var(--muted) / 0.92),
+        hsl(var(--muted) / 0.58)
+      );
+      border: 1px solid hsl(var(--border) / 0.38);
+      box-shadow: inset 0 1px 0 0 hsl(var(--border) / 0.22);
+      transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .dark .inv-list-shell {
+      background: linear-gradient(
+        to bottom,
+        hsl(var(--muted) / 0.72),
+        hsl(var(--muted) / 0.38)
+      );
+      border-color: hsl(var(--border) / 0.5);
+      box-shadow: inset 0 1px 0 0 hsl(var(--border) / 0.18);
+    }
+    /* Grid (not flex column) so children always span the card width — flex could shrink .ui-table-wrap to content width */
+    .inv-list-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      overflow: hidden;
+      border-radius: 0.75rem;
+      border: 1px solid hsl(var(--border) / 0.88);
+      background: hsl(var(--card));
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 6px 16px -4px rgb(0 0 0 / 0.08);
+      transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .inv-list-card > * {
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+    }
+    .inv-list-card .ui-table-wrap {
+      width: 100%;
+      max-width: none;
+    }
+    .dark .inv-list-card {
+      box-shadow: 0 2px 22px -6px hsl(0 0% 0% / 0.55);
+      border-color: hsl(var(--border));
+    }
+    .inv-list-filter {
+      border-bottom: 1px solid hsl(var(--border) / 0.5);
+      background: hsl(var(--muted) / 0.45);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .dark .inv-list-filter {
+      background: hsl(var(--muted) / 0.38);
+    }
+    .inv-list-control {
+      width: 100%;
+      border-radius: 0.5rem;
+      border: 1px solid hsl(var(--border) / 0.65);
+      background: hsl(var(--card));
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      color: hsl(var(--foreground));
+      box-shadow: 0 1px 2px hsl(0 0% 0% / 0.05);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+    .dark .inv-list-control {
+      box-shadow: none;
+      border-color: hsl(var(--border));
+      background: hsl(var(--secondary) / 0.42);
+    }
+    .inv-list-control:focus {
+      outline: none;
+    }
+    .inv-list-control:focus-visible {
+      box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring) / 0.45);
+    }
+    .dark .inv-list-control:focus-visible {
+      box-shadow: 0 0 0 2px hsl(var(--card)), 0 0 0 4px hsl(var(--ring) / 0.4);
+    }
+    /* Tom Select in inventory filters — match .inv-list-control surfaces */
+    .inv-list-filter .ts-wrapper.inv-ts-premium .ts-control {
+      background: hsl(var(--card)) !important;
+      border-color: hsl(var(--border) / 0.65) !important;
+      box-shadow: 0 1px 2px hsl(0 0% 0% / 0.05);
+    }
+    .dark .inv-list-filter .ts-wrapper.inv-ts-premium .ts-control {
+      background: hsl(var(--secondary) / 0.42) !important;
+      border-color: hsl(var(--border)) !important;
+      box-shadow: none;
+    }
+    .inv-list-filter .ts-wrapper.inv-ts-premium.focus .ts-control,
+    .inv-list-filter .ts-wrapper.inv-ts-premium.dropdown-active .ts-control {
+      border-color: hsl(var(--ring) / 0.55) !important;
+      box-shadow: 0 0 0 3px hsl(var(--ring) / 0.18);
+    }
     /* Active nav — primary/10 pill like Simple */
     .nav-active { background: hsl(var(--primary) / 0.1); font-weight: 500; color: hsl(var(--primary)); }
     .dark .nav-active { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
@@ -216,6 +364,31 @@
     .card-act--lg .card-act__icon {
       width: 2.125rem;
       height: 2.125rem;
+    }
+    /* Table row actions — same visual language as Team Members */
+    .table-action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.5rem;
+      color: hsl(var(--muted-foreground));
+      border: 1px solid transparent;
+      transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+    }
+    .table-action-btn:hover {
+      background: hsl(var(--accent));
+      color: hsl(var(--accent-foreground));
+      border-color: hsl(var(--border));
+    }
+    .table-action-btn:active {
+      transform: scale(0.96);
+    }
+    .table-action-btn--danger:hover {
+      background: hsl(var(--destructive) / 0.12);
+      color: hsl(var(--destructive));
+      border-color: hsl(var(--destructive) / 0.25);
     }
   </style>
   {% block extra_head %}{% endblock %}
@@ -375,10 +548,14 @@
               <li><a href="{% url 'finance:finance_dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'finance_dashboard' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a></li>
               <li><a href="{% url 'finance:finance_guide' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'finance_guide' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Guide (বাংলা)</a></li>
               <li><a href="{% url 'finance:account_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'account_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Chart of accounts</a></li>
+              <li><a href="{% url 'finance:fiscal_year_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'fiscal_year_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Fiscal years</a></li>
+              <li><a href="{% url 'finance:fiscal_period_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'fiscal_period_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Fiscal periods</a></li>
               <li><a href="{% url 'finance:journal_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'journal_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Journal entries</a></li>
+              <li><a href="{% url 'finance:report_gl' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'report_gl' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">General ledger</a></li>
               <li><a href="{% url 'finance:report_trial_balance' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'report_trial_balance' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Trial balance</a></li>
               <li><a href="{% url 'finance:report_profit_loss' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'report_profit_loss' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Profit &amp; loss</a></li>
               <li><a href="{% url 'finance:report_balance_sheet' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'report_balance_sheet' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Balance sheet</a></li>
+              <li><a href="{% url 'finance:report_budget_vs_actual' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'report_budget_vs_actual' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Budget vs actual</a></li>
               <li>
                 <button type="button" class="submenu-toggle flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left {% if request.resolver_match and request.resolver_match.url_name == 'ap_invoice_list' or request.resolver_match and request.resolver_match.url_name == 'ap_invoice_create' or request.resolver_match and request.resolver_match.url_name == 'ap_payment_list' or request.resolver_match and request.resolver_match.url_name == 'ap_payment_create' or request.resolver_match and request.resolver_match.url_name == 'ar_invoice_list' or request.resolver_match and request.resolver_match.url_name == 'ar_invoice_create' or request.resolver_match and request.resolver_match.url_name == 'ar_receipt_list' or request.resolver_match and request.resolver_match.url_name == 'ar_receipt_create' %}font-medium text-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-finance-subledger">
                   Subledger (AP/AR)
@@ -391,9 +568,63 @@
                   <li><a href="{% url 'finance:ar_receipt_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'ar_receipt_list' or request.resolver_match and request.resolver_match.url_name == 'ar_receipt_create' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">AR receipts</a></li>
                 </ul>
               </li>
-              <li><a href="{% url 'finance:cash_transaction_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'cash_transaction_list' or request.resolver_match and request.resolver_match.url_name == 'cash_transaction_create' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Cash &amp; bank</a></li>
+              <li><a href="{% url 'finance:bank_account_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'bank_account_list' or request.resolver_match and request.resolver_match.url_name == 'bank_account_create' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Bank accounts</a></li>
+              <li><a href="{% url 'finance:cash_transaction_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'cash_transaction_list' or request.resolver_match and request.resolver_match.url_name == 'cash_transaction_create' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Cash transactions</a></li>
               <li><a href="{% url 'finance:fixed_asset_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'asset_' in request.resolver_match.url_name or request.resolver_match and 'fixed_asset' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Fixed assets</a></li>
+              <li><a href="{% url 'finance:asset_depreciation_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'asset_depreciation_list' or request.resolver_match and request.resolver_match.url_name == 'asset_depreciation_create' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Depreciations</a></li>
               <li><a href="{% url 'finance:budget_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'budget_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Budgeting</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if request.resolver_match and request.resolver_match.namespace == 'purchase' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-purchase">
+              <i data-lucide="shopping-cart" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                Purchase
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-purchase" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'purchase' %}hidden{% endif %}">
+              <li><a href="{% url 'purchase:purchase_dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'purchase_dashboard' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a></li>
+              <li><a href="{% url 'purchase:purchase_request_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'purchase_request' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Purchase requests</a></li>
+              <li><a href="{% url 'purchase:purchase_order_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'purchase_order' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Purchase orders</a></li>
+              <li><a href="{% url 'purchase:goods_receipt_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'goods_receipt' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Goods receipts</a></li>
+              <li><a href="{% url 'purchase:purchase_return_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'purchase_return' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Purchase returns</a></li>
+              <li><a href="{% url 'finance:ap_invoice_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'finance' and request.resolver_match.url_name == 'ap_invoice_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">AP bills</a></li>
+              <li><a href="{% url 'finance:ap_payment_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'finance' and request.resolver_match.url_name == 'ap_payment_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">AP payments</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if request.resolver_match and request.resolver_match.namespace == 'sales' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-sales">
+              <i data-lucide="shopping-bag" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                Sales
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-sales" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'sales' %}hidden{% endif %}">
+              <li><a href="{% url 'sales:sales_dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'sales_dashboard' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a></li>
+              <li><a href="{% url 'sales:quotation_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'quotation' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Sales quotations</a></li>
+              <li><a href="{% url 'sales:order_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'sales' and 'order' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Sales orders</a></li>
+              <li><a href="{% url 'sales:delivery_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'delivery' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Delivery notes</a></li>
+              <li><a href="{% url 'sales:return_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'sales' and 'return' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Sales returns</a></li>
+              <li><a href="{% url 'finance:ar_invoice_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'finance' and request.resolver_match.url_name == 'ar_invoice_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">AR invoices</a></li>
+              <li><a href="{% url 'finance:ar_receipt_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'finance' and request.resolver_match.url_name == 'ar_receipt_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">AR receipts</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if request.resolver_match and request.resolver_match.namespace == 'production' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-production">
+              <i data-lucide="factory" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                Production
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-production" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'production' %}hidden{% endif %}">
+              <li><a href="{% url 'production:production_dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'production_dashboard' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a></li>
+              <li><a href="{% url 'production:bom_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'bom_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Bill of materials</a></li>
+              <li><a href="{% url 'production:order_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'production' and 'order_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Production orders</a></li>
+              <li><a href="{% url 'production:issue_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'issue_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Issue for production</a></li>
+              <li><a href="{% url 'production:receipt_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'receipt_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Receipt from production</a></li>
             </ul>
           </li>
           <li>
@@ -711,7 +942,7 @@
     <div id="customizer-backdrop" class="fixed inset-0 z-40 hidden bg-black/50"></div>
 
     <!-- Page content -->
-    <main class="flex-1 overflow-x-auto bg-muted/40 p-4 transition-colors duration-300 ease-in-out lg:p-6">
+    <main class="flex-1 w-full min-w-0 overflow-x-auto bg-muted/40 p-4 transition-colors duration-300 ease-in-out lg:p-6">
       {% if messages %}
         {% for message in messages %}
           <div class="mb-4 rounded-lg border px-4 py-3 text-sm

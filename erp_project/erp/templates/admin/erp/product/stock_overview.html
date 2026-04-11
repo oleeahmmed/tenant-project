@@ -1,0 +1,413 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ product.name }} - Stock Overview{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:erp_product_changelist' %}">{% trans 'Products' %}</a>
+    &rsaquo; <a href="{% url 'admin:erp_product_change' product.id %}">{{ product.name }}</a>
+    &rsaquo; {% trans 'Stock Overview' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+    .stock-overview {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .product-header {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+        color: white;
+        padding: 24px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 20px;
+    }
+    .product-info h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        font-weight: 600;
+    }
+    .product-meta {
+        display: flex;
+        gap: 24px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+    }
+    .meta-item {
+        display: flex;
+        flex-direction: column;
+    }
+    .meta-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        opacity: 0.7;
+        letter-spacing: 0.5px;
+    }
+    .meta-value {
+        font-size: 16px;
+        font-weight: 500;
+    }
+    .stock-summary {
+        text-align: right;
+    }
+    .total-stock {
+        font-size: 42px;
+        font-weight: 700;
+        line-height: 1;
+    }
+    .stock-unit {
+        font-size: 14px;
+        opacity: 0.8;
+    }
+    .stock-status {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 8px;
+    }
+    .status-ok { background: #10b981; }
+    .status-low { background: #f59e0b; }
+    .status-out { background: #ef4444; }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+    }
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1f2937;
+    }
+    .stat-label {
+        font-size: 13px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+    .stat-card.primary { border-left: 4px solid #3b82f6; }
+    .stat-card.success { border-left: 4px solid #10b981; }
+    .stat-card.warning { border-left: 4px solid #f59e0b; }
+    .stat-card.danger { border-left: 4px solid #ef4444; }
+    
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 24px 0 16px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-title::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: #3b82f6;
+        border-radius: 2px;
+    }
+    
+    .warehouse-table {
+        width: 100%;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+        border-collapse: collapse;
+    }
+    .warehouse-table th {
+        background: #f9fafb;
+        padding: 14px 16px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6b7280;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .warehouse-table td {
+        padding: 16px;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 14px;
+    }
+    .warehouse-table tr:last-child td {
+        border-bottom: none;
+    }
+    .warehouse-table tr:hover {
+        background: #f9fafb;
+    }
+    .warehouse-name {
+        font-weight: 600;
+        color: #1f2937;
+    }
+    .warehouse-code {
+        font-size: 12px;
+        color: #9ca3af;
+        font-family: monospace;
+    }
+    .quantity {
+        font-weight: 600;
+        font-size: 16px;
+    }
+    .quantity.positive { color: #10b981; }
+    .quantity.zero { color: #9ca3af; }
+    .quantity.negative { color: #ef4444; }
+    
+    .progress-bar {
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+        min-width: 100px;
+    }
+    .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    .progress-fill.high { background: #10b981; }
+    .progress-fill.medium { background: #f59e0b; }
+    .progress-fill.low { background: #ef4444; }
+    
+    .transactions-table {
+        width: 100%;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+        border-collapse: collapse;
+        margin-top: 16px;
+    }
+    .transactions-table th {
+        background: #f9fafb;
+        padding: 12px 16px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6b7280;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .transactions-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 13px;
+    }
+    .txn-type {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .txn-in { background: #d1fae5; color: #065f46; }
+    .txn-out { background: #fee2e2; color: #991b1b; }
+    .txn-transfer { background: #dbeafe; color: #1e40af; }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #9ca3af;
+    }
+    .empty-state svg {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 12px;
+        opacity: 0.5;
+    }
+    
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 20px;
+        background: #f3f4f6;
+        color: #374151;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        margin-top: 24px;
+        transition: background 0.2s;
+    }
+    .back-btn:hover {
+        background: #e5e7eb;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        .product-header { grid-template-columns: 1fr; }
+        .stock-summary { text-align: left; margin-top: 16px; }
+    }
+</style>
+
+<div class="stock-overview">
+    <!-- Product Header -->
+    <div class="product-header">
+        <div class="product-info">
+            <h1>{{ product.name }}</h1>
+            <div class="product-meta">
+                <div class="meta-item">
+                    <span class="meta-label">SKU</span>
+                    <span class="meta-value">{{ product.sku }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Category</span>
+                    <span class="meta-value">{{ product.category.name|default:"-" }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Unit</span>
+                    <span class="meta-value">{{ product.unit }}</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Min Stock</span>
+                    <span class="meta-value">{{ product.min_stock_level }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="stock-summary">
+            <div class="total-stock">{{ total_stock }}</div>
+            <div class="stock-unit">{{ product.unit }} Total</div>
+            {% if total_stock <= 0 %}
+                <span class="stock-status status-out">Out of Stock</span>
+            {% elif total_stock <= product.min_stock_level %}
+                <span class="stock-status status-low">Low Stock</span>
+            {% else %}
+                <span class="stock-status status-ok">In Stock</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-value">{{ warehouse_count }}</div>
+            <div class="stat-label">Warehouses</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-value">{{ total_stock }}</div>
+            <div class="stat-label">Total Stock</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">৳{{ product.purchase_price }}</div>
+            <div class="stat-label">Purchase Price</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-value">৳{{ product.selling_price }}</div>
+            <div class="stat-label">Selling Price</div>
+        </div>
+    </div>
+
+    <!-- Warehouse Stock Table -->
+    <h2 class="section-title">Stock by Warehouse</h2>
+    {% if warehouse_stocks %}
+    <table class="warehouse-table">
+        <thead>
+            <tr>
+                <th>Warehouse</th>
+                <th>Location</th>
+                <th style="text-align: right;">Quantity</th>
+                <th style="text-align: right;">Value</th>
+                <th style="width: 150px;">Stock Level</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock in warehouse_stocks %}
+            <tr>
+                <td>
+                    <div class="warehouse-name">{{ stock.warehouse.name }}</div>
+                    <div class="warehouse-code">{{ stock.warehouse.code }}</div>
+                </td>
+                <td>{{ stock.warehouse.city|default:"-" }}, {{ stock.warehouse.country|default:"-" }}</td>
+                <td style="text-align: right;">
+                    <span class="quantity {% if stock.quantity > 0 %}positive{% elif stock.quantity == 0 %}zero{% else %}negative{% endif %}">
+                        {{ stock.quantity }} {{ product.unit }}
+                    </span>
+                </td>
+                <td style="text-align: right;">
+                    ৳{{ stock.stock_value|floatformat:2 }}
+                </td>
+                <td>
+                    <div class="progress-bar">
+                        <div class="progress-fill {% if stock.percentage >= 50 %}high{% elif stock.percentage >= 20 %}medium{% else %}low{% endif %}" 
+                             style="width: {{ stock.percentage }}%"></div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            <tr style="background: #f9fafb; font-weight: 600;">
+                <td colspan="2">Total</td>
+                <td style="text-align: right;">{{ total_stock }} {{ product.unit }}</td>
+                <td style="text-align: right;">৳{{ total_value|floatformat:2 }}</td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+        <p>No stock records found for this product</p>
+    </div>
+    {% endif %}
+
+    <!-- Recent Transactions -->
+    <h2 class="section-title">Recent Transactions</h2>
+    {% if transactions %}
+    <table class="transactions-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Reference</th>
+                <th>Warehouse</th>
+                <th style="text-align: right;">Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for txn in transactions %}
+            <tr>
+                <td>{{ txn.created_at|date:"d M Y, H:i" }}</td>
+                <td>
+                    <span class="txn-type {% if txn.transaction_type == 'IN' %}txn-in{% elif txn.transaction_type == 'OUT' %}txn-out{% else %}txn-transfer{% endif %}">
+                        {{ txn.get_transaction_type_display }}
+                    </span>
+                </td>
+                <td>{{ txn.reference_number|default:"-" }}</td>
+                <td>{{ txn.warehouse.name }}</td>
+                <td style="text-align: right;">
+                    {% if txn.transaction_type == 'IN' %}+{% elif txn.transaction_type == 'OUT' %}-{% endif %}{{ txn.quantity }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <p>No transactions found for this product</p>
+    </div>
+    {% endif %}
+
+    <a href="{% url 'admin:erp_product_change' product.id %}" class="back-btn">
+        ← Back to Product
+    </a>
+</div>
+{% endblock %}

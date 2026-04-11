@@ -1,0 +1,606 @@
+{% extends "unfold/layouts/base_simple.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="p-6 md:p-8 bg-base-50 dark:bg-base-900 min-h-screen">
+    <!-- Header with Date Range Filters -->
+    <div class="mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-font-important-light dark:text-font-important-dark mb-2">{{ title }}</h1>
+                <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark">{{ subtitle }}</p>
+            </div>
+            
+            <!-- Date Range Buttons -->
+            <div class="flex flex-wrap gap-2">
+                <button onclick="loadDashboard('today')" class="date-filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all" data-range="today">Today</button>
+                <button onclick="loadDashboard('week')" class="date-filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all" data-range="week">This Week</button>
+                <button onclick="loadDashboard('month')" class="date-filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all" data-range="month">This Month</button>
+                <button onclick="loadDashboard('prev_month')" class="date-filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all" data-range="prev_month">Last Month</button>
+                <button onclick="loadDashboard('year')" class="date-filter-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all" data-range="year">This Year</button>
+                <button onclick="loadDashboard('all')" class="date-filter-btn active px-4 py-2 rounded-lg text-sm font-semibold transition-all" data-range="all">All Time</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progress Bar -->
+    <div id="progressContainer" class="hidden mb-6 bg-gradient-to-br from-[#e8f4f8] to-white dark:from-[#1a4d6d] dark:to-[#0d2d45] border-2 border-[#c4d82e]/30 rounded-default p-5 shadow-lg">
+        <div class="flex items-center justify-between mb-3">
+            <span id="progressText" class="text-sm font-semibold text-[#1a4d6d] dark:text-white">Loading...</span>
+            <span id="progressPercent" class="text-sm font-bold text-[#c4d82e] bg-[#1a4d6d]/10 dark:bg-[#c4d82e]/10 px-3 py-1 rounded-full">0%</span>
+        </div>
+        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden shadow-inner">
+            <div id="progressBar" class="h-3 rounded-full transition-all duration-300 shadow-md" style="width: 0%; background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%);"></div>
+        </div>
+    </div>
+    
+    <!-- Tabs Navigation -->
+    <div class="mb-6 bg-white dark:bg-base-800 rounded-xl shadow-md border border-base-200 dark:border-base-700 p-2">
+        <div class="flex flex-wrap gap-2">
+            <button onclick="showTab('overview')" class="tab-btn active px-6 py-3 rounded-lg text-sm font-semibold transition-all" data-tab="overview">📊 Overview</button>
+            <button onclick="showTab('charts')" class="tab-btn px-6 py-3 rounded-lg text-sm font-semibold transition-all" data-tab="charts">📈 Charts</button>
+            <button onclick="showTab('activities')" class="tab-btn px-6 py-3 rounded-lg text-sm font-semibold transition-all" data-tab="activities">📋 Activities</button>
+        </div>
+    </div>
+
+    <!-- Tab Content: Overview -->
+    <div id="tab-overview" class="tab-content">
+        <!-- KPI Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Purchases -->
+            <div class="relative overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <svg class="w-8 h-8 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                    <div id="kpi-purchases" class="text-3xl font-extrabold text-white mb-1">৳0.00</div>
+                    <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Total Purchases</div>
+                </div>
+            </div>
+            
+            <!-- Total Orders -->
+            <div class="relative overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <svg class="w-8 h-8 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                    </div>
+                    <div id="kpi-orders" class="text-3xl font-extrabold text-white mb-1">0</div>
+                    <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Purchase Orders</div>
+                </div>
+            </div>
+            
+            <!-- Average Order Value -->
+            <div class="relative overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <svg class="w-8 h-8 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <div id="kpi-avg" class="text-3xl font-extrabold text-white mb-1">৳0.00</div>
+                    <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Avg Order Value</div>
+                </div>
+            </div>
+            
+            <!-- Active Suppliers -->
+            <div class="relative overflow-hidden rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <svg class="w-8 h-8 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                        </svg>
+                    </div>
+                    <div id="kpi-suppliers" class="text-3xl font-extrabold text-white mb-1">0</div>
+                    <div class="text-sm text-white/90 font-semibold uppercase tracking-wide">Active Suppliers</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Secondary KPIs -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white dark:bg-base-800 rounded-xl p-6 shadow-md border border-base-200 dark:border-base-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark mb-1">Pending Orders</p>
+                        <p id="kpi-pending" class="text-2xl font-bold text-font-important-light dark:text-font-important-dark">0</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-base-800 rounded-xl p-6 shadow-md border border-base-200 dark:border-base-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark mb-1">Payables</p>
+                        <p id="kpi-payables" class="text-2xl font-bold text-font-important-light dark:text-font-important-dark">৳0.00</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-base-800 rounded-xl p-6 shadow-md border border-base-200 dark:border-base-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark mb-1">Overdue Invoices</p>
+                        <p id="kpi-overdue" class="text-2xl font-bold text-red-600 dark:text-red-400">0</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-base-800 rounded-xl p-6 shadow-md border border-base-200 dark:border-base-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark mb-1">Goods Receipts</p>
+                        <p id="kpi-receipts" class="text-2xl font-bold text-font-important-light dark:text-font-important-dark">0</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #c4d82e 0%, #b8cc2a 100%);">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Content: Charts -->
+    <div id="tab-charts" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Purchase Trend -->
+            <div class="lg:col-span-2 bg-white dark:bg-base-800 rounded-xl p-6 shadow-md border border-base-200 dark:border-base-700">
+                <h3 class="text-lg font-bold text-font-important-light dark:text-font-important-dark mb-4">Purchase Trend</h3>
+                <canvas id="purchaseTrendChart" height="80"></canvas>
+            </div>
+            
+            <!-- Top Products -->
+            <div class="bg-white dark:bg-base-800 rounded-xl p-6 shadow-md border border-base-200 dark:border-base-700">
+                <h3 class="text-lg font-bold text-font-important-light dark:text-font-important-dark mb-4">Top 10 Products Purchased</h3>
+                <canvas id="topProductsChart" height="100"></canvas>
+            </div>
+            
+            <!-- Top Suppliers -->
+            <div class="bg-white dark:bg-base-800 rounded-xl p-6 shadow-md border border-base-200 dark:border-base-700">
+                <h3 class="text-lg font-bold text-font-important-light dark:text-font-important-dark mb-4">Top 10 Suppliers</h3>
+                <canvas id="topSuppliersChart" height="100"></canvas>
+            </div>
+            
+            <!-- Purchase by Category -->
+            <div class="bg-white dark:bg-base-800 rounded-xl p-6 shadow-md border border-base-200 dark:border-base-700">
+                <h3 class="text-lg font-bold text-font-important-light dark:text-font-important-dark mb-4">Purchase by Category</h3>
+                <canvas id="categorySalesChart"></canvas>
+            </div>
+            
+            <!-- Order Status -->
+            <div class="bg-white dark:bg-base-800 rounded-xl p-6 shadow-md border border-base-200 dark:border-base-700">
+                <h3 class="text-lg font-bold text-font-important-light dark:text-font-important-dark mb-4">Order Status</h3>
+                <canvas id="orderStatusChart"></canvas>
+            </div>
+            
+            <!-- Invoice Status -->
+            <div class="lg:col-span-2 bg-white dark:bg-base-800 rounded-xl p-6 shadow-md border border-base-200 dark:border-base-700">
+                <h3 class="text-lg font-bold text-font-important-light dark:text-font-important-dark mb-4">Invoice Status Distribution</h3>
+                <canvas id="invoiceStatusChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Content: Activities -->
+    <div id="tab-activities" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Recent Orders -->
+            <div class="bg-white dark:bg-base-800 rounded-xl p-6 shadow-md border border-base-200 dark:border-base-700">
+                <h3 class="text-lg font-bold text-font-important-light dark:text-font-important-dark mb-4">Recent Purchase Orders</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b border-base-200 dark:border-base-700">
+                            <tr>
+                                <th class="text-left py-2 text-font-subtle-light dark:text-font-subtle-dark">Order #</th>
+                                <th class="text-left py-2 text-font-subtle-light dark:text-font-subtle-dark">Supplier</th>
+                                <th class="text-right py-2 text-font-subtle-light dark:text-font-subtle-dark">Amount</th>
+                                <th class="text-center py-2 text-font-subtle-light dark:text-font-subtle-dark">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr class="border-b border-base-100 dark:border-base-800">
+                                <td class="py-3 font-semibold">{{ order.order_number }}</td>
+                                <td class="py-3">{{ order.supplier.name|truncatewords:3 }}</td>
+                                <td class="py-3 text-right">৳{{ order.total_amount|floatformat:2 }}</td>
+                                <td class="py-3 text-center">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                        {% if order.status == 'draft' %}bg-gray-100 text-gray-800
+                                        {% elif order.status == 'sent' %}bg-blue-100 text-blue-800
+                                        {% elif order.status == 'confirmed' %}bg-yellow-100 text-yellow-800
+                                        {% elif order.status == 'received' %}bg-green-100 text-green-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ order.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="py-4 text-center text-font-subtle-light">No recent orders</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Overdue Invoices -->
+            <div class="bg-white dark:bg-base-800 rounded-xl p-6 shadow-md border border-base-200 dark:border-base-700">
+                <h3 class="text-lg font-bold text-red-600 dark:text-red-400 mb-4">Overdue Invoices</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="border-b border-base-200 dark:border-base-700">
+                            <tr>
+                                <th class="text-left py-2 text-font-subtle-light dark:text-font-subtle-dark">Invoice #</th>
+                                <th class="text-left py-2 text-font-subtle-light dark:text-font-subtle-dark">Supplier</th>
+                                <th class="text-right py-2 text-font-subtle-light dark:text-font-subtle-dark">Due Amount</th>
+                                <th class="text-center py-2 text-font-subtle-light dark:text-font-subtle-dark">Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in overdue_invoices_list %}
+                            <tr class="border-b border-base-100 dark:border-base-800">
+                                <td class="py-3 font-semibold">{{ invoice.invoice_number }}</td>
+                                <td class="py-3">{{ invoice.supplier.name|truncatewords:3 }}</td>
+                                <td class="py-3 text-right text-red-600 font-semibold">৳{{ invoice.due_amount|floatformat:2 }}</td>
+                                <td class="py-3 text-center text-xs">{{ invoice.due_date|date:"d M Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="py-4 text-center text-font-subtle-light">No overdue invoices</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+.date-filter-btn {
+    background: white;
+    border: 2px solid #e5e7eb;
+    color: #6b7280;
+}
+.date-filter-btn:hover {
+    border-color: #c4d82e;
+    color: #c4d82e;
+}
+.date-filter-btn.active {
+    background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%);
+    border-color: #c4d82e;
+    color: white;
+}
+.tab-btn {
+    background: transparent;
+    color: #6b7280;
+}
+.tab-btn:hover {
+    background: #f3f4f6;
+}
+.tab-btn.active {
+    background: linear-gradient(90deg, #c4d82e 0%, #b8cc2a 100%);
+    color: white;
+}
+</style>
+
+<script>
+// Global variables
+let currentTaskId = null;
+let pollInterval = null;
+let charts = {};
+const primaryColor = '#c4d82e';
+const colorPalette = ['#c4d82e', '#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#06b6d4', '#84cc16', '#f97316'];
+
+// Chart.js Configuration
+Chart.defaults.font.family = "'Inter', 'system-ui', '-apple-system', 'sans-serif'";
+Chart.defaults.color = '#6b7280';
+
+// Tab Management
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabName).classList.remove('hidden');
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+}
+
+// Load Dashboard Data
+function loadDashboard(range) {
+    document.querySelectorAll('.date-filter-btn').forEach(el => el.classList.remove('active'));
+    document.querySelector(`[data-range="${range}"]`).classList.add('active');
+    
+    document.getElementById('progressContainer').classList.remove('hidden');
+    document.getElementById('progressText').textContent = 'Checking cache...';
+    document.getElementById('progressBar').style.width = '5%';
+    document.getElementById('progressPercent').textContent = '5%';
+    
+    fetch(`/erp/api/purchase-dashboard/start/?range=${range}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.cached) {
+                document.getElementById('progressText').textContent = 'Loaded from cache (instant!)';
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressPercent').textContent = '100%';
+                setTimeout(() => {
+                    displayDashboardData(data.data);
+                }, 500);
+            } else {
+                currentTaskId = data.task_id;
+                pollTaskStatus();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load dashboard');
+            document.getElementById('progressContainer').classList.add('hidden');
+        });
+}
+
+// Poll Task Status
+function pollTaskStatus() {
+    if (!currentTaskId) return;
+    
+    pollInterval = setInterval(() => {
+        fetch(`/erp/api/purchase-dashboard/status/${currentTaskId}/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('progressBar').style.width = data.progress + '%';
+                document.getElementById('progressPercent').textContent = data.progress + '%';
+                document.getElementById('progressText').textContent = data.status;
+                
+                if (data.state === 'SUCCESS') {
+                    clearInterval(pollInterval);
+                    displayDashboardData(data.data);
+                } else if (data.state === 'FAILURE') {
+                    clearInterval(pollInterval);
+                    alert('Dashboard loading failed: ' + data.error);
+                    document.getElementById('progressContainer').classList.add('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                clearInterval(pollInterval);
+            });
+    }, 1000);
+}
+
+// Display Dashboard Data
+function displayDashboardData(data) {
+    document.getElementById('progressContainer').classList.add('hidden');
+    
+    // Update KPIs
+    document.getElementById('kpi-purchases').textContent = '৳' + data.kpis.total_purchases.toFixed(2);
+    document.getElementById('kpi-orders').textContent = data.kpis.total_orders;
+    document.getElementById('kpi-avg').textContent = '৳' + data.kpis.avg_order_value.toFixed(2);
+    document.getElementById('kpi-suppliers').textContent = data.kpis.active_suppliers;
+    document.getElementById('kpi-pending').textContent = data.kpis.pending_orders;
+    document.getElementById('kpi-payables').textContent = '৳' + data.kpis.outstanding_payables.toFixed(2);
+    document.getElementById('kpi-overdue').textContent = data.kpis.overdue_invoices;
+    document.getElementById('kpi-receipts').textContent = data.kpis.total_receipts;
+    
+    // Update Charts
+    updateCharts(data.charts);
+}
+
+// Update Charts
+function updateCharts(chartData) {
+    // Destroy existing charts
+    Object.values(charts).forEach(chart => chart.destroy());
+    charts = {};
+    
+    // Purchase Trend Chart
+    const purchaseTrendCtx = document.getElementById('purchaseTrendChart').getContext('2d');
+    charts.purchaseTrend = new Chart(purchaseTrendCtx, {
+        type: 'line',
+        data: {
+            labels: chartData.purchase_trend_labels,
+            datasets: [{
+                label: 'Purchases',
+                data: chartData.purchase_trend_data,
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#ef4444'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    callbacks: {
+                        label: (context) => 'Purchases: ৳' + context.parsed.y.toFixed(2)
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: (value) => '৳' + value.toLocaleString() },
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+    
+    // Top Products Chart
+    const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
+    charts.topProducts = new Chart(topProductsCtx, {
+        type: 'bar',
+        data: {
+            labels: chartData.product_names,
+            datasets: [{
+                label: 'Cost',
+                data: chartData.product_costs,
+                backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                borderColor: '#ef4444',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => 'Cost: ৳' + context.parsed.x.toFixed(2)
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { callback: (value) => '৳' + value.toLocaleString() }
+                }
+            }
+        }
+    });
+    
+    // Top Suppliers Chart
+    const topSuppliersCtx = document.getElementById('topSuppliersChart').getContext('2d');
+    charts.topSuppliers = new Chart(topSuppliersCtx, {
+        type: 'bar',
+        data: {
+            labels: chartData.supplier_names,
+            datasets: [{
+                label: 'Cost',
+                data: chartData.supplier_costs,
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                borderColor: '#3b82f6',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => 'Cost: ৳' + context.parsed.x.toFixed(2)
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { callback: (value) => '৳' + value.toLocaleString() }
+                }
+            }
+        }
+    });
+    
+    // Category Sales Chart
+    const categorySalesCtx = document.getElementById('categorySalesChart').getContext('2d');
+    charts.categorySales = new Chart(categorySalesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: chartData.category_names,
+            datasets: [{
+                data: chartData.category_costs,
+                backgroundColor: colorPalette,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 15, font: { size: 11 } } },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => context.label + ': ৳' + context.parsed.toFixed(2)
+                    }
+                }
+            }
+        }
+    });
+    
+    // Order Status Chart
+    const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
+    charts.orderStatus = new Chart(orderStatusCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Draft', 'Sent', 'Confirmed', 'Received', 'Cancelled'],
+            datasets: [{
+                data: chartData.order_status_values,
+                backgroundColor: ['#9ca3af', '#3b82f6', '#f59e0b', '#10b981', '#ef4444'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 15, font: { size: 11 } } }
+            }
+        }
+    });
+    
+    // Invoice Status Chart
+    const invoiceStatusCtx = document.getElementById('invoiceStatusChart').getContext('2d');
+    charts.invoiceStatus = new Chart(invoiceStatusCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Draft', 'Received', 'Paid', 'Partially Paid', 'Overdue', 'Cancelled'],
+            datasets: [{
+                label: 'Count',
+                data: chartData.invoice_status_values,
+                backgroundColor: ['#9ca3af', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#6b7280'],
+                borderWidth: 2,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+// Load default dashboard on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboard('all');
+});
+</script>
+{% endblock %}

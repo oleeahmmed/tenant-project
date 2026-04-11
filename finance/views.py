@@ -1,16 +1,21 @@
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
+from foundation.models import Customer, Supplier
+
 from .forms import (
     APInvoiceForm,
     APInvoiceLineFormSet,
+    APPaymentAllocationFormSet,
     APPaymentForm,
     ARInvoiceForm,
     ARInvoiceLineFormSet,
+    ARReceiptAllocationFormSet,
     ARReceiptForm,
     AccountForm,
     AssetDepreciationForm,
@@ -24,7 +29,7 @@ from .forms import (
     JournalEntryForm,
     JournalLineFormSet,
 )
-from .mixins import FinanceAdminMixin, FinanceDashboardAccessMixin, FinancePageContextMixin
+from .mixins import FinanceAdminMixin, FinanceDashboardAccessMixin, FinancePageContextMixin, FinancePermissionRequiredMixin
 from .models import (
     APInvoice,
     APPayment,
@@ -42,6 +47,10 @@ from .models import (
     LedgerEntry,
 )
 from .services.posting import (
+    cancel_ap_invoice,
+    cancel_ap_payment,
+    cancel_ar_invoice,
+    cancel_ar_receipt,
     post_ap_invoice,
     post_ap_payment,
     post_ar_invoice,
@@ -313,9 +322,48 @@ class JournalEntryListView(FinanceAdminMixin, FinancePageContextMixin, ListView)
     template_name = "finance/journal_list.html"
     context_object_name = "journals"
     page_title = "Journal entries"
+    paginate_by = 15
 
     def get_queryset(self):
-        return JournalEntry.objects.filter(tenant=self.request.hrm_tenant).select_related("fiscal_period").order_by("-posting_date", "-id")
+        qs = JournalEntry.objects.filter(tenant=self.request.hrm_tenant).select_related("fiscal_period")
+        q = (self.request.GET.get("q") or "").strip()
+        status = (self.request.GET.get("status") or "").strip()
+        ordering = (self.request.GET.get("sort") or "-posting_date").strip()
+        if q:
+            qs = qs.filter(Q(entry_no__icontains=q) | Q(memo__icontains=q))
+        if status:
+            qs = qs.filter(status=status)
+        allowed = {
+            "-posting_date": "-posting_date",
+            "posting_date": "posting_date",
+            "entry_no": "entry_no",
+            "-entry_no": "-entry_no",
+            "-id": "-id",
+            "id": "id",
+        }
+        return qs.order_by(allowed.get(ordering, "-posting_date"), "-id")
+
+    def get_paginate_by(self, queryset):
+        raw = (self.request.GET.get("page_size") or "").strip()
+        try:
+            size = int(raw)
+        except ValueError:
+            size = self.paginate_by
+        return 100 if size > 100 else (5 if size < 5 else size)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        params = self.request.GET.copy()
+        params.pop("page", None)
+        ctx["qs_no_page"] = params.urlencode()
+        ctx["status_choices"] = JournalEntry.Status.choices
+        ctx["selected"] = {
+            "q": self.request.GET.get("q", ""),
+            "status": self.request.GET.get("status", ""),
+            "sort": self.request.GET.get("sort", "-posting_date"),
+            "page_size": self.request.GET.get("page_size", str(self.paginate_by)),
+        }
+        return ctx
 
 
 class JournalEntryCreateView(FinanceAdminMixin, FinancePageContextMixin, View):
@@ -398,7 +446,8 @@ class JournalEntryDetailView(FinanceAdminMixin, FinancePageContextMixin, DetailV
         return JournalEntry.objects.filter(tenant=self.request.hrm_tenant).prefetch_related("lines__account")
 
 
-class JournalEntryPostView(FinanceAdminMixin, View):
+class JournalEntryPostView(FinancePermissionRequiredMixin, FinanceAdminMixin, View):
+    permission_codename = "finance.journal.post"
     def post(self, request, pk):
         journal = get_object_or_404(JournalEntry, pk=pk, tenant=request.hrm_tenant)
         try:
@@ -409,7 +458,8 @@ class JournalEntryPostView(FinanceAdminMixin, View):
         return redirect("finance:journal_detail", pk=pk)
 
 
-class JournalEntryReverseView(FinanceAdminMixin, View):
+class JournalEntryReverseView(FinancePermissionRequiredMixin, FinanceAdminMixin, View):
+    permission_codename = "finance.journal.reverse"
     def post(self, request, pk):
         journal = get_object_or_404(JournalEntry, pk=pk, tenant=request.hrm_tenant)
         try:
@@ -428,9 +478,90 @@ def _simple_list_view(model_cls, template, context_name, page_title):
         template_name = template
         context_object_name = context_name
         page_title = _page_title
+        paginate_by = 20
 
         def get_queryset(self):
-            return model_cls.objects.filter(tenant=self.request.hrm_tenant).order_by("-id")
+            qs = model_cls.objects.filter(tenant=self.request.hrm_tenant)
+            q = (self.request.GET.get("q") or "").strip()
+            status = (self.request.GET.get("status") or "").strip()
+            party = (self.request.GET.get("party") or "").strip()
+            ordering = (self.request.GET.get("sort") or "-id").strip()
+
+            if hasattr(model_cls, "supplier"):
+                qs = qs.select_related("supplier")
+            if hasattr(model_cls, "customer"):
+                qs = qs.select_related("customer")
+
+            if q:
+                filters = Q()
+                for fld in ("doc_no", "memo", "code", "name"):
+                    if hasattr(model_cls, fld):
+                        filters |= Q(**{f"{fld}__icontains": q})
+                if filters:
+                    qs = qs.filter(filters)
+            if status and hasattr(model_cls, "status"):
+                qs = qs.filter(status=status)
+            if party.isdigit():
+                if hasattr(model_cls, "supplier"):
+                    qs = qs.filter(supplier_id=int(party))
+                elif hasattr(model_cls, "customer"):
+                    qs = qs.filter(customer_id=int(party))
+
+            allowed = {"id", "-id"}
+            for f in ("posting_date", "created_at"):
+                if hasattr(model_cls, f):
+                    allowed.update({f, f"-{f}"})
+            if ordering not in allowed:
+                ordering = "-id"
+            return qs.order_by(ordering, "-id")
+
+        def get_paginate_by(self, queryset):
+            raw = (self.request.GET.get("page_size") or "").strip()
+            try:
+                size = int(raw)
+            except ValueError:
+                size = self.paginate_by
+            return 100 if size > 100 else (10 if size < 10 else size)
+
+        def get_context_data(self, **kwargs):
+            ctx = super().get_context_data(**kwargs)
+            params = self.request.GET.copy()
+            params.pop("page", None)
+            party = (self.request.GET.get("party") or "").strip()
+            party_url = ""
+            party_label = ""
+            filtered_party = None
+            if hasattr(model_cls, "supplier"):
+                party_url = "/api/foundation/autocomplete/suppliers/"
+                party_label = "Supplier"
+                if party.isdigit():
+                    filtered_party = Supplier.objects.filter(
+                        tenant=self.request.hrm_tenant, pk=int(party)
+                    ).only("id", "supplier_code", "name").first()
+            elif hasattr(model_cls, "customer"):
+                party_url = "/api/foundation/autocomplete/customers/"
+                party_label = "Customer"
+                if party.isdigit():
+                    filtered_party = Customer.objects.filter(
+                        tenant=self.request.hrm_tenant, pk=int(party)
+                    ).only("id", "customer_code", "name").first()
+            ctx.update(
+                {
+                    "qs_no_page": params.urlencode(),
+                    "selected": {
+                        "q": self.request.GET.get("q", ""),
+                        "status": self.request.GET.get("status", ""),
+                        "party": party,
+                        "sort": self.request.GET.get("sort", "-id"),
+                        "page_size": self.request.GET.get("page_size", str(self.paginate_by)),
+                    },
+                    "status_choices": getattr(model_cls, "Status", None).choices if hasattr(model_cls, "Status") else [],
+                    "party_autocomplete_url": party_url,
+                    "party_label": party_label,
+                    "filtered_party": filtered_party,
+                }
+            )
+            return ctx
 
     return _V
 
@@ -439,16 +570,76 @@ class APInvoiceListView(_simple_list_view(APInvoice, "finance/document_list.html
     pass
 
 
+class APInvoiceDetailView(FinanceAdminMixin, FinancePageContextMixin, DetailView):
+    model = APInvoice
+    template_name = "finance/document_detail.html"
+    context_object_name = "object"
+    page_title = "AP invoice details"
+
+    def get_queryset(self):
+        return APInvoice.objects.filter(tenant=self.request.hrm_tenant).select_related("supplier", "journal_entry")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["list_url"] = reverse_lazy("finance:ap_invoice_list")
+        return ctx
+
+
 class ARInvoiceListView(_simple_list_view(ARInvoice, "finance/document_list.html", "object_list", "AR invoices")):
     pass
+
+
+class ARInvoiceDetailView(FinanceAdminMixin, FinancePageContextMixin, DetailView):
+    model = ARInvoice
+    template_name = "finance/document_detail.html"
+    context_object_name = "object"
+    page_title = "AR invoice details"
+
+    def get_queryset(self):
+        return ARInvoice.objects.filter(tenant=self.request.hrm_tenant).select_related("customer", "journal_entry")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["list_url"] = reverse_lazy("finance:ar_invoice_list")
+        return ctx
 
 
 class APPaymentListView(_simple_list_view(APPayment, "finance/document_list.html", "object_list", "AP payments")):
     pass
 
 
+class APPaymentDetailView(FinanceAdminMixin, FinancePageContextMixin, DetailView):
+    model = APPayment
+    template_name = "finance/document_detail.html"
+    context_object_name = "object"
+    page_title = "AP payment details"
+
+    def get_queryset(self):
+        return APPayment.objects.filter(tenant=self.request.hrm_tenant).select_related("supplier", "journal_entry")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["list_url"] = reverse_lazy("finance:ap_payment_list")
+        return ctx
+
+
 class ARReceiptListView(_simple_list_view(ARReceipt, "finance/document_list.html", "object_list", "AR receipts")):
     pass
+
+
+class ARReceiptDetailView(FinanceAdminMixin, FinancePageContextMixin, DetailView):
+    model = ARReceipt
+    template_name = "finance/document_detail.html"
+    context_object_name = "object"
+    page_title = "AR receipt details"
+
+    def get_queryset(self):
+        return ARReceipt.objects.filter(tenant=self.request.hrm_tenant).select_related("customer", "journal_entry")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["list_url"] = reverse_lazy("finance:ar_receipt_list")
+        return ctx
 
 
 class BankAccountListView(_simple_list_view(BankAccount, "finance/document_list.html", "object_list", "Bank accounts")):
@@ -509,12 +700,70 @@ class APInvoiceCreateView(FinanceAdminMixin, View):
         return _render_document_form(request, form=form, formset=formset, title="Add AP invoice", action_url=reverse_lazy("finance:ap_invoice_create"), list_url=reverse_lazy("finance:ap_invoice_list"))
 
 
-class APInvoicePostView(FinanceAdminMixin, View):
+class APInvoiceUpdateView(FinanceAdminMixin, View):
+    def get_object(self, request, pk):
+        return get_object_or_404(APInvoice, pk=pk, tenant=request.hrm_tenant)
+
+    def get(self, request, pk):
+        obj = self.get_object(request, pk)
+        if obj.status != APInvoice.Status.DRAFT:
+            messages.error(request, "Only draft AP invoices can be edited.")
+            return redirect("finance:ap_invoice_list")
+        form = APInvoiceForm(instance=obj, tenant=request.hrm_tenant)
+        formset = APInvoiceLineFormSet(instance=obj, prefix="lines")
+        return _render_document_form(request, form=form, formset=formset, title="Edit AP invoice", action_url=reverse_lazy("finance:ap_invoice_edit", kwargs={"pk": obj.pk}), list_url=reverse_lazy("finance:ap_invoice_list"))
+
+    def post(self, request, pk):
+        obj = self.get_object(request, pk)
+        if obj.status != APInvoice.Status.DRAFT:
+            messages.error(request, "Only draft AP invoices can be edited.")
+            return redirect("finance:ap_invoice_list")
+        form = APInvoiceForm(request.POST, instance=obj, tenant=request.hrm_tenant)
+        formset = APInvoiceLineFormSet(request.POST, instance=obj, prefix="lines")
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            lines = formset.save(commit=False)
+            for line in lines:
+                line.tenant = request.hrm_tenant
+                line.save()
+            for deleted in formset.deleted_objects:
+                deleted.delete()
+            messages.success(request, "AP invoice updated.")
+            return redirect("finance:ap_invoice_list")
+        return _render_document_form(request, form=form, formset=formset, title="Edit AP invoice", action_url=reverse_lazy("finance:ap_invoice_edit", kwargs={"pk": obj.pk}), list_url=reverse_lazy("finance:ap_invoice_list"))
+
+
+class APInvoiceDeleteView(FinanceAdminMixin, View):
+    def post(self, request, pk):
+        obj = get_object_or_404(APInvoice, pk=pk, tenant=request.hrm_tenant)
+        if obj.status != APInvoice.Status.DRAFT:
+            messages.error(request, "Only draft AP invoices can be deleted.")
+            return redirect("finance:ap_invoice_list")
+        obj.delete()
+        messages.success(request, "AP invoice deleted.")
+        return redirect("finance:ap_invoice_list")
+
+
+class APInvoicePostView(FinancePermissionRequiredMixin, FinanceAdminMixin, View):
+    permission_codename = "finance.ap.post"
     def post(self, request, pk):
         doc = get_object_or_404(APInvoice, pk=pk, tenant=request.hrm_tenant)
         try:
             post_ap_invoice(invoice=doc, posted_by=request.user)
             messages.success(request, "AP invoice posted.")
+        except ValidationError as exc:
+            messages.error(request, str(exc))
+        return redirect("finance:ap_invoice_list")
+
+
+class APInvoiceCancelView(FinancePermissionRequiredMixin, FinanceAdminMixin, View):
+    permission_codename = "finance.ap.post"
+
+    def post(self, request, pk):
+        doc = get_object_or_404(APInvoice, pk=pk, tenant=request.hrm_tenant)
+        try:
+            cancel_ap_invoice(invoice=doc, posted_by=request.user)
+            messages.success(request, "AP invoice cancelled.")
         except ValidationError as exc:
             messages.error(request, str(exc))
         return redirect("finance:ap_invoice_list")
@@ -543,7 +792,52 @@ class ARInvoiceCreateView(FinanceAdminMixin, View):
         return _render_document_form(request, form=form, formset=formset, title="Add AR invoice", action_url=reverse_lazy("finance:ar_invoice_create"), list_url=reverse_lazy("finance:ar_invoice_list"))
 
 
-class ARInvoicePostView(FinanceAdminMixin, View):
+class ARInvoiceUpdateView(FinanceAdminMixin, View):
+    def get_object(self, request, pk):
+        return get_object_or_404(ARInvoice, pk=pk, tenant=request.hrm_tenant)
+
+    def get(self, request, pk):
+        obj = self.get_object(request, pk)
+        if obj.status != ARInvoice.Status.DRAFT:
+            messages.error(request, "Only draft AR invoices can be edited.")
+            return redirect("finance:ar_invoice_list")
+        form = ARInvoiceForm(instance=obj, tenant=request.hrm_tenant)
+        formset = ARInvoiceLineFormSet(instance=obj, prefix="lines")
+        return _render_document_form(request, form=form, formset=formset, title="Edit AR invoice", action_url=reverse_lazy("finance:ar_invoice_edit", kwargs={"pk": obj.pk}), list_url=reverse_lazy("finance:ar_invoice_list"))
+
+    def post(self, request, pk):
+        obj = self.get_object(request, pk)
+        if obj.status != ARInvoice.Status.DRAFT:
+            messages.error(request, "Only draft AR invoices can be edited.")
+            return redirect("finance:ar_invoice_list")
+        form = ARInvoiceForm(request.POST, instance=obj, tenant=request.hrm_tenant)
+        formset = ARInvoiceLineFormSet(request.POST, instance=obj, prefix="lines")
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            lines = formset.save(commit=False)
+            for line in lines:
+                line.tenant = request.hrm_tenant
+                line.save()
+            for deleted in formset.deleted_objects:
+                deleted.delete()
+            messages.success(request, "AR invoice updated.")
+            return redirect("finance:ar_invoice_list")
+        return _render_document_form(request, form=form, formset=formset, title="Edit AR invoice", action_url=reverse_lazy("finance:ar_invoice_edit", kwargs={"pk": obj.pk}), list_url=reverse_lazy("finance:ar_invoice_list"))
+
+
+class ARInvoiceDeleteView(FinanceAdminMixin, View):
+    def post(self, request, pk):
+        obj = get_object_or_404(ARInvoice, pk=pk, tenant=request.hrm_tenant)
+        if obj.status != ARInvoice.Status.DRAFT:
+            messages.error(request, "Only draft AR invoices can be deleted.")
+            return redirect("finance:ar_invoice_list")
+        obj.delete()
+        messages.success(request, "AR invoice deleted.")
+        return redirect("finance:ar_invoice_list")
+
+
+class ARInvoicePostView(FinancePermissionRequiredMixin, FinanceAdminMixin, View):
+    permission_codename = "finance.ar.post"
     def post(self, request, pk):
         doc = get_object_or_404(ARInvoice, pk=pk, tenant=request.hrm_tenant)
         try:
@@ -554,32 +848,104 @@ class ARInvoicePostView(FinanceAdminMixin, View):
         return redirect("finance:ar_invoice_list")
 
 
-class APPaymentCreateView(FinanceAdminMixin, CreateView):
-    model = APPayment
-    form_class = APPaymentForm
-    template_name = "finance/document_form_single.html"
-    success_url = reverse_lazy("finance:ap_payment_list")
-    page_title = "Add AP payment"
+class ARInvoiceCancelView(FinancePermissionRequiredMixin, FinanceAdminMixin, View):
+    permission_codename = "finance.ar.post"
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["tenant"] = self.request.hrm_tenant
-        return kwargs
-
-    def form_valid(self, form):
-        self.object = form.save(commit=False)
-        self.object.tenant = self.request.hrm_tenant
-        self.object.save()
-        messages.success(self.request, "AP payment created.")
-        return redirect(self.success_url)
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["list_url_name"] = "finance:ap_payment_list"
-        return ctx
+    def post(self, request, pk):
+        doc = get_object_or_404(ARInvoice, pk=pk, tenant=request.hrm_tenant)
+        try:
+            cancel_ar_invoice(invoice=doc, posted_by=request.user)
+            messages.success(request, "AR invoice cancelled.")
+        except ValidationError as exc:
+            messages.error(request, str(exc))
+        return redirect("finance:ar_invoice_list")
 
 
-class APPaymentPostView(FinanceAdminMixin, View):
+class APPaymentCreateView(FinanceAdminMixin, View):
+    def get(self, request):
+        form = APPaymentForm(tenant=request.hrm_tenant)
+        formset = APPaymentAllocationFormSet(prefix="alloc")
+        for f in formset.forms:
+            f.fields["invoice"].queryset = APInvoice.objects.filter(tenant=request.hrm_tenant, status=APInvoice.Status.POSTED).order_by("-posting_date", "-id")
+        return _render_document_form(request, form=form, formset=formset, title="Add AP payment", action_url=reverse_lazy("finance:ap_payment_create"), list_url=reverse_lazy("finance:ap_payment_list"))
+
+    def post(self, request):
+        form = APPaymentForm(request.POST, tenant=request.hrm_tenant)
+        formset = APPaymentAllocationFormSet(request.POST, prefix="alloc")
+        supplier = None
+        if form.is_valid():
+            supplier = form.cleaned_data.get("supplier")
+        for f in formset.forms:
+            f.fields["invoice"].queryset = APInvoice.objects.filter(tenant=request.hrm_tenant, status=APInvoice.Status.POSTED, supplier=supplier).order_by("-posting_date", "-id") if supplier else APInvoice.objects.filter(tenant=request.hrm_tenant, status=APInvoice.Status.POSTED).order_by("-posting_date", "-id")
+        if form.is_valid() and formset.is_valid():
+            self.object = form.save(commit=False)
+            self.object.tenant = request.hrm_tenant
+            self.object.save()
+            formset.instance = self.object
+            rows = formset.save(commit=False)
+            for row in rows:
+                row.tenant = request.hrm_tenant
+                row.save()
+            for deleted in formset.deleted_objects:
+                deleted.delete()
+            messages.success(request, "AP payment created.")
+            return redirect("finance:ap_payment_list")
+        return _render_document_form(request, form=form, formset=formset, title="Add AP payment", action_url=reverse_lazy("finance:ap_payment_create"), list_url=reverse_lazy("finance:ap_payment_list"))
+
+
+class APPaymentUpdateView(FinanceAdminMixin, View):
+    def get_object(self, request, pk):
+        return get_object_or_404(APPayment, pk=pk, tenant=request.hrm_tenant)
+
+    def get(self, request, pk):
+        obj = self.get_object(request, pk)
+        if obj.status != APPayment.Status.DRAFT:
+            messages.error(request, "Only draft AP payments can be edited.")
+            return redirect("finance:ap_payment_list")
+        form = APPaymentForm(instance=obj, tenant=request.hrm_tenant)
+        formset = APPaymentAllocationFormSet(instance=obj, prefix="alloc")
+        for f in formset.forms:
+            f.fields["invoice"].queryset = APInvoice.objects.filter(tenant=request.hrm_tenant, status=APInvoice.Status.POSTED, supplier=obj.supplier).order_by("-posting_date", "-id")
+        return _render_document_form(request, form=form, formset=formset, title="Edit AP payment", action_url=reverse_lazy("finance:ap_payment_edit", kwargs={"pk": obj.pk}), list_url=reverse_lazy("finance:ap_payment_list"))
+
+    def post(self, request, pk):
+        obj = self.get_object(request, pk)
+        if obj.status != APPayment.Status.DRAFT:
+            messages.error(request, "Only draft AP payments can be edited.")
+            return redirect("finance:ap_payment_list")
+        form = APPaymentForm(request.POST, instance=obj, tenant=request.hrm_tenant)
+        formset = APPaymentAllocationFormSet(request.POST, instance=obj, prefix="alloc")
+        supplier = None
+        if form.is_valid():
+            supplier = form.cleaned_data.get("supplier")
+        for f in formset.forms:
+            f.fields["invoice"].queryset = APInvoice.objects.filter(tenant=request.hrm_tenant, status=APInvoice.Status.POSTED, supplier=supplier).order_by("-posting_date", "-id") if supplier else APInvoice.objects.filter(tenant=request.hrm_tenant, status=APInvoice.Status.POSTED).order_by("-posting_date", "-id")
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            rows = formset.save(commit=False)
+            for row in rows:
+                row.tenant = request.hrm_tenant
+                row.save()
+            for deleted in formset.deleted_objects:
+                deleted.delete()
+            messages.success(request, "AP payment updated.")
+            return redirect("finance:ap_payment_list")
+        return _render_document_form(request, form=form, formset=formset, title="Edit AP payment", action_url=reverse_lazy("finance:ap_payment_edit", kwargs={"pk": obj.pk}), list_url=reverse_lazy("finance:ap_payment_list"))
+
+
+class APPaymentDeleteView(FinanceAdminMixin, View):
+    def post(self, request, pk):
+        obj = get_object_or_404(APPayment, pk=pk, tenant=request.hrm_tenant)
+        if obj.status != APPayment.Status.DRAFT:
+            messages.error(request, "Only draft AP payments can be deleted.")
+            return redirect("finance:ap_payment_list")
+        obj.delete()
+        messages.success(request, "AP payment deleted.")
+        return redirect("finance:ap_payment_list")
+
+
+class APPaymentPostView(FinancePermissionRequiredMixin, FinanceAdminMixin, View):
+    permission_codename = "finance.ap.post"
     def post(self, request, pk):
         doc = get_object_or_404(APPayment, pk=pk, tenant=request.hrm_tenant)
         try:
@@ -590,37 +956,122 @@ class APPaymentPostView(FinanceAdminMixin, View):
         return redirect("finance:ap_payment_list")
 
 
-class ARReceiptCreateView(FinanceAdminMixin, CreateView):
-    model = ARReceipt
-    form_class = ARReceiptForm
-    template_name = "finance/document_form_single.html"
-    success_url = reverse_lazy("finance:ar_receipt_list")
-    page_title = "Add AR receipt"
+class APPaymentCancelView(FinancePermissionRequiredMixin, FinanceAdminMixin, View):
+    permission_codename = "finance.ap.post"
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["tenant"] = self.request.hrm_tenant
-        return kwargs
-
-    def form_valid(self, form):
-        self.object = form.save(commit=False)
-        self.object.tenant = self.request.hrm_tenant
-        self.object.save()
-        messages.success(self.request, "AR receipt created.")
-        return redirect(self.success_url)
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["list_url_name"] = "finance:ar_receipt_list"
-        return ctx
+    def post(self, request, pk):
+        doc = get_object_or_404(APPayment, pk=pk, tenant=request.hrm_tenant)
+        try:
+            cancel_ap_payment(payment=doc, posted_by=request.user)
+            messages.success(request, "AP payment cancelled.")
+        except ValidationError as exc:
+            messages.error(request, str(exc))
+        return redirect("finance:ap_payment_list")
 
 
-class ARReceiptPostView(FinanceAdminMixin, View):
+class ARReceiptCreateView(FinanceAdminMixin, View):
+    def get(self, request):
+        form = ARReceiptForm(tenant=request.hrm_tenant)
+        formset = ARReceiptAllocationFormSet(prefix="alloc")
+        for f in formset.forms:
+            f.fields["invoice"].queryset = ARInvoice.objects.filter(tenant=request.hrm_tenant, status=ARInvoice.Status.POSTED).order_by("-posting_date", "-id")
+        return _render_document_form(request, form=form, formset=formset, title="Add AR receipt", action_url=reverse_lazy("finance:ar_receipt_create"), list_url=reverse_lazy("finance:ar_receipt_list"))
+
+    def post(self, request):
+        form = ARReceiptForm(request.POST, tenant=request.hrm_tenant)
+        formset = ARReceiptAllocationFormSet(request.POST, prefix="alloc")
+        customer = None
+        if form.is_valid():
+            customer = form.cleaned_data.get("customer")
+        for f in formset.forms:
+            f.fields["invoice"].queryset = ARInvoice.objects.filter(tenant=request.hrm_tenant, status=ARInvoice.Status.POSTED, customer=customer).order_by("-posting_date", "-id") if customer else ARInvoice.objects.filter(tenant=request.hrm_tenant, status=ARInvoice.Status.POSTED).order_by("-posting_date", "-id")
+        if form.is_valid() and formset.is_valid():
+            self.object = form.save(commit=False)
+            self.object.tenant = request.hrm_tenant
+            self.object.save()
+            formset.instance = self.object
+            rows = formset.save(commit=False)
+            for row in rows:
+                row.tenant = request.hrm_tenant
+                row.save()
+            for deleted in formset.deleted_objects:
+                deleted.delete()
+            messages.success(request, "AR receipt created.")
+            return redirect("finance:ar_receipt_list")
+        return _render_document_form(request, form=form, formset=formset, title="Add AR receipt", action_url=reverse_lazy("finance:ar_receipt_create"), list_url=reverse_lazy("finance:ar_receipt_list"))
+
+
+class ARReceiptUpdateView(FinanceAdminMixin, View):
+    def get_object(self, request, pk):
+        return get_object_or_404(ARReceipt, pk=pk, tenant=request.hrm_tenant)
+
+    def get(self, request, pk):
+        obj = self.get_object(request, pk)
+        if obj.status != ARReceipt.Status.DRAFT:
+            messages.error(request, "Only draft AR receipts can be edited.")
+            return redirect("finance:ar_receipt_list")
+        form = ARReceiptForm(instance=obj, tenant=request.hrm_tenant)
+        formset = ARReceiptAllocationFormSet(instance=obj, prefix="alloc")
+        for f in formset.forms:
+            f.fields["invoice"].queryset = ARInvoice.objects.filter(tenant=request.hrm_tenant, status=ARInvoice.Status.POSTED, customer=obj.customer).order_by("-posting_date", "-id")
+        return _render_document_form(request, form=form, formset=formset, title="Edit AR receipt", action_url=reverse_lazy("finance:ar_receipt_edit", kwargs={"pk": obj.pk}), list_url=reverse_lazy("finance:ar_receipt_list"))
+
+    def post(self, request, pk):
+        obj = self.get_object(request, pk)
+        if obj.status != ARReceipt.Status.DRAFT:
+            messages.error(request, "Only draft AR receipts can be edited.")
+            return redirect("finance:ar_receipt_list")
+        form = ARReceiptForm(request.POST, instance=obj, tenant=request.hrm_tenant)
+        formset = ARReceiptAllocationFormSet(request.POST, instance=obj, prefix="alloc")
+        customer = None
+        if form.is_valid():
+            customer = form.cleaned_data.get("customer")
+        for f in formset.forms:
+            f.fields["invoice"].queryset = ARInvoice.objects.filter(tenant=request.hrm_tenant, status=ARInvoice.Status.POSTED, customer=customer).order_by("-posting_date", "-id") if customer else ARInvoice.objects.filter(tenant=request.hrm_tenant, status=ARInvoice.Status.POSTED).order_by("-posting_date", "-id")
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            rows = formset.save(commit=False)
+            for row in rows:
+                row.tenant = request.hrm_tenant
+                row.save()
+            for deleted in formset.deleted_objects:
+                deleted.delete()
+            messages.success(request, "AR receipt updated.")
+            return redirect("finance:ar_receipt_list")
+        return _render_document_form(request, form=form, formset=formset, title="Edit AR receipt", action_url=reverse_lazy("finance:ar_receipt_edit", kwargs={"pk": obj.pk}), list_url=reverse_lazy("finance:ar_receipt_list"))
+
+
+class ARReceiptDeleteView(FinanceAdminMixin, View):
+    def post(self, request, pk):
+        obj = get_object_or_404(ARReceipt, pk=pk, tenant=request.hrm_tenant)
+        if obj.status != ARReceipt.Status.DRAFT:
+            messages.error(request, "Only draft AR receipts can be deleted.")
+            return redirect("finance:ar_receipt_list")
+        obj.delete()
+        messages.success(request, "AR receipt deleted.")
+        return redirect("finance:ar_receipt_list")
+
+
+class ARReceiptPostView(FinancePermissionRequiredMixin, FinanceAdminMixin, View):
+    permission_codename = "finance.ar.post"
     def post(self, request, pk):
         doc = get_object_or_404(ARReceipt, pk=pk, tenant=request.hrm_tenant)
         try:
             post_ar_receipt(receipt=doc, posted_by=request.user)
             messages.success(request, "AR receipt posted.")
+        except ValidationError as exc:
+            messages.error(request, str(exc))
+        return redirect("finance:ar_receipt_list")
+
+
+class ARReceiptCancelView(FinancePermissionRequiredMixin, FinanceAdminMixin, View):
+    permission_codename = "finance.ar.post"
+
+    def post(self, request, pk):
+        doc = get_object_or_404(ARReceipt, pk=pk, tenant=request.hrm_tenant)
+        try:
+            cancel_ar_receipt(receipt=doc, posted_by=request.user)
+            messages.success(request, "AR receipt cancelled.")
         except ValidationError as exc:
             messages.error(request, str(exc))
         return redirect("finance:ar_receipt_list")
@@ -676,7 +1127,8 @@ class CashTransactionCreateView(FinanceAdminMixin, CreateView):
         return ctx
 
 
-class CashTransactionPostView(FinanceAdminMixin, View):
+class CashTransactionPostView(FinancePermissionRequiredMixin, FinanceAdminMixin, View):
+    permission_codename = "finance.cash.post"
     def post(self, request, pk):
         doc = get_object_or_404(CashTransaction, pk=pk, tenant=request.hrm_tenant)
         try:
@@ -737,7 +1189,8 @@ class AssetDepreciationCreateView(FinanceAdminMixin, CreateView):
         return ctx
 
 
-class AssetDepreciationPostView(FinanceAdminMixin, View):
+class AssetDepreciationPostView(FinancePermissionRequiredMixin, FinanceAdminMixin, View):
+    permission_codename = "finance.asset.post"
     def post(self, request, pk):
         doc = get_object_or_404(AssetDepreciation, pk=pk, tenant=request.hrm_tenant)
         try:
@@ -771,7 +1224,8 @@ class BudgetCreateView(FinanceAdminMixin, View):
         return _render_document_form(request, form=form, formset=formset, title="Add budget", action_url=reverse_lazy("finance:budget_create"), list_url=reverse_lazy("finance:budget_list"))
 
 
-class GeneralLedgerReportView(FinanceAdminMixin, FinancePageContextMixin, TemplateView):
+class GeneralLedgerReportView(FinancePermissionRequiredMixin, FinanceAdminMixin, FinancePageContextMixin, TemplateView):
+    permission_codename = "finance.report.view"
     template_name = "finance/report_gl.html"
     page_title = "General Ledger"
 
@@ -789,59 +1243,106 @@ class GeneralLedgerReportView(FinanceAdminMixin, FinancePageContextMixin, Templa
         return ctx
 
 
-class TrialBalanceReportView(FinanceAdminMixin, FinancePageContextMixin, TemplateView):
+class TrialBalanceReportView(FinancePermissionRequiredMixin, FinanceAdminMixin, FinancePageContextMixin, TemplateView):
+    permission_codename = "finance.report.view"
     template_name = "finance/report_trial_balance.html"
     page_title = "Trial Balance"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        tenant = self.request.hrm_tenant
         date_to = self.request.GET.get("date_to") or None
-        rows, td, tc = trial_balance(tenant=self.request.hrm_tenant, date_to=date_to)
+        account_id = self.request.GET.get("account_id") or ""
+        rows, td, tc = trial_balance(tenant=tenant, date_to=date_to)
+        if account_id.isdigit():
+            rows = rows.filter(account_id=int(account_id))
+            td = sum((r.get("total_debit") or 0 for r in rows), 0)
+            tc = sum((r.get("total_credit") or 0 for r in rows), 0)
         ctx["rows"] = rows
         ctx["total_debit"] = td
         ctx["total_credit"] = tc
+        ctx["accounts"] = Account.objects.filter(tenant=tenant, is_active=True).order_by("code")
+        ctx["filter_account_id"] = account_id
         ctx["filter_date_to"] = date_to or ""
         return ctx
 
 
-class ProfitLossReportView(FinanceAdminMixin, FinancePageContextMixin, TemplateView):
+class ProfitLossReportView(FinancePermissionRequiredMixin, FinanceAdminMixin, FinancePageContextMixin, TemplateView):
+    permission_codename = "finance.report.view"
     template_name = "finance/report_profit_loss.html"
     page_title = "Profit & Loss"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        tenant = self.request.hrm_tenant
         date_from = self.request.GET.get("date_from") or None
         date_to = self.request.GET.get("date_to") or None
-        income, expense, total_income, total_expense, net_profit = profit_and_loss(tenant=self.request.hrm_tenant, date_from=date_from, date_to=date_to)
+        account_id = self.request.GET.get("account_id") or ""
+        income, expense, total_income, total_expense, net_profit = profit_and_loss(tenant=tenant, date_from=date_from, date_to=date_to)
+        if account_id.isdigit():
+            aid = int(account_id)
+            income = [r for r in income if r.get("account_id") == aid]
+            expense = [r for r in expense if r.get("account_id") == aid]
+            total_income = sum((r.get("amount") or 0 for r in income), 0)
+            total_expense = sum((r.get("amount") or 0 for r in expense), 0)
+            net_profit = total_income - total_expense
         ctx["income_rows"] = income
         ctx["expense_rows"] = expense
         ctx["total_income"] = total_income
         ctx["total_expense"] = total_expense
         ctx["net_profit"] = net_profit
+        ctx["accounts"] = Account.objects.filter(
+            tenant=tenant,
+            is_active=True,
+            account_type__in=[Account.AccountType.INCOME, Account.AccountType.EXPENSE],
+        ).order_by("code")
+        ctx["filter_account_id"] = account_id
         ctx["filter_date_from"] = date_from or ""
         ctx["filter_date_to"] = date_to or ""
         return ctx
 
 
-class BalanceSheetReportView(FinanceAdminMixin, FinancePageContextMixin, TemplateView):
+class BalanceSheetReportView(FinancePermissionRequiredMixin, FinanceAdminMixin, FinancePageContextMixin, TemplateView):
+    permission_codename = "finance.report.view"
     template_name = "finance/report_balance_sheet.html"
     page_title = "Balance Sheet"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        tenant = self.request.hrm_tenant
         date_to = self.request.GET.get("date_to") or None
-        assets, liabilities, equity, ta, tl, te = balance_sheet(tenant=self.request.hrm_tenant, date_to=date_to)
+        account_id = self.request.GET.get("account_id") or ""
+        assets, liabilities, equity, ta, tl, te = balance_sheet(tenant=tenant, date_to=date_to)
+        if account_id.isdigit():
+            aid = int(account_id)
+            assets = [r for r in assets if r.get("account_id") == aid]
+            liabilities = [r for r in liabilities if r.get("account_id") == aid]
+            equity = [r for r in equity if r.get("account_id") == aid]
+            ta = sum((r.get("amount") or 0 for r in assets), 0)
+            tl = sum((r.get("amount") or 0 for r in liabilities), 0)
+            te = sum((r.get("amount") or 0 for r in equity), 0)
         ctx["asset_rows"] = assets
         ctx["liability_rows"] = liabilities
         ctx["equity_rows"] = equity
         ctx["total_assets"] = ta
         ctx["total_liabilities"] = tl
         ctx["total_equity"] = te
+        ctx["accounts"] = Account.objects.filter(
+            tenant=tenant,
+            is_active=True,
+            account_type__in=[
+                Account.AccountType.ASSET,
+                Account.AccountType.LIABILITY,
+                Account.AccountType.EQUITY,
+            ],
+        ).order_by("code")
+        ctx["filter_account_id"] = account_id
         ctx["filter_date_to"] = date_to or ""
         return ctx
 
 
-class BudgetVsActualReportView(FinanceAdminMixin, FinancePageContextMixin, TemplateView):
+class BudgetVsActualReportView(FinancePermissionRequiredMixin, FinanceAdminMixin, FinancePageContextMixin, TemplateView):
+    permission_codename = "finance.report.view"
     template_name = "finance/report_budget_vs_actual.html"
     page_title = "Budget vs Actual"
 

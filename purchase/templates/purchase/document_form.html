@@ -1,0 +1,91 @@
+{% extends "auth_tenants/base.html" %}
+{% load static %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block page_title %}Purchase · {{ page_title }}{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css" rel="stylesheet"/>
+<link href="{% static 'foundation/css/tom_select_inv.css' %}" rel="stylesheet"/>
+{% endblock %}
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <h2 class="text-lg font-semibold text-foreground">{{ page_title }}</h2>
+      <a href="{{ list_url }}" class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+      </a>
+    </div>
+    <form method="post" action="{{ action_url }}" class="p-5 space-y-5" data-simple-formset="{{ formset.prefix }}">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for field in form %}
+        <div class="{% if field.name == 'notes' %}md:col-span-2{% endif %}">
+          <label class="mb-1 block text-xs font-medium text-muted-foreground">{{ field.label }}</label>
+          {{ field }}
+          {% for error in field.errors %}<p class="mt-1 text-xs text-destructive">{{ error }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+
+      {{ formset.management_form }}
+      <div class="ui-table-wrap overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-border bg-muted/40">
+              {% if formset.forms %}{% for f in formset.forms.0.visible_fields %}{% if f.name != 'DELETE' %}<th class="px-3 py-2 text-left">{{ f.label }}</th>{% endif %}{% endfor %}{% endif %}
+              <th class="px-3 py-2 text-center">Delete</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border" data-simple-formset-body="{{ formset.prefix }}">
+            {% for f in formset.forms %}
+            <tr>
+              {% for field in f.visible_fields %}
+                {% if field.name != 'DELETE' %}
+                <td class="px-3 py-2">
+                  {{ field }}
+                  {% for error in field.errors %}<p class="mt-1 text-xs text-destructive">{{ error }}</p>{% endfor %}
+                </td>
+                {% endif %}
+              {% endfor %}
+              <td class="px-3 py-2 text-center">
+                <span class="sr-only">{{ f.DELETE }}</span>
+                <button type="button" class="js-formset-remove-row rounded border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10">Remove</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <button type="button" data-simple-formset-add="{{ formset.prefix }}" class="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border bg-muted/30 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent">
+          <i data-lucide="plus" class="h-3.5 w-3.5"></i> Add row
+        </button>
+      </div>
+      <div class="flex justify-end gap-2 border-t border-border pt-4">
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+document.addEventListener("input", function (ev) {
+  var row = ev.target.closest("tr");
+  if (!row) return;
+  var qty = row.querySelector(".js-qty");
+  var unit = row.querySelector(".js-unit-cost");
+  var total = row.querySelector(".js-line-total");
+  if (!qty || !unit || !total) return;
+  var q = parseFloat(qty.value || "0");
+  var u = parseFloat(unit.value || "0");
+  if (!isFinite(q)) q = 0;
+  if (!isFinite(u)) u = 0;
+  total.value = (q * u).toFixed(4);
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script src="{% static 'foundation/js/tom_select_autocomplete.js' %}"></script>
+<script src="{% static 'foundation/js/tom_select_local.js' %}"></script>
+<script src="{% static 'foundation/js/simple_formset_rows.js' %}"></script>
+{% endblock %}
+

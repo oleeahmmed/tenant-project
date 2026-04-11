@@ -1,0 +1,255 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Device Setup & Management Guide" %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+    &rsaquo; {% trans "Device Setup & Management Guide" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1 style="margin-bottom: 30px; color: #1f2937;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 32px;">devices</span>
+        {% trans "Device Setup & Management Guide" %}
+    </h1>
+    
+    <p style="color: #6b7280; margin-bottom: 30px; font-size: 16px;">
+        এই guide এ দেখানো হয়েছে কিভাবে ZK attendance device setup করবেন, employee enroll করবেন, 
+        এবং device থেকে attendance data sync করবেন।
+    </p>
+
+    <!-- Device Integration Methods -->
+    <div style="background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">integration_instructions</span>
+            Device Integration Methods
+        </h2>
+        <p style="margin: 0; font-size: 15px; opacity: 0.95;">
+            আমাদের system দুইটি method support করে: <strong>ADMS Protocol (Push)</strong> এবং <strong>TCP/IP (Pull)</strong>। 
+            আপনি যেকোনো একটি বা দুইটি একসাথে ব্যবহার করতে পারবেন।
+        </p>
+    </div>
+
+    <!-- Method 1: ADMS Protocol -->
+    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #3b82f6; font-size: 32px;">cloud_upload</span>
+            Method 1: ADMS Protocol (Push-based) - Recommended
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 ADMS কি?</h3>
+            <div style="background: #dbeafe; padding: 16px; border-left: 4px solid #3b82f6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #1e40af;">ADMS (Attendance Data Management System)</strong> হলো একটি protocol যেখানে device 
+                automatically আপনার server এ data push করে। Real-time data sync এর জন্য এটি best।
+            </div>
+            
+            <h4 style="color: #1f2937; margin: 16px 0 12px;">Device Configuration:</h4>
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px;">
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Server URL:</strong> http://your-server-ip:8000/hrm/device/iclock/
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Device SN:</strong> Device এর Serial Number (unique হতে হবে)
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Push Interval:</strong> 1 minute (recommended)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+            <strong style="color: #92400e;">💡 Advantage:</strong> Device automatically push করে, manual sync করার দরকার নেই। 
+            Real-time attendance tracking এর জন্য perfect।
+        </div>
+    </div>
+
+    <!-- Method 2: TCP/IP -->
+    <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #991b1b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #ef4444; font-size: 32px;">cloud_download</span>
+            Method 2: TCP/IP (Pull-based)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 TCP/IP Method কি?</h3>
+            <div style="background: #fee2e2; padding: 16px; border-left: 4px solid #ef4444; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #991b1b;">TCP/IP Method</strong> এ আপনার server device এর IP address দিয়ে connect করে 
+                এবং data fetch করে। Manual sync এর জন্য useful।
+            </div>
+            
+            <h4 style="color: #1f2937; margin: 16px 0 12px;">Device Configuration:</h4>
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px;">
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">IP Address:</strong> Device এর local IP (e.g., 192.168.1.100)
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Port:</strong> 4370 (default)
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Password:</strong> Device admin password (if set)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+            <strong style="color: #92400e;">💡 Use Case:</strong> ADMS configure করতে না পারলে বা manual sync করতে চাইলে এই method ব্যবহার করুন।
+        </div>
+    </div>
+
+    <!-- Step 1: Add Device -->
+    <div style="background: #dcfce7; border: 2px solid #10b981; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #065f46; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">add_circle</span>
+            Step 1: Add Device to System
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <code style="background: #dcfce7; color: #065f46; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">HRM → Device Management → ZK Devices → Add</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example Device:</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Serial Number:</strong> ABCD1234567890
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Name:</strong> Main Office Device
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">IP Address:</strong> 192.168.1.100
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Port:</strong> 4370
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Location:</strong> Main Office
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Enroll Employee -->
+    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 32px;">fingerprint</span>
+            Step 2: Enroll Employee on Device
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Enrollment Process:</h3>
+            
+            <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 16px;">
+                <strong style="color: #92400e;">⚠️ Important:</strong> Device এ যে User ID দিয়ে enroll করবেন, 
+                system এ employee এর User ID ও সেই same number হতে হবে।
+            </div>
+
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Enrollment Steps:</h4>
+                <ol style="margin: 0; padding-left: 20px; color: #374151;">
+                    <li style="margin-bottom: 8px;">Device এ Menu → User Management → New User</li>
+                    <li style="margin-bottom: 8px;">User ID enter করুন (e.g., 001) - এটি system এর User ID এর সাথে match করতে হবে</li>
+                    <li style="margin-bottom: 8px;">Name enter করুন</li>
+                    <li style="margin-bottom: 8px;">Fingerprint scan করুন (minimum 2 fingers recommended)</li>
+                    <li style="margin-bottom: 8px;">Save করুন</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Sync Data -->
+    <div style="background: #e0e7ff; border: 2px solid #6366f1; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #3730a3; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1; font-size: 32px;">sync</span>
+            Step 3: Sync Attendance Data
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">ADMS Method (Automatic):</h3>
+            <div style="background: #e0e7ff; padding: 16px; border-left: 4px solid #6366f1; border-radius: 4px;">
+                Device automatically push করবে। আপনাকে কিছু করতে হবে না। শুধু check করুন:
+                <code style="background: white; color: #3730a3; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 8px;">
+                    HRM → Device Management → Device Heartbeats
+                </code>
+            </div>
+        </div>
+
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">TCP/IP Method (Manual):</h3>
+            <div style="background: #e0e7ff; padding: 16px; border-left: 4px solid #6366f1; border-radius: 4px;">
+                Device list থেকে "Sync Attendance" button click করুন অথবা API call করুন:
+                <code style="background: white; color: #3730a3; padding: 4px 8px; border-radius: 4px; display: block; margin-top: 8px;">
+                    POST /hrm/device/pyzk/sync-attendance/
+                </code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Troubleshooting -->
+    <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #991b1b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #ef4444; font-size: 32px;">troubleshoot</span>
+            Common Issues & Solutions
+        </h2>
+        
+        <div style="display: grid; gap: 12px;">
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                <strong style="color: #991b1b;">❌ Device not connecting:</strong>
+                <div style="color: #374151; margin-top: 8px;">
+                    ✓ Check network connection<br>
+                    ✓ Verify IP address and port<br>
+                    ✓ Check firewall settings
+                </div>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                <strong style="color: #991b1b;">❌ Attendance not syncing:</strong>
+                <div style="color: #374151; margin-top: 8px;">
+                    ✓ Check device heartbeat status<br>
+                    ✓ Verify User ID matches in system and device<br>
+                    ✓ Check TCP Sync Logs for errors
+                </div>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                <strong style="color: #991b1b;">❌ Employee not found:</strong>
+                <div style="color: #374151; margin-top: 8px;">
+                    ✓ Ensure employee exists in system with correct User ID<br>
+                    ✓ Check employee status is Active<br>
+                    ✓ Verify User ID in device matches system
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Next Steps -->
+    <div style="background: #dcfce7; border: 2px solid #10b981; border-radius: 12px; padding: 24px;">
+        <h2 style="color: #065f46; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">arrow_forward</span>
+            Next Steps
+        </h2>
+        
+        <div style="display: grid; gap: 12px;">
+            <a href="{% url 'hrm:attendance-management-guide' %}" style="background: white; padding: 16px; border-radius: 8px; text-decoration: none; display: block; border-left: 4px solid #10b981;">
+                <div style="font-weight: 600; color: #065f46; margin-bottom: 4px;">Attendance Management Guide →</div>
+                <div style="font-size: 14px; color: #6b7280;">Attendance track এবং manage করুন</div>
+            </a>
+            
+            <a href="{% url 'hrm:leave-management-guide' %}" style="background: white; padding: 16px; border-radius: 8px; text-decoration: none; display: block; border-left: 4px solid #10b981;">
+                <div style="font-weight: 600; color: #065f46; margin-bottom: 4px;">Leave Management Guide →</div>
+                <div style="font-size: 14px; color: #6b7280;">Leave application এবং approval process</div>
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

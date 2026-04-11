@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Return - {{ sales_return.return_number }}</title>
+    <style>
+        @page { size: A4; margin: 10mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.3; color: #000; background: #fff; }
+        .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 15px; border: 2px solid #d0d0d0; background: #fff; display: flex; flex-direction: column; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #dc2626; }
+        .header-left { width: 30%; }
+        .logo-box { width: 100px; height: 100px; border: 1px solid #ccc; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 10pt; color: #999; }
+        .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .company-name { font-size: 12pt; font-weight: bold; margin-bottom: 3px; }
+        .company-address { font-size: 8pt; line-height: 1.4; color: #333; }
+        .header-center { width: 40%; text-align: center; }
+        .title { font-size: 22pt; font-weight: bold; color: #dc2626; letter-spacing: 2px; margin-bottom: 10px; }
+        .return-info-box { display: inline-block; border: 2px solid #dc2626; padding: 10px 20px; background: #fef2f2; border-radius: 5px; margin-top: 5px; }
+        .return-number { font-size: 16pt; font-weight: bold; color: #dc2626; margin-bottom: 5px; }
+        .return-date { font-size: 12pt; font-weight: bold; color: #b91c1c; }
+        .header-right { width: 30%; text-align: right; font-size: 9pt; line-height: 1.5; }
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 10pt; font-weight: bold; margin-top: 10px; }
+        .status-draft { background: #e0e0e0; color: #424242; }
+        .status-pending { background: #fff9c4; color: #f57f17; }
+        .status-approved { background: #bbdefb; color: #1565c0; }
+        .status-rejected { background: #ffcdd2; color: #c62828; }
+        .status-completed { background: #c8e6c9; color: #2e7d32; }
+        .info-bar { display: table; width: 100%; margin-bottom: 15px; border-collapse: collapse; }
+        .info-bar-row { display: table-row; }
+        .info-bar-cell { display: table-cell; padding: 8px 6px; border: 1px solid #fca5a5; background: #fef2f2; text-align: center; font-size: 9pt; font-weight: bold; color: #dc2626; }
+        .reason-box { background: #fef3c7; border: 2px solid #f59e0b; padding: 12px 15px; border-radius: 5px; margin-bottom: 15px; }
+        .reason-label { font-size: 10pt; color: #d97706; font-weight: bold; margin-bottom: 5px; }
+        .reason-text { font-size: 10pt; color: #92400e; }
+        .content { flex: 1; }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .items-table thead { background: #dc2626; color: #fff; }
+        .items-table th { padding: 10px 6px; text-align: center; font-size: 9pt; font-weight: bold; border: 1px solid #dc2626; }
+        .items-table td { padding: 8px 6px; border: 1px solid #e0e0e0; text-align: center; font-size: 9pt; }
+        .items-table tbody tr:nth-child(odd) { background: #fef2f2; }
+        .items-table tbody tr:nth-child(even) { background: #fff; }
+        .text-left { text-align: left !important; padding-left: 8px !important; }
+        .text-right { text-align: right !important; padding-right: 10px !important; }
+        .bottom-section { display: flex; justify-content: space-between; margin-top: 15px; }
+        .notes-section { width: 55%; border: 1px solid #d0d0d0; padding: 12px; min-height: 100px; }
+        .notes-section h4 { font-size: 9pt; color: #666; margin-bottom: 8px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
+        .totals-section { width: 42%; }
+        .totals-table { width: 100%; border-collapse: collapse; }
+        .totals-table td { padding: 8px 10px; border: 1px solid #e0e0e0; font-size: 10pt; }
+        .totals-table .label { text-align: left; font-weight: 600; background: #f9fafb; }
+        .totals-table .value { text-align: right; width: 35%; }
+        .totals-table .currency { text-align: center; width: 10%; }
+        .totals-table tr:nth-child(2) { background: #dc2626; color: #fff; font-weight: bold; font-size: 11pt; }
+        .totals-table tr:nth-child(2) .label { background: #dc2626; }
+        .totals-table tr:nth-child(3) { background: #c8e6c9; font-weight: bold; }
+        .signature-section { display: flex; justify-content: space-between; margin-top: 40px; margin-bottom: 20px; }
+        .signature-box { width: 30%; text-align: center; }
+        .signature-line { border-top: 1px solid #000; margin-top: 50px; padding-top: 8px; font-size: 9pt; }
+        .footer { text-align: center; font-size: 12pt; color: #dc2626; font-weight: bold; margin-top: auto; padding-top: 15px; border-top: 2px solid #dc2626; }
+        .copyright { text-align: center; font-size: 8pt; color: #999; margin-top: 10px; }
+        .print-btn { position: fixed; top: 15px; right: 15px; padding: 12px 24px; background: #dc2626; color: #fff; border: none; border-radius: 5px; font-size: 11pt; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); z-index: 9999; }
+        .print-btn:hover { background: #b91c1c; }
+        @media print { .print-btn { display: none !important; } .page { border: none; padding: 0; min-height: auto; } body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ PRINT</button>
+    <div class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-box">{% if company.logo %}<img src="{{ company.logo.url }}" alt="Logo">{% else %}LOGO{% endif %}</div>
+                <div class="company-name">{{ company.name|default:"Company Name" }}</div>
+                <div class="company-address">{{ company.address|default:"Address" }}<br>{{ company.phone|default:"Phone" }}<br>{{ company.email|default:"Email" }}</div>
+            </div>
+            <div class="header-center">
+                <div class="title">SALES RETURN</div>
+                <div class="return-info-box">
+                    <div class="return-number">{{ sales_return.return_number }}</div>
+                    <div class="return-date">{{ sales_return.return_date|date:"d F, Y" }}</div>
+                </div>
+                <div class="status-badge status-{{ sales_return.status }}">{{ sales_return.get_status_display|upper }}</div>
+            </div>
+            <div class="header-right">
+                <strong>Customer:</strong><br>
+                <strong style="font-size: 11pt;">{{ sales_return.customer.name }}</strong><br>
+                {{ sales_return.customer.address|default:"" }}<br>
+                {% if sales_return.customer.city %}{{ sales_return.customer.city }}, {{ sales_return.customer.country|default:"" }}{% endif %}<br>
+                <strong>Phone:</strong> {{ sales_return.customer.phone|default:"-" }}<br>
+                <strong>Email:</strong> {{ sales_return.customer.email|default:"-" }}
+            </div>
+        </div>
+
+        <div class="info-bar">
+            <div class="info-bar-row">
+                <div class="info-bar-cell"><strong>Sales Order:</strong><br>{{ sales_return.sales_order.order_number|default:"-" }}</div>
+                <div class="info-bar-cell"><strong>Invoice:</strong><br>{{ sales_return.invoice.invoice_number|default:"-" }}</div>
+                <div class="info-bar-cell"><strong>Salesperson:</strong><br>{{ sales_return.salesperson|default:"-" }}</div>
+                <div class="info-bar-cell"><strong>Warehouse:</strong><br>{{ sales_return.warehouse.name|default:"-" }}</div>
+            </div>
+        </div>
+
+        {% if sales_return.reason %}
+        <div class="reason-box">
+            <div class="reason-label">📋 Return Reason:</div>
+            <div class="reason-text">{{ sales_return.reason }}</div>
+        </div>
+        {% endif %}
+
+        <div class="content">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 12%;">SKU</th>
+                        <th style="width: 38%;">PRODUCT DESCRIPTION</th>
+                        <th style="width: 10%;">QTY</th>
+                        <th style="width: 8%;">UNIT</th>
+                        <th style="width: 12%;">UNIT PRICE</th>
+                        <th style="width: 15%;">LINE TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sales_return.items.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.product.sku }}</td>
+                        <td class="text-left">{{ item.product.name }}</td>
+                        <td>{{ item.quantity|floatformat:0 }}</td>
+                        <td>{{ item.product.unit }}</td>
+                        <td class="text-right">{{ item.unit_price|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.line_total|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% with item_count=sales_return.items.count %}
+                    {% for i in "12345678901234567890" %}
+                    {% if forloop.counter|add:item_count <= 15 %}
+                    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+                </tbody>
+            </table>
+
+            <div class="bottom-section">
+                <div class="notes-section">
+                    <h4>Notes / Additional Information:</h4>
+                    <p style="font-size: 9pt;">{{ sales_return.notes|default:"" }}</p>
+                </div>
+                <div class="totals-section">
+                    <table class="totals-table">
+                        <tr><td class="label">SUBTOTAL</td><td class="currency">$</td><td class="value">{{ sales_return.subtotal|floatformat:2 }}</td></tr>
+                        <tr><td class="label">TOTAL AMOUNT</td><td class="currency">$</td><td class="value">{{ sales_return.total_amount|floatformat:2 }}</td></tr>
+                        <tr><td class="label">REFUND AMOUNT</td><td class="currency">$</td><td class="value">{{ sales_return.refund_amount|floatformat:2 }}</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box"><div class="signature-line">Customer Signature</div></div>
+            <div class="signature-box"><div class="signature-line">Received By</div></div>
+            <div class="signature-box"><div class="signature-line">Authorized By</div></div>
+        </div>
+
+        <div class="footer">Sales Return Document</div>
+        <div class="copyright">© {{ company.name|default:"Company" }} | {{ company.website|default:"www.company.com" }}</div>
+    </div>
+</body>
+</html>

@@ -58,6 +58,21 @@ class HrmDashboardView(WorkspaceTenantDashboardMixin, HrmPageContextMixin, Templ
     template_name = "hrm/dashboard.html"
     page_title = "Human Resources"
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        tenant = getattr(request, "hrm_tenant", None)
+        if tenant is not None and not tenant.is_module_enabled("hrm"):
+            messages.error(request, "HRM module is disabled for this tenant.")
+            return redirect("dashboard")
+        if (
+            tenant is not None
+            and getattr(request.user, "role", None) in ("staff", "tenant_admin")
+            and not request.user.has_tenant_permission("hrm.view")
+        ):
+            messages.error(request, "You do not have permission for this HRM action.")
+            return redirect("dashboard")
+        return response
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         t = self.request.hrm_tenant
@@ -554,8 +569,17 @@ class LeaveRequestListView(HrmAdminMixin, HrmPageContextMixin, ListView):
             ):
                 messages.error(request, "Invalid employee or leave type.")
             else:
+                if lr.leave_type.requires_approval:
+                    lr.status = LeaveRequest.Status.PENDING
+                else:
+                    lr.status = LeaveRequest.Status.APPROVED
+                    lr.reviewed_by = request.user
+                    lr.reviewed_at = timezone.now()
                 lr.save()
-                messages.success(request, "Leave request recorded.")
+                if lr.status == LeaveRequest.Status.APPROVED:
+                    messages.success(request, "Leave request recorded and auto-approved.")
+                else:
+                    messages.success(request, "Leave request recorded.")
                 return redirect("hrm:leave_request_list")
         messages.error(request, "Please fix the errors below.")
         ctx = self.get_context_data(form=form, leave_form_invalid=True)
@@ -563,21 +587,24 @@ class LeaveRequestListView(HrmAdminMixin, HrmPageContextMixin, ListView):
 
 
 class LeaveRequestApproveView(HrmAdminMixin, View):
+    permission_codename = "hrm.leave.approve"
+
     def post(self, request, pk):
         tenant = request.hrm_tenant
-        lr = get_object_or_404(
-            LeaveRequest.objects.select_related("employee"),
-            pk=pk,
-            employee__tenant=tenant,
-        )
-        if lr.status != LeaveRequest.Status.PENDING:
-            messages.warning(request, "This request is no longer pending.")
-        else:
-            lr.status = LeaveRequest.Status.APPROVED
-            lr.reviewed_by = request.user
-            lr.reviewed_at = timezone.now()
-            lr.save(update_fields=["status", "reviewed_by", "reviewed_at"])
-            messages.success(request, "Leave approved.")
+        with transaction.atomic():
+            lr = get_object_or_404(
+                LeaveRequest.objects.select_for_update().select_related("employee"),
+                pk=pk,
+                employee__tenant=tenant,
+            )
+            if lr.status != LeaveRequest.Status.PENDING:
+                messages.warning(request, "This request is no longer pending.")
+            else:
+                lr.status = LeaveRequest.Status.APPROVED
+                lr.reviewed_by = request.user
+                lr.reviewed_at = timezone.now()
+                lr.save(update_fields=["status", "reviewed_by", "reviewed_at"])
+                messages.success(request, "Leave approved.")
         return redirect("hrm:leave_request_list")
 
     def get(self, request, *args, **kwargs):
@@ -585,21 +612,24 @@ class LeaveRequestApproveView(HrmAdminMixin, View):
 
 
 class LeaveRequestRejectView(HrmAdminMixin, View):
+    permission_codename = "hrm.leave.approve"
+
     def post(self, request, pk):
         tenant = request.hrm_tenant
-        lr = get_object_or_404(
-            LeaveRequest.objects.select_related("employee"),
-            pk=pk,
-            employee__tenant=tenant,
-        )
-        if lr.status != LeaveRequest.Status.PENDING:
-            messages.warning(request, "This request is no longer pending.")
-        else:
-            lr.status = LeaveRequest.Status.REJECTED
-            lr.reviewed_by = request.user
-            lr.reviewed_at = timezone.now()
-            lr.save(update_fields=["status", "reviewed_by", "reviewed_at"])
-            messages.success(request, "Leave rejected.")
+        with transaction.atomic():
+            lr = get_object_or_404(
+                LeaveRequest.objects.select_for_update().select_related("employee"),
+                pk=pk,
+                employee__tenant=tenant,
+            )
+            if lr.status != LeaveRequest.Status.PENDING:
+                messages.warning(request, "This request is no longer pending.")
+            else:
+                lr.status = LeaveRequest.Status.REJECTED
+                lr.reviewed_by = request.user
+                lr.reviewed_at = timezone.now()
+                lr.save(update_fields=["status", "reviewed_by", "reviewed_at"])
+                messages.success(request, "Leave rejected.")
         return redirect("hrm:leave_request_list")
 
     def get(self, request, *args, **kwargs):
@@ -792,6 +822,7 @@ class AttendanceRecordListView(HrmAdminMixin, HrmPageContextMixin, ListView):
 
 class AttendanceRecordCreateView(HrmAdminMixin, View):
     """POST: bulk attendance for one or more employees (same date / times / status)."""
+    permission_codename = "hrm.attendance.manage"
 
     def post(self, request):
         tenant = request.hrm_tenant
@@ -856,6 +887,7 @@ class AttendanceRecordUpdateView(HrmAdminMixin, HrmPageContextMixin, UpdateView)
     context_object_name = "record"
     success_url = reverse_lazy("hrm:attendance_list")
     page_title = "Edit attendance"
+    permission_codename = "hrm.attendance.manage"
 
     def get_queryset(self):
         return AttendanceRecord.objects.filter(employee__tenant=self.request.hrm_tenant)
@@ -877,6 +909,7 @@ class AttendanceRecordUpdateView(HrmAdminMixin, HrmPageContextMixin, UpdateView)
 class AttendanceRecordDeleteView(HrmAdminMixin, PostOnlyMixin, DeleteView):
     model = AttendanceRecord
     success_url = reverse_lazy("hrm:attendance_list")
+    permission_codename = "hrm.attendance.manage"
 
     def get_queryset(self):
         return AttendanceRecord.objects.filter(employee__tenant=self.request.hrm_tenant)
@@ -891,6 +924,7 @@ class AttendanceBulkActionView(HrmAdminMixin, View):
     """POST: bulk_action=delete + attendance_ids[] + optional next (return path)."""
 
     http_method_names = ["post"]
+    permission_codename = "hrm.attendance.manage"
 
     def post(self, request):
         action = (request.POST.get("bulk_action") or "").strip()
@@ -968,6 +1002,7 @@ class OvertimeRequestListView(HrmAdminMixin, HrmPageContextMixin, ListView):
 
 class OvertimeRequestCreateView(HrmAdminMixin, View):
     """POST: bulk overtime rows for one or more employees (same date / hours / reason)."""
+    permission_codename = "hrm.overtime.manage"
 
     def post(self, request):
         tenant = request.hrm_tenant
@@ -1028,6 +1063,7 @@ class OvertimeRequestUpdateView(HrmAdminMixin, HrmPageContextMixin, UpdateView):
     context_object_name = "overtime"
     success_url = reverse_lazy("hrm:overtime_list")
     page_title = "Edit overtime"
+    permission_codename = "hrm.overtime.manage"
 
     def get_queryset(self):
         return OvertimeRequest.objects.filter(employee__tenant=self.request.hrm_tenant)
@@ -1045,6 +1081,7 @@ class OvertimeRequestUpdateView(HrmAdminMixin, HrmPageContextMixin, UpdateView):
 class OvertimeRequestDeleteView(HrmAdminMixin, PostOnlyMixin, DeleteView):
     model = OvertimeRequest
     success_url = reverse_lazy("hrm:overtime_list")
+    permission_codename = "hrm.overtime.manage"
 
     def get_queryset(self):
         return OvertimeRequest.objects.filter(employee__tenant=self.request.hrm_tenant)
@@ -1056,20 +1093,23 @@ class OvertimeRequestDeleteView(HrmAdminMixin, PostOnlyMixin, DeleteView):
 
 
 class OvertimeApproveView(HrmAdminMixin, View):
+    permission_codename = "hrm.overtime.approve"
+
     def post(self, request, pk):
-        ot = get_object_or_404(
-            OvertimeRequest.objects.select_related("employee"),
-            pk=pk,
-            employee__tenant=request.hrm_tenant,
-        )
-        if ot.status != OvertimeRequest.Status.PENDING:
-            messages.warning(request, "This request is no longer pending.")
-        else:
-            ot.status = OvertimeRequest.Status.APPROVED
-            ot.reviewed_by = request.user
-            ot.reviewed_at = timezone.now()
-            ot.save(update_fields=["status", "reviewed_by", "reviewed_at"])
-            messages.success(request, "Overtime approved.")
+        with transaction.atomic():
+            ot = get_object_or_404(
+                OvertimeRequest.objects.select_for_update().select_related("employee"),
+                pk=pk,
+                employee__tenant=request.hrm_tenant,
+            )
+            if ot.status != OvertimeRequest.Status.PENDING:
+                messages.warning(request, "This request is no longer pending.")
+            else:
+                ot.status = OvertimeRequest.Status.APPROVED
+                ot.reviewed_by = request.user
+                ot.reviewed_at = timezone.now()
+                ot.save(update_fields=["status", "reviewed_by", "reviewed_at"])
+                messages.success(request, "Overtime approved.")
         return redirect("hrm:overtime_list")
 
     def get(self, request, *args, **kwargs):
@@ -1077,20 +1117,23 @@ class OvertimeApproveView(HrmAdminMixin, View):
 
 
 class OvertimeRejectView(HrmAdminMixin, View):
+    permission_codename = "hrm.overtime.approve"
+
     def post(self, request, pk):
-        ot = get_object_or_404(
-            OvertimeRequest.objects.select_related("employee"),
-            pk=pk,
-            employee__tenant=request.hrm_tenant,
-        )
-        if ot.status != OvertimeRequest.Status.PENDING:
-            messages.warning(request, "This request is no longer pending.")
-        else:
-            ot.status = OvertimeRequest.Status.REJECTED
-            ot.reviewed_by = request.user
-            ot.reviewed_at = timezone.now()
-            ot.save(update_fields=["status", "reviewed_by", "reviewed_at"])
-            messages.success(request, "Overtime rejected.")
+        with transaction.atomic():
+            ot = get_object_or_404(
+                OvertimeRequest.objects.select_for_update().select_related("employee"),
+                pk=pk,
+                employee__tenant=request.hrm_tenant,
+            )
+            if ot.status != OvertimeRequest.Status.PENDING:
+                messages.warning(request, "This request is no longer pending.")
+            else:
+                ot.status = OvertimeRequest.Status.REJECTED
+                ot.reviewed_by = request.user
+                ot.reviewed_at = timezone.now()
+                ot.save(update_fields=["status", "reviewed_by", "reviewed_at"])
+                messages.success(request, "Overtime rejected.")
         return redirect("hrm:overtime_list")
 
     def get(self, request, *args, **kwargs):
@@ -1101,6 +1144,7 @@ class OvertimeBulkActionView(HrmAdminMixin, View):
     """POST: bulk_action=approve|reject|delete + overtime_ids[] + optional next (return path)."""
 
     http_method_names = ["post"]
+    permission_codename = "hrm.overtime.manage"
 
     def post(self, request):
         action = (request.POST.get("bulk_action") or "").strip()
@@ -1135,17 +1179,18 @@ class OvertimeBulkActionView(HrmAdminMixin, View):
             return redirect_back()
 
         now = timezone.now()
-        pending = qs.filter(status=OvertimeRequest.Status.PENDING)
+        pending = qs.select_for_update().filter(status=OvertimeRequest.Status.PENDING)
         n_ok = 0
-        for ot in pending:
-            if action == "approve":
-                ot.status = OvertimeRequest.Status.APPROVED
-            else:
-                ot.status = OvertimeRequest.Status.REJECTED
-            ot.reviewed_by = request.user
-            ot.reviewed_at = now
-            ot.save(update_fields=["status", "reviewed_by", "reviewed_at"])
-            n_ok += 1
+        with transaction.atomic():
+            for ot in pending:
+                if action == "approve":
+                    ot.status = OvertimeRequest.Status.APPROVED
+                else:
+                    ot.status = OvertimeRequest.Status.REJECTED
+                ot.reviewed_by = request.user
+                ot.reviewed_at = now
+                ot.save(update_fields=["status", "reviewed_by", "reviewed_at"])
+                n_ok += 1
 
         skipped = qs.count() - n_ok
         verb = "Approved" if action == "approve" else "Rejected"

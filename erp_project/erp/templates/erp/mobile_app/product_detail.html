@@ -1,0 +1,83 @@
+{% if not request.is_ajax %}
+{% extends 'erp/mobile_app/base_app.html' %}
+{% block title %}{{product.name}} - ERP Mobile{% endblock %}
+{% block page_title %}Product Details{% endblock %}
+{% block content %}
+{% endif %}
+
+<div class="modal-body">
+<div class="detail-section">
+<div class="detail-title">📦 Basic Information</div>
+<div class="detail-grid">
+<div class="detail-item">
+<div class="detail-label">Product Name</div>
+<div class="detail-value">{{product.name}}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">SKU</div>
+<div class="detail-value">{{product.sku}}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">Category</div>
+<div class="detail-value">{{product.category.name|default:"N/A"}}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">Unit</div>
+<div class="detail-value">{{product.unit}}</div>
+</div>
+</div>
+</div>
+
+<div class="detail-section">
+<div class="detail-title">💰 Pricing</div>
+<div class="detail-grid">
+<div class="detail-item">
+<div class="detail-label">Purchase Price</div>
+<div class="detail-value" style="color:#3b82f6">৳{{product.purchase_price|floatformat:2}}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">Selling Price</div>
+<div class="detail-value" style="color:var(--accent-primary)">৳{{product.selling_price|floatformat:2}}</div>
+</div>
+</div>
+</div>
+
+<div class="detail-section">
+<div class="detail-title">📊 Stock Information</div>
+<div class="detail-grid">
+<div class="detail-item">
+<div class="detail-label">Current Stock</div>
+<div class="detail-value">{{product.current_stock|floatformat:0}} {{product.unit}}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">Min Stock Level</div>
+<div class="detail-value">{{product.min_stock_level|floatformat:0}} {{product.unit}}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">Default Warehouse</div>
+<div class="detail-value">{{product.default_warehouse.name|default:"N/A"}}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">Status</div>
+<div class="detail-value">{% if product.is_active %}Active{% else %}Inactive{% endif %}</div>
+</div>
+</div>
+</div>
+
+{% if product.description %}
+<div class="detail-section">
+<div class="detail-title">📝 Description</div>
+<div style="background:var(--bg-primary);padding:12px;border-radius:12px;color:var(--text-secondary);font-size:14px;line-height:1.6">
+{{product.description}}
+</div>
+</div>
+{% endif %}
+
+<div class="detail-section">
+<a href="{% url 'erp:erp-mobile-product-edit' product.id %}" style="display:block;width:100%;padding:14px;background:var(--accent-primary);color:#000;text-align:center;border-radius:12px;font-weight:600;text-decoration:none;transition:all 0.2s">✏️ Edit Product</a>
+</div>
+</div>
+
+{% if not request.is_ajax %}
+{% endblock %}
+{% endif %}

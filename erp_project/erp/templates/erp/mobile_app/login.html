@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Login - ERP Mobile</title>
+<style>
+:root[data-theme="dark"]{--bg-primary:#0a0a0a;--bg-card:#1e1e1e;--text-primary:#ffffff;--text-secondary:#a0a0a0;--accent-primary:#c4ff0d;--border-color:#2a2a2a}
+:root[data-theme="light"]{--bg-primary:#f5f5f5;--bg-card:#ffffff;--text-primary:#1a1a1a;--text-secondary:#666666;--accent-primary:#c4ff0d;--border-color:#e5e5e5}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;transition:background 0.3s}
+.login-container{width:100%;max-width:400px}
+.logo{text-align:center;margin-bottom:40px}
+.logo-icon{width:80px;height:80px;background:var(--accent-primary);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 16px;font-weight:700;color:#000}
+.logo-text{font-size:28px;font-weight:800;color:var(--text-primary);margin-bottom:4px}
+.logo-subtitle{font-size:14px;color:var(--text-secondary)}
+.login-card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:24px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,0.1)}
+.form-group{margin-bottom:20px}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.form-input{width:100%;padding:14px 16px;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:12px;color:var(--text-primary);font-size:15px;outline:none;transition:all 0.2s}
+.form-input:focus{border-color:var(--accent-primary);box-shadow:0 0 0 3px rgba(196,255,13,0.1)}
+.btn-login{width:100%;padding:16px;background:var(--accent-primary);color:#000;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;margin-top:8px}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(196,255,13,0.3)}
+.btn-login:active{transform:translateY(0)}
+.error{background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);padding:12px 16px;border-radius:12px;margin-bottom:20px;font-size:14px;display:flex;align-items:center;gap:8px}
+.theme-toggle{position:fixed;top:20px;right:20px;width:48px;height:48px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:all 0.2s}
+.theme-toggle:hover{transform:scale(1.1)}
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">☀️</button>
+<div class="login-container">
+<div class="logo">
+<div class="logo-icon">📊</div>
+<div class="logo-text">ERP Mobile</div>
+<div class="logo-subtitle">Enterprise Resource Planning</div>
+</div>
+<div class="login-card">
+{% if error %}
+<div class="error">
+<span>⚠️</span>
+<span>{{error}}</span>
+</div>
+{% endif %}
+<form method="post">
+{% csrf_token %}
+<div class="form-group">
+<label class="form-label">Username</label>
+<input type="text" name="username" class="form-input" placeholder="Enter your username" required autofocus>
+</div>
+<div class="form-group">
+<label class="form-label">Password</label>
+<input type="password" name="password" class="form-input" placeholder="Enter your password" required>
+</div>
+<button type="submit" class="btn-login">Sign In</button>
+</form>
+</div>
+</div>
+<script>
+function toggleTheme(){
+const html=document.documentElement;
+const currentTheme=html.getAttribute('data-theme');
+const newTheme=currentTheme==='dark'?'light':'dark';
+html.setAttribute('data-theme',newTheme);
+localStorage.setItem('erp_theme',newTheme);
+document.getElementById('themeToggle').textContent=newTheme==='dark'?'☀️':'🌙';
+}
+document.addEventListener('DOMContentLoaded',()=>{
+const savedTheme=localStorage.getItem('erp_theme')||'dark';
+document.documentElement.setAttribute('data-theme',savedTheme);
+document.getElementById('themeToggle').textContent=savedTheme==='dark'?'☀️':'🌙';
+});
+</script>
+</body>
+</html>

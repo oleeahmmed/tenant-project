@@ -63,7 +63,7 @@
             </td>
             <td class="px-4 py-3 text-right">
               {% if not invite.is_accepted %}
-              <button type="button" onclick="openCancelModal('{% url 'invitation_cancel' invite.id %}', 'Cancel invitation for {{ invite.email|escapejs }}?')" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" title="Cancel">
+              <button type="button" onclick="openCancelModal('{% url 'invitation_cancel' invite.id %}', 'Cancel invitation for {{ invite.email|escapejs }}?')" class="table-action-btn table-action-btn--danger" title="Cancel">
                 <i data-lucide="x" class="h-4 w-4"></i>
               </button>
               {% endif %}

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Order - {{ order.order_number }}</title>
+    <style>
+        @page { size: A4; margin: 10mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.3; color: #000; background: #fff; }
+        .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 15px; border: 2px solid #d0d0d0; background: #fff; display: flex; flex-direction: column; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #f97316; }
+        .header-left { width: 30%; }
+        .logo-box { width: 100px; height: 100px; border: 1px solid #ccc; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 10pt; color: #999; }
+        .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .company-name { font-size: 12pt; font-weight: bold; margin-bottom: 3px; }
+        .company-address { font-size: 8pt; line-height: 1.4; color: #333; }
+        .header-center { width: 40%; text-align: center; }
+        .title { font-size: 20pt; font-weight: bold; color: #f97316; letter-spacing: 2px; margin-bottom: 10px; }
+        .order-info-box { display: inline-block; border: 2px solid #f97316; padding: 10px 20px; background: #fff7ed; border-radius: 5px; margin-top: 5px; }
+        .order-number { font-size: 16pt; font-weight: bold; color: #f97316; margin-bottom: 5px; }
+        .order-date { font-size: 12pt; font-weight: bold; color: #ea580c; }
+        .header-right { width: 30%; text-align: right; font-size: 9pt; line-height: 1.5; }
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 10pt; font-weight: bold; margin-top: 10px; }
+        .status-draft { background: #e0e0e0; color: #424242; }
+        .status-planned { background: #dbeafe; color: #1d4ed8; }
+        .status-in_progress { background: #fff9c4; color: #f57f17; }
+        .status-completed { background: #c8e6c9; color: #2e7d32; }
+        .status-cancelled { background: #ffcdd2; color: #c62828; }
+        .product-box { background: #fff7ed; border: 2px solid #f97316; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
+        .product-box h3 { font-size: 11pt; color: #ea580c; margin-bottom: 10px; }
+        .product-info { display: flex; gap: 20px; flex-wrap: wrap; }
+        .product-detail { font-size: 10pt; min-width: 150px; }
+        .product-detail strong { color: #f97316; }
+        .info-bar { display: table; width: 100%; margin-bottom: 15px; border-collapse: collapse; }
+        .info-bar-row { display: table-row; }
+        .info-bar-cell { display: table-cell; padding: 8px 6px; border: 1px solid #fdba74; background: #fff7ed; text-align: center; font-size: 9pt; font-weight: bold; color: #f97316; }
+        .schedule-box { display: flex; gap: 20px; margin-bottom: 15px; }
+        .schedule-item { flex: 1; border: 1px solid #e0e0e0; padding: 10px; border-radius: 5px; text-align: center; }
+        .schedule-item.planned { background: #dbeafe; border-color: #3b82f6; }
+        .schedule-item.actual { background: #dcfce7; border-color: #22c55e; }
+        .schedule-label { font-size: 8pt; color: #666; margin-bottom: 5px; }
+        .schedule-date { font-size: 10pt; font-weight: bold; }
+        .content { flex: 1; }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .items-table thead { background: #f97316; color: #fff; }
+        .items-table th { padding: 10px 6px; text-align: center; font-size: 9pt; font-weight: bold; border: 1px solid #f97316; }
+        .items-table td { padding: 8px 6px; border: 1px solid #e0e0e0; text-align: center; font-size: 9pt; }
+        .items-table tbody tr:nth-child(odd) { background: #fff7ed; }
+        .items-table tbody tr:nth-child(even) { background: #fff; }
+        .text-left { text-align: left !important; padding-left: 8px !important; }
+        .text-right { text-align: right !important; padding-right: 10px !important; }
+        .notes-section { border: 1px solid #d0d0d0; padding: 12px; min-height: 80px; margin-top: 15px; }
+        .notes-section h4 { font-size: 9pt; color: #666; margin-bottom: 8px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
+        .signature-section { display: flex; justify-content: space-between; margin-top: 40px; margin-bottom: 20px; }
+        .signature-box { width: 30%; text-align: center; }
+        .signature-line { border-top: 1px solid #000; margin-top: 50px; padding-top: 8px; font-size: 9pt; }
+        .footer { text-align: center; font-size: 12pt; color: #f97316; font-weight: bold; margin-top: auto; padding-top: 15px; border-top: 2px solid #f97316; }
+        .copyright { text-align: center; font-size: 8pt; color: #999; margin-top: 10px; }
+        .print-btn { position: fixed; top: 15px; right: 15px; padding: 12px 24px; background: #f97316; color: #fff; border: none; border-radius: 5px; font-size: 11pt; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); z-index: 9999; }
+        .print-btn:hover { background: #ea580c; }
+        @media print { .print-btn { display: none !important; } .page { border: none; padding: 0; min-height: auto; } body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ PRINT</button>
+    <div class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-box">{% if company.logo %}<img src="{{ company.logo.url }}" alt="Logo">{% else %}LOGO{% endif %}</div>
+                <div class="company-name">{{ company.name|default:"Company Name" }}</div>
+                <div class="company-address">{{ company.address|default:"Address" }}<br>{{ company.phone|default:"Phone" }}<br>{{ company.email|default:"Email" }}</div>
+            </div>
+            <div class="header-center">
+                <div class="title">PRODUCTION ORDER</div>
+                <div class="order-info-box">
+                    <div class="order-number">{{ order.order_number }}</div>
+                    <div class="order-date">{{ order.order_date|date:"d F, Y" }}</div>
+                </div>
+                <div class="status-badge status-{{ order.status }}">{{ order.get_status_display|upper }}</div>
+            </div>
+            <div class="header-right">
+                <strong>BOM:</strong> {{ order.bom.bom_number|default:"-" }}<br>
+                <strong>Warehouse:</strong> {{ order.warehouse.name|default:"-" }}<br>
+                <strong>Reference:</strong> {{ order.reference|default:"-" }}<br>
+                {% if order.sales_order %}<strong>Sales Order:</strong> {{ order.sales_order.order_number }}{% endif %}
+            </div>
+        </div>
+
+        <div class="product-box">
+            <h3>🏭 Product to Manufacture</h3>
+            <div class="product-info">
+                <div class="product-detail"><strong>Product:</strong> {{ order.product.name }}</div>
+                <div class="product-detail"><strong>SKU:</strong> {{ order.product.sku }}</div>
+                <div class="product-detail"><strong>To Produce:</strong> {{ order.quantity_to_produce|floatformat:0 }} {{ order.product.unit }}</div>
+                <div class="product-detail"><strong>Produced:</strong> {{ order.quantity_produced|floatformat:0 }} {{ order.product.unit }}</div>
+            </div>
+        </div>
+
+        <div class="schedule-box">
+            <div class="schedule-item planned">
+                <div class="schedule-label">Planned Start</div>
+                <div class="schedule-date">{{ order.planned_start_date|date:"d M, Y"|default:"-" }}</div>
+            </div>
+            <div class="schedule-item planned">
+                <div class="schedule-label">Planned End</div>
+                <div class="schedule-date">{{ order.planned_end_date|date:"d M, Y"|default:"-" }}</div>
+            </div>
+            <div class="schedule-item actual">
+                <div class="schedule-label">Actual Start</div>
+                <div class="schedule-date">{{ order.actual_start_date|date:"d M, Y"|default:"-" }}</div>
+            </div>
+            <div class="schedule-item actual">
+                <div class="schedule-label">Actual End</div>
+                <div class="schedule-date">{{ order.actual_end_date|date:"d M, Y"|default:"-" }}</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <h4 style="font-size: 11pt; color: #f97316; margin-bottom: 10px; border-bottom: 2px solid #f97316; padding-bottom: 5px;">📦 Required Components</h4>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 12%;">SKU</th>
+                        <th style="width: 30%;">COMPONENT</th>
+                        <th style="width: 12%;">REQUIRED</th>
+                        <th style="width: 12%;">CONSUMED</th>
+                        <th style="width: 12%;">REMAINING</th>
+                        <th style="width: 8%;">UNIT</th>
+                        <th style="width: 9%;">UNIT COST</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for comp in order.components.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ comp.product.sku }}</td>
+                        <td class="text-left">{{ comp.product.name }}</td>
+                        <td>{{ comp.quantity_required|floatformat:2 }}</td>
+                        <td>{{ comp.quantity_consumed|floatformat:2 }}</td>
+                        <td>{{ comp.remaining_to_consume|floatformat:2 }}</td>
+                        <td>{{ comp.product.unit }}</td>
+                        <td class="text-right">{{ comp.unit_cost|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% with item_count=order.components.count %}
+                    {% for i in "12345678901234567890" %}
+                    {% if forloop.counter|add:item_count <= 12 %}
+                    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+                </tbody>
+            </table>
+
+            <div class="notes-section">
+                <h4>Notes / Instructions:</h4>
+                <p style="font-size: 9pt;">{{ order.notes|default:"" }}</p>
+            </div>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box"><div class="signature-line">Production Manager</div></div>
+            <div class="signature-box"><div class="signature-line">Quality Control</div></div>
+            <div class="signature-box"><div class="signature-line">Warehouse Manager</div></div>
+        </div>
+
+        <div class="footer">Production Order Document</div>
+        <div class="copyright">© {{ company.name|default:"Company" }} | {{ company.website|default:"www.company.com" }}</div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ action }} Product - ERP System{% endblock %}
+
+{% block content %}
+<!-- Page header section -->
+<div class="block-header">
+    <div class="row clearfix">
+        <div class="col-lg-6 col-md-12 col-sm-12">
+            <h1>{{ action }} Product</h1>
+            <span>{% if product %}Edit existing product{% else %}Create a new product{% endif %}</span>
+        </div>
+        <div class="col-lg-6 col-md-12 col-sm-12 text-lg-right">
+            <a href="{% url 'erp:product_list' %}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Messages -->
+{% if messages %}
+<div class="row clearfix">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Product Form -->
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>Product Information</h2>
+                <small class="text-muted">Fill in the product details below</small>
+            </div>
+            <div class="body">
+                <form method="post" action="">
+                    {% csrf_token %}
+                    
+                    <div class="row clearfix">
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Product Name <span class="text-danger">*</span></label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="name" 
+                                       name="name" 
+                                       placeholder="Enter product name" 
+                                       value="{{ product.name|default:'' }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>SKU <span class="text-danger">*</span></label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="sku" 
+                                       name="sku" 
+                                       placeholder="Enter SKU" 
+                                       value="{{ product.sku|default:'' }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Category</label>
+                                <select class="form-control show-tick" id="category" name="category">
+                                    <option value="">-- Select Category --</option>
+                                    {% for cat in form.category.field.queryset %}
+                                    <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Unit</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="unit" 
+                                       name="unit" 
+                                       placeholder="e.g., PCS, KG, L" 
+                                       value="{{ product.unit|default:'PCS' }}">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Purchase Price <span class="text-danger">*</span></label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="purchase_price" 
+                                       name="purchase_price" 
+                                       placeholder="Enter purchase price" 
+                                       value="{{ product.purchase_price|default:'' }}"
+                                       step="0.01"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Selling Price <span class="text-danger">*</span></label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="selling_price" 
+                                       name="selling_price" 
+                                       placeholder="Enter selling price" 
+                                       value="{{ product.selling_price|default:'' }}"
+                                       step="0.01"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Minimum Stock Level</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="min_stock_level" 
+                                       name="min_stock_level" 
+                                       placeholder="Enter minimum stock level" 
+                                       value="{{ product.min_stock_level|default:'10' }}"
+                                       step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Default Warehouse</label>
+                                <select class="form-control show-tick" id="default_warehouse" name="default_warehouse">
+                                    <option value="">-- Select Warehouse --</option>
+                                    {% for wh in form.default_warehouse.field.queryset %}
+                                    <option value="{{ wh.id }}" {% if product.default_warehouse_id == wh.id %}selected{% endif %}>{{ wh.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Default BOM</label>
+                                <select class="form-control show-tick" id="default_bom" name="default_bom">
+                                    <option value="">-- Select BOM --</option>
+                                    {% for bom in form.default_bom.field.queryset %}
+                                    <option value="{{ bom.id }}" {% if product.default_bom_id == bom.id %}selected{% endif %}>{{ bom.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">If set, Quick Sale will deduct BOM components instead of this product</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Status <span class="text-danger">*</span></label>
+                                <select class="form-control show-tick" id="is_active" name="is_active">
+                                    <option value="on" {% if not product or product.is_active %}selected{% endif %}>Active</option>
+                                    <option value="off" {% if product and not product.is_active %}selected{% endif %}>Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <div class="form-group mt-3">
+                                <label>Description</label>
+                                <textarea rows="3" 
+                                          class="form-control no-resize" 
+                                          id="description" 
+                                          name="description" 
+                                          placeholder="Enter product description">{{ product.description|default:'' }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row clearfix">
+                        <div class="col-sm-12">
+                            <button type="submit" class="btn btn-primary theme-bg gradient">
+                                <i class="fa fa-save"></i> {{ action }} Product
+                            </button>
+                            <a href="{% url 'erp:product_list' %}" class="btn btn-default">
+                                <i class="fa fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {% if product %}
+        <!-- Additional Info Card -->
+        <div class="card">
+            <div class="header">
+                <h2>Additional Information</h2>
+            </div>
+            <div class="body">
+                <div class="row clearfix">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Created Date</label>
+                            <p class="form-control-static">{{ product.created_at|date:"d M, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Last Updated</label>
+                            <p class="form-control-static">{{ product.updated_at|date:"d M, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Current Stock</label>
+                            <p class="form-control-static">{{ product.current_stock }} {{ product.unit }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Current Status</label>
+                            <p class="form-control-static">
+                                {% if product.is_active %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('name').focus();
+</script>
+{% endblock %}

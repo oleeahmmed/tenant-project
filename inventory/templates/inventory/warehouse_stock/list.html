@@ -1,0 +1,134 @@
+{% extends "auth_tenants/base.html" %}
+{% load static %}
+{% block title %}Warehouse stock{% endblock %}
+{% block page_title %}Inventory · Warehouse stock{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css" rel="stylesheet"/>
+<link href="{% static 'foundation/css/tom_select_inv.css' %}" rel="stylesheet"/>
+{% endblock %}
+
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  {% if messages %}
+  <ul class="rounded-lg border border-border bg-card p-3 text-sm">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+      <div>
+        <h2 class="text-xl font-bold text-foreground">Warehouse stock</h2>
+        <p class="text-sm text-muted-foreground mt-0.5">On-hand quantity by product and warehouse</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <a href="{% url 'inventory:inventory_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+        </a>
+      </div>
+    </div>
+
+    <form method="get" class="inv-list-filter px-4 py-4">
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <input type="text" name="q" value="{{ selected.q }}" placeholder="Search SKU, product, warehouse..."
+               class="inv-list-control" />
+        <select name="warehouse"
+                class="inv-list-control inv-filter-autocomplete"
+                data-autocomplete-url="/api/foundation/autocomplete/warehouses/"
+                data-value-key="code">
+          <option value="">All warehouses</option>
+          {% if selected.warehouse %}
+          <option value="{{ selected.warehouse }}" selected>{{ selected.warehouse }}</option>
+          {% endif %}
+        </select>
+        <select name="sort" class="inv-list-control">
+          <option value="warehouse__code" {% if selected.sort == "warehouse__code" %}selected{% endif %}>Warehouse A-Z, then SKU</option>
+          <option value="-warehouse__code" {% if selected.sort == "-warehouse__code" %}selected{% endif %}>Warehouse Z-A, then SKU</option>
+          <option value="product__sku" {% if selected.sort == "product__sku" %}selected{% endif %}>SKU A-Z</option>
+          <option value="-product__sku" {% if selected.sort == "-product__sku" %}selected{% endif %}>SKU Z-A</option>
+          <option value="-quantity" {% if selected.sort == "-quantity" %}selected{% endif %}>On hand (high → low)</option>
+          <option value="quantity" {% if selected.sort == "quantity" %}selected{% endif %}>On hand (low → high)</option>
+        </select>
+        <select name="page_size" class="inv-list-control">
+          <option value="10" {% if selected.page_size == "10" %}selected{% endif %}>10 / page</option>
+          <option value="15" {% if selected.page_size == "15" %}selected{% endif %}>15 / page</option>
+          <option value="25" {% if selected.page_size == "25" %}selected{% endif %}>25 / page</option>
+          <option value="50" {% if selected.page_size == "50" %}selected{% endif %}>50 / page</option>
+        </select>
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-4">
+        <label class="inline-flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+          <input type="checkbox" name="include_zero" value="1" {% if selected.include_zero %}checked{% endif %} class="h-4 w-4 rounded border-border" />
+          <span>Include zero balance rows</span>
+        </label>
+      </div>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+          <i data-lucide="search" class="h-4 w-4"></i> Apply filters
+        </button>
+        <a href="{% url 'inventory:warehouse_stock_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent">
+          <i data-lucide="rotate-ccw" class="h-4 w-4"></i> Reset
+        </a>
+      </div>
+    </form>
+
+    <div class="flex flex-wrap gap-4 border-t border-border/50 bg-card px-4 py-2.5 text-xs text-muted-foreground">
+      <span><span class="font-semibold text-foreground">{{ summary.total_rows }}</span> row{{ summary.total_rows|pluralize }}</span>
+      <span>Total on hand: <span class="font-mono tabular-nums font-semibold text-foreground">{{ summary.total_qty }}</span></span>
+    </div>
+
+    <div class="ui-table-wrap overflow-x-auto border-t border-border/50 bg-card">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-border bg-muted/40">
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Warehouse</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">SKU</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Product</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">On hand</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Min</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Max</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          {% for row in rows %}
+          <tr class="hover:bg-accent/40 transition-colors">
+            <td class="px-4 py-3">{{ row.warehouse.code }}{% if row.warehouse.name %} — {{ row.warehouse.name }}{% endif %}</td>
+            <td class="px-4 py-3 font-medium">{{ row.product.sku }}</td>
+            <td class="px-4 py-3 text-muted-foreground">{{ row.product.name }}</td>
+            <td class="px-4 py-3 text-right font-mono tabular-nums">{{ row.quantity }}</td>
+            <td class="px-4 py-3 text-right font-mono tabular-nums text-muted-foreground">{% if row.min_quantity is not None %}{{ row.min_quantity }}{% else %}—{% endif %}</td>
+            <td class="px-4 py-3 text-right font-mono tabular-nums text-muted-foreground">{% if row.max_quantity is not None %}{{ row.max_quantity }}{% else %}—{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="px-4 py-10 text-center text-muted-foreground">No stock rows for current filters.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border/50 bg-card px-4 py-3 text-sm">
+      <p class="text-muted-foreground">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} ({{ page_obj.paginator.count }} results)
+      </p>
+      <div class="flex items-center gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}page={{ page_obj.previous_page_number }}"
+             class="rounded-md border border-border px-3 py-1.5 hover:bg-accent">Previous</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}page={{ page_obj.next_page_number }}"
+             class="rounded-md border border-border px-3 py-1.5 hover:bg-accent">Next</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script src="{% static 'inventory/js/filter_autocomplete.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - ERP System{% endblock %}
+
+{% block content %}
+<!-- Page header section -->
+<div class="block-header">
+    <div class="row clearfix">
+        <div class="col-lg-6 col-md-12 col-sm-12">
+            <h1>{{ title }}</h1>
+            <span>{% if object %}Edit existing payment method{% else %}Add a new payment method{% endif %}</span>
+        </div>
+        <div class="col-lg-6 col-md-12 col-sm-12 text-lg-right">
+            <a href="{% url 'erp:paymentmethod_list' %}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Messages -->
+{% if messages %}
+<div class="row clearfix">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Payment Method Form -->
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>Payment Method Information</h2>
+                <small class="text-muted">Fill in the payment method details below</small>
+            </div>
+            <div class="body">
+                <form method="post" action="">
+                    {% csrf_token %}
+
+                    <div class="row clearfix">
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Method Name <span class="text-danger">*</span></label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="name"
+                                       name="name"
+                                       placeholder="Enter method name"
+                                       value="{{ object.name|default:'' }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Code <span class="text-danger">*</span></label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="code"
+                                       name="code"
+                                       placeholder="Enter method code"
+                                       value="{{ object.code|default:'' }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Payment Type <span class="text-danger">*</span></label>
+                                <select class="form-control show-tick" id="payment_type" name="payment_type" required>
+                                    <option value="">-- Select Type --</option>
+                                    <option value="cash" {% if object.payment_type == 'cash' %}selected{% endif %}>Cash</option>
+                                    <option value="card" {% if object.payment_type == 'card' %}selected{% endif %}>Card</option>
+                                    <option value="mobile" {% if object.payment_type == 'mobile' %}selected{% endif %}>Mobile Payment</option>
+                                    <option value="bank" {% if object.payment_type == 'bank' %}selected{% endif %}>Bank Transfer</option>
+                                    <option value="credit" {% if object.payment_type == 'credit' %}selected{% endif %}>Credit</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Status <span class="text-danger">*</span></label>
+                                <select class="form-control show-tick" id="is_active" name="is_active">
+                                    <option value="True" {% if not object or object.is_active %}selected{% endif %}>Active</option>
+                                    <option value="False" {% if object and not object.is_active %}selected{% endif %}>Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Account Number</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="account_number"
+                                       name="account_number"
+                                       placeholder="Enter account number"
+                                       value="{{ object.account_number|default:'' }}">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Account Name</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="account_name"
+                                       name="account_name"
+                                       placeholder="Enter account name"
+                                       value="{{ object.account_name|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row clearfix">
+                        <div class="col-sm-12">
+                            <button type="submit" class="btn btn-primary theme-bg gradient">
+                                <i class="fa fa-save"></i> {{ button_text }} Payment Method
+                            </button>
+                            <a href="{% url 'erp:paymentmethod_list' %}" class="btn btn-default">
+                                <i class="fa fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if object %}
+        <!-- Additional Info Card -->
+        <div class="card">
+            <div class="header">
+                <h2>Additional Information</h2>
+            </div>
+            <div class="body">
+                <div class="row clearfix">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Created Date</label>
+                            <p class="form-control-static">{{ object.created_at|date:"d M, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Last Updated</label>
+                            <p class="form-control-static">{{ object.updated_at|date:"d M, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Payment Type</label>
+                            <p class="form-control-static">{{ object.payment_type|default:"—" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Current Status</label>
+                            <p class="form-control-static">
+                                {% if object.is_active %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('name').focus();
+</script>
+{% endblock %}

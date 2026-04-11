@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Sale - {{ sale.sale_number }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 8mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 9pt;
+            line-height: 1.2;
+            color: #000;
+            background: #fff;
+        }
+
+        .page {
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 12px;
+            border: 2px solid #d0d0d0;
+            background: #fff;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .header-left {
+            width: 30%;
+        }
+
+        .logo-box {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #ccc;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9pt;
+            color: #999;
+        }
+
+        .logo-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .company-name {
+            font-size: 10pt;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .company-address {
+            font-size: 7.5pt;
+            line-height: 1.3;
+            color: #333;
+        }
+
+        .header-center {
+            width: 40%;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #1976d2;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+        }
+
+        .order-info-box {
+            display: inline-block;
+            border: 2px solid #1976d2;
+            padding: 8px 15px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+
+        .order-number {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 3px;
+        }
+
+        .order-date {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #0d47a1;
+        }
+
+        .header-right {
+            width: 30%;
+            text-align: right;
+            font-size: 7.5pt;
+            line-height: 1.4;
+        }
+
+        /* Info Bar */
+        .info-bar {
+            display: table;
+            width: 100%;
+            margin-bottom: 8px;
+            border-collapse: collapse;
+        }
+
+        .info-bar-row {
+            display: table-row;
+        }
+
+        .info-bar-cell {
+            display: table-cell;
+            padding: 5px 4px;
+            border: 1px solid #64b5f6;
+            background: #e3f2fd;
+            text-align: center;
+            font-size: 7.5pt;
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        /* Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+
+        .items-table thead {
+            background: #1976d2;
+            color: #fff;
+        }
+
+        .items-table th {
+            padding: 6px 4px;
+            text-align: center;
+            font-size: 8pt;
+            font-weight: bold;
+            border: 1px solid #1976d2;
+        }
+
+        .items-table td {
+            padding: 5px 4px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            font-size: 8pt;
+        }
+
+        .items-table tbody tr:nth-child(odd) {
+            background: #e3f2fd;
+        }
+
+        .items-table tbody tr:nth-child(even) {
+            background: #fff;
+        }
+
+        .text-left {
+            text-align: left !important;
+            padding-left: 6px !important;
+        }
+
+        .text-right {
+            text-align: right !important;
+            padding-right: 8px !important;
+        }
+
+        /* Bottom Section */
+        .bottom-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .notes-section {
+            width: 48%;
+            border: 1px solid #d0d0d0;
+            padding: 8px;
+            min-height: 70px;
+        }
+
+        .notes-section h4 {
+            font-size: 7.5pt;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .totals-section {
+            width: 48%;
+        }
+
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .totals-table td {
+            padding: 4px 8px;
+            border: 1px solid #e0e0e0;
+            font-size: 8pt;
+        }
+
+        .totals-table .label {
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .totals-table .value {
+            text-align: right;
+            width: 35%;
+        }
+
+        .totals-table tr:nth-child(1) {
+            background: #fff;
+        }
+
+        .totals-table tr:nth-child(2) {
+            background: #e3f2fd;
+        }
+
+        .totals-table tr:nth-child(3) {
+            background: #c8e6c9;
+        }
+
+        .totals-table tr:nth-child(4) {
+            background: #fff9c4;
+        }
+
+        .totals-table tr.total-row {
+            background: #1976d2;
+            color: #fff;
+            font-weight: bold;
+            font-size: 9pt;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-completed {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .status-draft {
+            background: #fff9c4;
+            color: #f57f17;
+        }
+
+        .status-cancelled {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            font-size: 10pt;
+            color: #1976d2;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .copyright {
+            text-align: left;
+            font-size: 7pt;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        /* Print Button */
+        .print-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            padding: 10px 20px;
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 10pt;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+        }
+
+        .print-btn:hover {
+            background: #0d47a1;
+        }
+
+        @media print {
+            .print-btn {
+                display: none !important;
+            }
+
+            .page {
+                border: none;
+                padding: 0;
+            }
+
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ PRINT</button>
+
+    <div class="page">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-box">
+                    {% if company.logo %}
+                    <img src="{{ company.logo.url }}" alt="Logo">
+                    {% else %}
+                    LOGO
+                    {% endif %}
+                </div>
+                <div class="company-name">{{ company.name|default:"Company Name" }}</div>
+                <div class="company-address">
+                    {{ company.address|default:"Address" }}<br>
+                    {{ company.phone|default:"Phone" }}<br>
+                    {{ company.email|default:"Email" }}
+                </div>
+            </div>
+            <div class="header-center">
+                <div class="title">QUICK SALE</div>
+                <div class="order-info-box">
+                    <div class="order-number">{{ sale.sale_number }}</div>
+                    <div class="order-date">{{ sale.sale_date|date:"d F, Y" }}</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <strong>Customer:</strong><br>
+                {{ sale.customer.name|default:sale.customer_name|default:"Walk-in Customer" }}<br>
+                {% if sale.customer_phone %}Phone: {{ sale.customer_phone }}<br>{% endif %}
+                <br>
+                <strong>Cashier:</strong> {{ sale.user.username }}<br>
+                <strong>Warehouse:</strong> {{ sale.warehouse.name }}
+            </div>
+        </div>
+
+        <!-- Info Bar -->
+        <div class="info-bar">
+            <div class="info-bar-row">
+                <div class="info-bar-cell">
+                    <strong>Sale #:</strong><br>{{ sale.sale_number }}
+                </div>
+                <div class="info-bar-cell">
+                    <strong>Date:</strong><br>{{ sale.sale_date|date:"d/m/Y" }}
+                </div>
+                <div class="info-bar-cell">
+                    <strong>Time:</strong><br>{{ sale.created_at|time:"H:i" }}
+                </div>
+                <div class="info-bar-cell">
+                    <strong>Payment:</strong><br>{{ sale.get_payment_method_display }}
+                </div>
+                <div class="info-bar-cell">
+                    <strong>Status:</strong><br>
+                    <span class="status-badge status-{{ sale.status }}">{{ sale.get_status_display }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 12%;">SKU</th>
+                    <th style="width: 43%;">PRODUCT</th>
+                    <th style="width: 10%;">QTY</th>
+                    <th style="width: 15%;">UNIT PRICE</th>
+                    <th style="width: 15%;">TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sale.items.all %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ item.product.sku }}</td>
+                    <td class="text-left">{{ item.product.name }}</td>
+                    <td>{{ item.quantity|floatformat:0 }}</td>
+                    <td class="text-right">৳{{ item.unit_price|floatformat:2 }}</td>
+                    <td class="text-right">৳{{ item.line_total|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+
+                {% with item_count=sale.items.count %}
+                {% for i in "12345678" %}
+                {% if forloop.counter|add:item_count <= 8 %}
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td class="text-right">-</td>
+                    <td class="text-right">-</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+                {% endwith %}
+            </tbody>
+        </table>
+
+        <!-- Bottom Section -->
+        <div class="bottom-section">
+            <div class="notes-section">
+                <h4>Notes:</h4>
+                <p style="font-size: 7.5pt;">{{ sale.notes|default:"" }}</p>
+            </div>
+            <div class="totals-section">
+                <table class="totals-table">
+                    <tr>
+                        <td class="label">SUBTOTAL</td>
+                        <td class="value">৳{{ sale.subtotal|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">DISCOUNT</td>
+                        <td class="value">৳{{ sale.discount_amount|floatformat:2 }}</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td class="label">TOTAL</td>
+                        <td class="value">৳{{ sale.total_amount|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">RECEIVED</td>
+                        <td class="value">৳{{ sale.amount_received|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">CHANGE</td>
+                        <td class="value">৳{{ sale.change_amount|floatformat:2 }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">Thank You For Your Purchase!</div>
+        <div class="copyright">{{ company.website|default:"" }} | Printed: {% now "d/m/Y H:i" %}</div>
+    </div>
+</body>
+</html>

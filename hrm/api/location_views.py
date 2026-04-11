@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -8,6 +9,7 @@ from hrm.services.location_checkin import (
     get_or_create_location_policy,
     persist_mobile_attendance_log,
     process_mobile_checkin,
+    sync_daily_record_from_log,
 )
 from hrm.tenant_scope import get_hrm_tenant
 
@@ -30,7 +32,10 @@ class EmployeeMobileCheckinView(APIView):
                 {"success": False, "message": "No tenant assigned."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        emp = getattr(user, "hrm_employee_profile", None)
+        try:
+            emp = user.hrm_employee_profile
+        except ObjectDoesNotExist:
+            emp = None
         if emp is None or emp.tenant_id != tenant.id:
             return Response(
                 {
@@ -72,6 +77,8 @@ class EmployeeMobileCheckinView(APIView):
 
         if result.ok or (result.log_defaults and policy.record_invalid_attempts):
             log = persist_mobile_attendance_log(dict(result.log_defaults))
+            if result.ok:
+                sync_daily_record_from_log(emp, log)
             return Response(
                 {
                     "success": result.ok,

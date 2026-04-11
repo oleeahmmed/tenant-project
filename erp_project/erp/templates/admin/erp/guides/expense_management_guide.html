@@ -1,0 +1,540 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Expense Management Guide" %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+    &rsaquo; {% trans "Expense Management Guide" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1 style="margin-bottom: 30px; color: #1f2937;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 32px;">account_balance_wallet</span>
+        {% trans "Expense Management Guide" %}
+    </h1>
+    
+    <p style="color: #6b7280; margin-bottom: 30px; font-size: 16px;">
+        এই guide এ দেখানো হয়েছে একটি Garments Manufacturing Company তে কিভাবে সব ধরনের খরচ (Expense) entry করতে হয় এবং কোন module ব্যবহার করতে হয়।
+    </p>
+
+    <!-- Company Example -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">factory</span>
+            Example Company: "Fashion Tex Ltd"
+        </h2>
+        <p style="margin: 0; font-size: 15px; opacity: 0.95;">
+            একটি garments manufacturing company যারা T-Shirt, Shirt, Pants তৈরি করে এবং export করে। 
+            তাদের 200 জন worker, 5টি production line, এবং monthly turnover ৳50 লাখ।
+        </p>
+    </div>
+
+    <!-- Type 1: COGS via Purchase Module -->
+    <div style="background: #fef3c7; border: 2px solid #fbbf24; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 32px;">shopping_cart</span>
+            Type 1: Cost of Goods Sold (COGS) - Purchase Module দিয়ে
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📦 Raw Material Purchase (কাঁচামাল কেনা)</h3>
+            <div style="background: #fffbeb; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #92400e;">Scenario:</strong> Fashion Tex Ltd কে 1000 meter fabric কিনতে হবে T-shirt তৈরির জন্য
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #166534; margin-bottom: 8px;">Step 1: Purchase Order</div>
+                    <code style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: block; margin-bottom: 8px;">Purchase → Purchase Orders → Add</code>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Supplier: "Fabric Suppliers Ltd"</li>
+                        <li>Product: Cotton Fabric</li>
+                        <li>Quantity: 1000 meter</li>
+                        <li>Rate: ৳150/meter</li>
+                        <li>Total: ৳1,50,000</li>
+                        <li>Status: Save as "Sent"</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #166534; margin-bottom: 8px;">Step 2: Goods Receipt</div>
+                    <code style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: block; margin-bottom: 8px;">Inventory → Goods Receipt (PO)</code>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Select PO: PO-2026-001</li>
+                        <li>Received Qty: 1000 meter</li>
+                        <li>Warehouse: Main Warehouse</li>
+                        <li>Status: "Received"</li>
+                        <li>✅ Stock IN হবে</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef2f2; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">Step 3: Purchase Invoice</div>
+                    <code style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: block; margin-bottom: 8px;">Purchase → Purchase Invoices → Add</code>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Link to PO: PO-2026-001</li>
+                        <li>Invoice Amount: ৳1,50,000</li>
+                        <li>Payment: Bank Transfer</li>
+                        <li>Status: "Paid"</li>
+                        <li>💰 COGS Entry হবে</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="background: #dbeafe; padding: 12px; border-radius: 6px; margin-top: 16px;">
+                <strong style="color: #1e40af;">📊 Result:</strong> 
+                <span style="color: #374151;">Purchase Invoice এর amount automatically COGS হিসেবে count হবে এবং User POS Dashboard এ দেখাবে।</span>
+            </div>
+        </div>
+
+        <!-- More COGS Examples -->
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🧵 Other Raw Materials</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                    <div style="font-weight: 600; color: #92400e; font-size: 14px;">Thread (সুতা)</div>
+                    <div style="font-size: 12px; color: #78350f;">500 cone × ৳50 = ৳25,000</div>
+                </div>
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                    <div style="font-weight: 600; color: #92400e; font-size: 14px;">Buttons (বোতাম)</div>
+                    <div style="font-size: 12px; color: #78350f;">10,000 pcs × ৳2 = ৳20,000</div>
+                </div>
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                    <div style="font-weight: 600; color: #92400e; font-size: 14px;">Zipper (জিপার)</div>
+                    <div style="font-size: 12px; color: #78350f;">2,000 pcs × ৳15 = ৳30,000</div>
+                </div>
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                    <div style="font-weight: 600; color: #92400e; font-size: 14px;">Packaging</div>
+                    <div style="font-size: 12px; color: #78350f;">5,000 poly bags × ৳3 = ৳15,000</div>
+                </div>
+            </div>
+            <div style="margin-top: 12px; padding: 10px; background: #dcfce7; border-radius: 6px; text-align: center;">
+                <strong style="color: #166534;">Total COGS Today: ৳2,40,000</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Type 2: Operating Expenses via Finance Module -->
+    <div style="background: #ede9fe; border: 2px solid #a78bfa; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #5b21b6; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #8b5cf6; font-size: 32px;">receipt_long</span>
+            Type 2: Operating Expenses - Finance Module দিয়ে (Journal Entry)
+        </h2>
+        
+        <!-- Electricity Bill -->
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">⚡ Electricity Bill Payment</h3>
+            <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #92400e;">Scenario:</strong> DESCO থেকে ৳45,000 বিদ্যুৎ বিল এসেছে (factory + office)
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px;">
+                <code style="background: #e0e7ff; color: #3730a3; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: block; margin-bottom: 12px;">Finance & Accounting → Journal Entries → Add Journal Entry</code>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px;">
+                    <thead style="background: #1f2937; color: white;">
+                        <tr>
+                            <th style="padding: 8px; text-align: left;">Account</th>
+                            <th style="padding: 8px; text-align: right;">Debit (৳)</th>
+                            <th style="padding: 8px; text-align: right;">Credit (৳)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #fee2e2;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Electricity Expense</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">45,000</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                        </tr>
+                        <tr style="background: #dcfce7;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Bank Account (DBBL)</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">45,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 12px; padding: 10px; background: #dbeafe; border-radius: 6px;">
+                    <strong>Description:</strong> "DESCO Electricity Bill - January 2026"<br>
+                    <strong>Date:</strong> 15/01/2026<br>
+                    <strong>Reference:</strong> DESCO-INV-2026-001
+                </div>
+            </div>
+        </div>
+
+        <!-- Rent Payment -->
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🏢 Factory Rent Payment</h3>
+            <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #92400e;">Scenario:</strong> Factory building এর মাসিক ভাড়া ৳1,50,000
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px;">
+                <code style="background: #e0e7ff; color: #3730a3; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: block; margin-bottom: 12px;">Finance & Accounting → Journal Entries → Add</code>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px;">
+                    <thead style="background: #1f2937; color: white;">
+                        <tr>
+                            <th style="padding: 8px; text-align: left;">Account</th>
+                            <th style="padding: 8px; text-align: right;">Debit (৳)</th>
+                            <th style="padding: 8px; text-align: right;">Credit (৳)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #fee2e2;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Rent Expense</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">1,50,000</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                        </tr>
+                        <tr style="background: #dcfce7;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Bank Account</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">1,50,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Maintenance -->
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🔧 Machine Maintenance</h3>
+            <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #92400e;">Scenario:</strong> Sewing machine repair ৳8,500
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <tbody>
+                        <tr style="background: #fee2e2;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Maintenance & Repair Expense</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">8,500</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                        </tr>
+                        <tr style="background: #dcfce7;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Cash</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">8,500</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- More Operating Expenses Grid -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Other Operating Expenses (Same Process)</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                <div style="background: #ede9fe; padding: 12px; border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                    <div style="font-weight: 600; color: #5b21b6; font-size: 13px;">💧 Water & Gas Bill</div>
+                    <div style="font-size: 12px; color: #6b21a8;">৳12,000</div>
+                </div>
+                <div style="background: #ede9fe; padding: 12px; border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                    <div style="font-weight: 600; color: #5b21b6; font-size: 13px;">📞 Telephone & Internet</div>
+                    <div style="font-size: 12px; color: #6b21a8;">৳5,500</div>
+                </div>
+                <div style="background: #ede9fe; padding: 12px; border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                    <div style="font-weight: 600; color: #5b21b6; font-size: 13px;">🚚 Transportation</div>
+                    <div style="font-size: 12px; color: #6b21a8;">৳18,000</div>
+                </div>
+                <div style="background: #ede9fe; padding: 12px; border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                    <div style="font-weight: 600; color: #5b21b6; font-size: 13px;">📢 Marketing & Ads</div>
+                    <div style="font-size: 12px; color: #6b21a8;">৳25,000</div>
+                </div>
+                <div style="background: #ede9fe; padding: 12px; border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                    <div style="font-weight: 600; color: #5b21b6; font-size: 13px;">📄 Office Supplies</div>
+                    <div style="font-size: 12px; color: #6b21a8;">৳7,500</div>
+                </div>
+                <div style="background: #ede9fe; padding: 12px; border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                    <div style="font-weight: 600; color: #5b21b6; font-size: 13px;">🛡️ Insurance Premium</div>
+                    <div style="font-size: 12px; color: #6b21a8;">৳15,000</div>
+                </div>
+            </div>
+            <div style="margin-top: 12px; padding: 10px; background: #e0e7ff; border-radius: 6px; text-align: center;">
+                <strong style="color: #3730a3;">Total Operating Expenses: ৳2,91,500</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Type 3: Payroll via HRM Module -->
+    <div style="background: #dcfce7; border: 2px solid #86efac; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #166534; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #22c55e; font-size: 32px;">groups</span>
+            Type 3: Salary & Wages - HRM Module (Payroll)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">💰 Monthly Payroll Processing</h3>
+            <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #92400e;">Scenario:</strong> Fashion Tex Ltd এর 200 জন employee এর January 2026 এর salary process করতে হবে
+            </div>
+            
+            <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                <code style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: block; margin-bottom: 12px;">HRM → Payroll → Process Payroll</code>
+                
+                <div style="margin-top: 12px;">
+                    <strong style="color: #166534;">Steps:</strong>
+                    <ol style="margin: 8px 0; padding-left: 20px; font-size: 14px; color: #374151;">
+                        <li>Select Month: January 2026</li>
+                        <li>Select Employees: All (200 employees)</li>
+                        <li>System automatically calculates:
+                            <ul style="margin-top: 4px;">
+                                <li>Basic Salary</li>
+                                <li>Allowances (House Rent, Medical, Transport)</li>
+                                <li>Overtime (if any)</li>
+                                <li>Deductions (Tax, Provident Fund)</li>
+                            </ul>
+                        </li>
+                        <li>Review & Approve</li>
+                        <li>Process Payment</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <!-- Employee Categories -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                <div style="background: #dcfce7; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #166534; margin-bottom: 8px;">👔 Management (10 persons)</div>
+                    <div style="font-size: 13px; color: #374151;">
+                        • Factory Manager: ৳60,000<br>
+                        • Production Manager: ৳50,000<br>
+                        • Accounts Manager: ৳45,000<br>
+                        • HR Manager: ৳40,000<br>
+                        • Others: ৳35,000 avg
+                    </div>
+                    <div style="margin-top: 8px; padding: 6px; background: #86efac; border-radius: 4px; text-align: center; font-weight: 600;">
+                        Total: ৳4,45,000
+                    </div>
+                </div>
+                
+                <div style="background: #dbeafe; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #1e40af; margin-bottom: 8px;">👨‍🏭 Supervisors (20 persons)</div>
+                    <div style="font-size: 13px; color: #374151;">
+                        • Line Supervisor: ৳25,000<br>
+                        • Quality Supervisor: ৳22,000<br>
+                        • Store Supervisor: ৳20,000<br>
+                        • Others: ৳18,000 avg
+                    </div>
+                    <div style="margin-top: 8px; padding: 6px; background: #93c5fd; border-radius: 4px; text-align: center; font-weight: 600;">
+                        Total: ৳4,20,000
+                    </div>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">👷 Skilled Workers (70 persons)</div>
+                    <div style="font-size: 13px; color: #374151;">
+                        • Master Tailor: ৳18,000<br>
+                        • Senior Operator: ৳15,000<br>
+                        • Operator: ৳12,000<br>
+                        • Helper: ৳10,000
+                    </div>
+                    <div style="margin-top: 8px; padding: 6px; background: #fde68a; border-radius: 4px; text-align: center; font-weight: 600;">
+                        Total: ৳9,80,000
+                    </div>
+                </div>
+                
+                <div style="background: #ede9fe; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #5b21b6; margin-bottom: 8px;">🏭 General Workers (100 persons)</div>
+                    <div style="font-size: 13px; color: #374151;">
+                        • Cutting: ৳11,000<br>
+                        • Finishing: ৳10,000<br>
+                        • Packing: ৳9,500<br>
+                        • Others: ৳9,000 avg
+                    </div>
+                    <div style="margin-top: 8px; padding: 6px; background: #c4b5fd; border-radius: 4px; text-align: center; font-weight: 600;">
+                        Total: ৳9,85,000
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: #1f2937; color: white; padding: 16px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 14px; margin-bottom: 4px;">💼 Total Monthly Payroll</div>
+                <div style="font-size: 28px; font-weight: 700;">৳28,30,000</div>
+                <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">(Including all allowances & deductions)</div>
+            </div>
+        </div>
+        
+        <!-- Payroll Journal Entry -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📊 Automatic Journal Entry (After Payroll Processing)</h3>
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px;">
+                <div style="background: #dbeafe; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 13px;">
+                    ℹ️ <strong>Note:</strong> Payroll process করার পর automatically Finance Module এ Journal Entry create হবে
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <thead style="background: #1f2937; color: white;">
+                        <tr>
+                            <th style="padding: 8px; text-align: left;">Account</th>
+                            <th style="padding: 8px; text-align: right;">Debit (৳)</th>
+                            <th style="padding: 8px; text-align: right;">Credit (৳)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #fee2e2;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Salary & Wages Expense</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">28,30,000</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                        </tr>
+                        <tr style="background: #dcfce7;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Bank Account (Salary Account)</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">28,30,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Expense Summary -->
+    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">calendar_today</span>
+            📅 একদিনের সম্পূর্ণ Expense Summary
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+            <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 16px; border-radius: 8px;">
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">💰 COGS (Purchase)</div>
+                <div style="font-size: 24px; font-weight: 700;">৳2,40,000</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 16px; border-radius: 8px;">
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">🏢 Operating Expenses</div>
+                <div style="font-size: 24px; font-weight: 700;">৳2,91,500</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 16px; border-radius: 8px;">
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">👥 Payroll (Daily)</div>
+                <div style="font-size: 24px; font-weight: 700;">৳94,333</div>
+                <div style="font-size: 11px; opacity: 0.8;">(৳28,30,000 ÷ 30 days)</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.3); backdrop-filter: blur(10px); padding: 16px; border-radius: 8px; border: 2px solid white;">
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">📊 TOTAL EXPENSES</div>
+                <div style="font-size: 28px; font-weight: 700;">৳6,25,833</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart of Accounts Structure -->
+    <div style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #1f2937; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1; font-size: 32px;">account_tree</span>
+            Chart of Accounts - Expense Structure
+        </h2>
+        
+        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; font-family: monospace; font-size: 13px;">
+            <div style="margin-bottom: 16px;">
+                <strong style="color: #1f2937; font-size: 15px;">📂 EXPENSES</strong>
+                <div style="margin-left: 20px; margin-top: 8px;">
+                    <div style="color: #f59e0b; font-weight: 600; margin-bottom: 8px;">├── 💰 Cost of Goods Sold (COGS)</div>
+                    <div style="margin-left: 30px; color: #6b7280;">
+                        ├── Raw Materials<br>
+                        ├── Packaging Materials<br>
+                        ├── Direct Labor<br>
+                        └── Manufacturing Supplies
+                    </div>
+                    
+                    <div style="color: #8b5cf6; font-weight: 600; margin: 12px 0 8px 0;">├── 🏢 Operating Expenses</div>
+                    <div style="margin-left: 30px; color: #6b7280;">
+                        ├── Electricity Expense<br>
+                        ├── Water & Gas Expense<br>
+                        ├── Rent Expense<br>
+                        ├── Salary & Wages<br>
+                        ├── Maintenance & Repairs<br>
+                        ├── Transportation Expense<br>
+                        ├── Marketing & Advertising<br>
+                        ├── Office Supplies<br>
+                        ├── Telephone & Internet<br>
+                        ├── Insurance Expense<br>
+                        └── Depreciation Expense
+                    </div>
+                    
+                    <div style="color: #ef4444; font-weight: 600; margin: 12px 0 8px 0;">└── 💳 Other Expenses</div>
+                    <div style="margin-left: 30px; color: #6b7280;">
+                        ├── Bank Charges<br>
+                        ├── Interest Expense<br>
+                        ├── Legal & Professional Fees<br>
+                        └── Miscellaneous Expense
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Important Notes -->
+    <div style="background: #fffbeb; border: 2px solid #fcd34d; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 32px;">info</span>
+            ⚠️ গুরুত্বপূর্ণ নোট
+        </h2>
+        
+        <ul style="margin: 0; padding-left: 20px; color: #78350f;">
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>COGS Entry:</strong> Purchase Invoice create করলেই automatically COGS হিসেবে count হবে। আলাদা Journal Entry করার দরকার নেই।
+            </li>
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>Operating Expenses:</strong> সব operating expense এর জন্য Finance Module এ Journal Entry করতে হবে।
+            </li>
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>Payroll:</strong> HRM Module এ payroll process করলে automatically Finance এ Journal Entry হবে।
+            </li>
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>Dashboard:</strong> User POS Dashboard এ শুধু COGS দেখাবে। সব expense দেখতে Financial Dashboard ব্যবহার করুন।
+            </li>
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>Reports:</strong> Profit & Loss Report এ সব expense একসাথে দেখা যাবে।
+            </li>
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>Approval:</strong> বড় expense এর জন্য manager approval নিতে হবে।
+            </li>
+        </ul>
+    </div>
+
+    <!-- Quick Reference -->
+    <div style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 24px;">
+        <h2 style="color: #1f2937; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">quick_reference</span>
+            🚀 Quick Reference Guide
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+            <div style="background: #fef3c7; padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">📦 Raw Material কিনলে</div>
+                <div style="font-size: 13px; color: #78350f;">
+                    Purchase → Purchase Invoice → Save<br>
+                    ✅ Automatically COGS
+                </div>
+            </div>
+            
+            <div style="background: #e0e7ff; padding: 16px; border-radius: 8px; border-left: 4px solid #6366f1;">
+                <div style="font-weight: 600; color: #3730a3; margin-bottom: 8px;">⚡ Utility Bill দিলে</div>
+                <div style="font-size: 13px; color: #4338ca;">
+                    Finance → Journal Entry<br>
+                    Debit: Expense | Credit: Bank/Cash
+                </div>
+            </div>
+            
+            <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border-left: 4px solid #22c55e;">
+                <div style="font-weight: 600; color: #166534; margin-bottom: 8px;">💰 Salary দিলে</div>
+                <div style="font-size: 13px; color: #15803d;">
+                    HRM → Payroll → Process<br>
+                    ✅ Auto Journal Entry
+                </div>
+            </div>
+            
+            <div style="background: #fee2e2; padding: 16px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">🔧 Maintenance করলে</div>
+                <div style="font-size: 13px; color: #b91c1c;">
+                    Finance → Journal Entry<br>
+                    Debit: Maintenance Expense
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+{% endblock %}

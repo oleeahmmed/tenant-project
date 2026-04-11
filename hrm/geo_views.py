@@ -1,6 +1,7 @@
 """GPS policy, location reports, attendance review queue — tenant admin."""
 
 from django.contrib import messages
+from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -10,6 +11,7 @@ from django.views.generic import FormView, ListView, TemplateView
 from .forms import LocationAttendancePolicyForm
 from .mixins import HrmAdminMixin, HrmPageContextMixin
 from .models import AttendanceLog, LocationAttendancePolicy
+from .services.location_checkin import sync_daily_record_from_log
 
 
 class LocationPolicyEditView(HrmAdminMixin, HrmPageContextMixin, FormView):
@@ -17,6 +19,7 @@ class LocationPolicyEditView(HrmAdminMixin, HrmPageContextMixin, FormView):
     form_class = LocationAttendancePolicyForm
     success_url = reverse_lazy("hrm:location_policy")
     page_title = "GPS / location policy"
+    permission_codename = "hrm.location_policy.manage"
 
     def load_policy(self):
         obj, _ = LocationAttendancePolicy.objects.get_or_create(tenant=self.request.hrm_tenant)
@@ -37,6 +40,7 @@ class LocationPolicyEditView(HrmAdminMixin, HrmPageContextMixin, FormView):
 class LocationAttendanceReportView(HrmAdminMixin, HrmPageContextMixin, TemplateView):
     template_name = "hrm/location_attendance_report.html"
     page_title = "Location attendance report"
+    permission_codename = "hrm.location_report.view"
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -89,6 +93,7 @@ class AttendanceReviewListView(HrmAdminMixin, HrmPageContextMixin, ListView):
     context_object_name = "logs"
     page_title = "Attendance review queue"
     paginate_by = 50
+    permission_codename = "hrm.attendance.review"
 
     def get_queryset(self):
         tenant = self.request.hrm_tenant
@@ -104,29 +109,35 @@ class AttendanceReviewListView(HrmAdminMixin, HrmPageContextMixin, ListView):
 
 
 class AttendanceReviewApproveView(HrmAdminMixin, View):
+    permission_codename = "hrm.attendance.review"
+
     def post(self, request, pk):
         tenant = request.hrm_tenant
-        log = get_object_or_404(
-            AttendanceLog.objects.filter(tenant=tenant),
-            pk=pk,
-        )
-        action = request.POST.get("action")
-        note = (request.POST.get("note") or "").strip()
-        log.review_note = note
-        log.reviewed_by = request.user
-        from django.utils import timezone as dj_tz
+        with transaction.atomic():
+            log = get_object_or_404(
+                AttendanceLog.objects.select_for_update().filter(tenant=tenant),
+                pk=pk,
+            )
+            action = request.POST.get("action")
+            note = (request.POST.get("note") or "").strip()
+            log.review_note = note
+            log.reviewed_by = request.user
+            from django.utils import timezone as dj_tz
 
-        log.reviewed_at = dj_tz.now()
-        if action == "approve":
-            log.validation_status = AttendanceLog.ValidationStatus.OVERRIDE_OK
-            log.review_status = "approved"
-            log.requires_review = False
-            messages.success(request, "Punch approved (override).")
-        else:
-            log.review_status = "rejected"
-            log.requires_review = False
-            messages.info(request, "Review closed as rejected.")
-        log.save()
+            log.reviewed_at = dj_tz.now()
+            if action == "approve":
+                log.validation_status = AttendanceLog.ValidationStatus.OVERRIDE_OK
+                log.review_status = "approved"
+                log.requires_review = False
+                log.save()
+                if log.employee_id:
+                    sync_daily_record_from_log(log.employee, log)
+                messages.success(request, "Punch approved (override).")
+            else:
+                log.review_status = "rejected"
+                log.requires_review = False
+                log.save()
+                messages.info(request, "Review closed as rejected.")
         return redirect("hrm:attendance_review_list")
 
 

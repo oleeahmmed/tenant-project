@@ -79,13 +79,13 @@
             </td>
             <td class="px-4 py-3 text-right">
               <div class="flex items-center justify-end gap-1">
-                <a href="{% url 'member_permissions' member.id %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Manage permissions">
+                <a href="{% url 'member_permissions' member.id %}" class="table-action-btn" title="Manage permissions">
                   <i data-lucide="key-round" class="h-4 w-4"></i>
                 </a>
-                <button type="button" onclick="openRoleModal({{ member.id }}, '{{ member.name|escapejs }}')" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors" title="Change role">
+                <button type="button" onclick="openRoleModal({{ member.id }}, '{{ member.name|escapejs }}')" class="table-action-btn" title="Change role">
                   <i data-lucide="shield" class="h-4 w-4"></i>
                 </button>
-                <button type="button" onclick="openDeleteModal('{% url 'member_delete' member.id %}', 'Remove {{ member.name|escapejs }}?')" class="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors" title="Remove">
+                <button type="button" onclick="openDeleteModal('{% url 'member_delete' member.id %}', 'Remove {{ member.name|escapejs }}?')" class="table-action-btn table-action-btn--danger" title="Remove">
                   <i data-lucide="trash-2" class="h-4 w-4"></i>
                 </button>
               </div>

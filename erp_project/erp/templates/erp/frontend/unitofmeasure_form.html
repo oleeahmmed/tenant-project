@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} - ERP System{% endblock %}
+
+{% block content %}
+<!-- Page header section -->
+<div class="block-header">
+    <div class="row clearfix">
+        <div class="col-lg-6 col-md-12 col-sm-12">
+            <h1>{{ title }}</h1>
+            <span>{% if object %}Edit existing unit of measure{% else %}Add a new unit of measure{% endif %}</span>
+        </div>
+        <div class="col-lg-6 col-md-12 col-sm-12 text-lg-right">
+            <a href="{% url 'erp:unitofmeasure_list' %}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Messages -->
+{% if messages %}
+<div class="row clearfix">
+    <div class="col-12">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Unit of Measure Form -->
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>Unit of Measure Information</h2>
+                <small class="text-muted">Fill in the unit of measure details below</small>
+            </div>
+            <div class="body">
+                <form method="post" action="">
+                    {% csrf_token %}
+
+                    <div class="row clearfix">
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Unit Name <span class="text-danger">*</span></label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="name"
+                                       name="name"
+                                       placeholder="Enter unit name (e.g. Kilogram)"
+                                       value="{{ object.name|default:'' }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Code <span class="text-danger">*</span></label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="code"
+                                       name="code"
+                                       placeholder="Enter unit code (e.g. KG)"
+                                       value="{{ object.code|default:'' }}"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>UOM Type</label>
+                                <select class="form-control show-tick" id="uom_type" name="uom_type">
+                                    <option value="unit" {% if not object or object.uom_type == 'unit' %}selected{% endif %}>Unit</option>
+                                    <option value="weight" {% if object.uom_type == 'weight' %}selected{% endif %}>Weight</option>
+                                    <option value="volume" {% if object.uom_type == 'volume' %}selected{% endif %}>Volume</option>
+                                    <option value="length" {% if object.uom_type == 'length' %}selected{% endif %}>Length</option>
+                                    <option value="area" {% if object.uom_type == 'area' %}selected{% endif %}>Area</option>
+                                    <option value="time" {% if object.uom_type == 'time' %}selected{% endif %}>Time</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Status <span class="text-danger">*</span></label>
+                                <select class="form-control show-tick" id="is_active" name="is_active">
+                                    <option value="True" {% if not object or object.is_active %}selected{% endif %}>Active</option>
+                                    <option value="False" {% if object and not object.is_active %}selected{% endif %}>Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group c_form_group">
+                                <label>Is Base Unit?</label>
+                                <select class="form-control show-tick" id="is_base_unit" name="is_base_unit">
+                                    <option value="True" {% if object and object.is_base_unit %}selected{% endif %}>Yes — Base Unit</option>
+                                    <option value="False" {% if not object or not object.is_base_unit %}selected{% endif %}>No</option>
+                                </select>
+                                <small class="text-muted">Base unit is the reference unit for its type (e.g. KG for weight)</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row clearfix">
+                        <div class="col-sm-12">
+                            <button type="submit" class="btn btn-primary theme-bg gradient">
+                                <i class="fa fa-save"></i> {{ button_text }} Unit of Measure
+                            </button>
+                            <a href="{% url 'erp:unitofmeasure_list' %}" class="btn btn-default">
+                                <i class="fa fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if object %}
+        <!-- Additional Info Card -->
+        <div class="card">
+            <div class="header">
+                <h2>Additional Information</h2>
+            </div>
+            <div class="body">
+                <div class="row clearfix">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Created Date</label>
+                            <p class="form-control-static">{{ object.created_at|date:"d M, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Last Updated</label>
+                            <p class="form-control-static">{{ object.updated_at|date:"d M, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>UOM Type</label>
+                            <p class="form-control-static">{{ object.uom_type|default:"—" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Current Status</label>
+                            <p class="form-control-static">
+                                {% if object.is_active %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                                {% if object.is_base_unit %}
+                                <span class="badge badge-info ml-1">Base Unit</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('name').focus();
+</script>
+{% endblock %}

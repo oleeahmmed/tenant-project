@@ -1,0 +1,447 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Quality & Service Management Guide" %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+    &rsaquo; {% trans "Quality & Service Management Guide" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1 style="margin-bottom: 30px; color: #1f2937;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 32px;">verified</span>
+        {% trans "Quality & Service Management Guide" %}
+    </h1>
+    
+    <p style="color: #6b7280; margin-bottom: 30px; font-size: 16px;">
+        এই guide এ দেখানো হয়েছে একটি Garments Manufacturing Company তে কিভাবে quality control করতে হয়, service request handle করতে হয়, এবং complaint management করতে হয়।
+    </p>
+
+    <!-- Company Example -->
+    <div style="background: linear-gradient(135deg, #c4d82e 0%, #b8cc2a 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">factory</span>
+            Example Company: "Fashion Tex Ltd"
+        </h2>
+        <p style="margin: 0; font-size: 15px; opacity: 0.95;">
+            একটি garments manufacturing company যারা international buyers এর জন্য high-quality garments তৈরি করে। 
+            তাদের strict quality control process এবং customer service system আছে।
+        </p>
+    </div>
+
+    <!-- Quality Control Setup -->
+    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #3b82f6; font-size: 32px;">fact_check</span>
+            Step 1: Quality Control Setup (Quality Check Types তৈরি করুন)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <code style="background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">Quality & Service → Quality Check Types → Add</code>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                    <div style="font-weight: 600; color: #065f46; margin-bottom: 8px;">📏 Measurement Check</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Name: Measurement Check</li>
+                        <li>Code: QC-MEASURE</li>
+                        <li>Description: Size measurement verification</li>
+                        <li>Stage: Pre-Production</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">🧵 Stitching Quality</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Name: Stitching Quality</li>
+                        <li>Code: QC-STITCH</li>
+                        <li>Description: Stitching quality check</li>
+                        <li>Stage: Production</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #e0e7ff; padding: 16px; border-radius: 8px; border-left: 4px solid #6366f1;">
+                    <div style="font-weight: 600; color: #3730a3; margin-bottom: 8px;">✅ Final Inspection</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Name: Final Inspection</li>
+                        <li>Code: QC-FINAL</li>
+                        <li>Description: Final quality check</li>
+                        <li>Stage: Post-Production</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Quality Check Process -->
+    <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #991b1b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #ef4444; font-size: 32px;">verified</span>
+            Step 2: Quality Check Process (Quality Check করুন)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📏 Pre-Production Quality Check</h3>
+            <div style="background: #fef2f2; padding: 16px; border-left: 4px solid #ef4444; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #991b1b;">Scenario:</strong> Production Order PO-001 এর জন্য fabric এবং accessories এর quality check করতে হবে।
+            </div>
+            
+            <code style="background: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">Quality & Service → Quality Checks → Add</code>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #065f46; margin-bottom: 8px;">Cotton Fabric Check</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Check Type: Measurement Check</li>
+                        <li>Product: Cotton Fabric</li>
+                        <li>Batch: FB-001</li>
+                        <li>Status: ✅ Passed</li>
+                        <li>Inspector: QC Team</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">Button Quality Check</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Check Type: Material Check</li>
+                        <li>Product: Plastic Buttons</li>
+                        <li>Batch: BT-001</li>
+                        <li>Status: ❌ Failed</li>
+                        <li>Reason: Color mismatch</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #e0e7ff; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #3730a3; margin-bottom: 8px;">Thread Quality Check</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Check Type: Strength Test</li>
+                        <li>Product: Polyester Thread</li>
+                        <li>Batch: TH-001</li>
+                        <li>Status: ✅ Passed</li>
+                        <li>Inspector: QC Team</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Production Quality Check -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🏭 Production Quality Check</h3>
+            <div style="background: #fef2f2; padding: 16px; border-left: 4px solid #ef4444; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #991b1b;">Scenario:</strong> Production চলাকালীন stitching quality এবং measurement check করতে হবে।
+            </div>
+            
+            <div style="background: #fef2f2; padding: 16px; border-radius: 8px;">
+                <code style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-block; margin-bottom: 8px;">Quality & Service → Quality Checks → Add</code>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                    <li>Check Type: Stitching Quality</li>
+                    <li>Production Order: PO-001</li>
+                    <li>Product: T-Shirt</li>
+                    <li>Sample Size: 10 pcs</li>
+                    <li>Status: ✅ Passed</li>
+                    <li>Notes: Good stitching quality</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Defect Management -->
+    <div style="background: #f0fdfa; border: 2px solid #14b8a6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #115e59; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #14b8a6; font-size: 32px;">bug_report</span>
+            Step 3: Defect Management (ত্রুটি ব্যবস্থাপনা)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🔧 Defect Types Setup</h3>
+            <div style="background: #f0fdfa; padding: 16px; border-left: 4px solid #14b8a6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #115e59;">First:</strong> Common defect types তৈরি করুন যা আপনার production এ হতে পারে।
+            </div>
+            
+            <code style="background: #ccfbf1; color: #115e59; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">Quality & Service → Defect Types → Add</code>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #dbeafe; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-weight: 600; color: #1e40af; margin-bottom: 8px;">🧵 Stitching Defects</div>
+                    <div style="font-size: 13px; color: #374151;">Broken stitches, uneven seams</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #dc2626; margin-top: 8px;">Critical</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">📏 Size Issues</div>
+                    <div style="font-size: 13px; color: #374151;">Wrong measurements</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #f59e0b; margin-top: 8px;">Major</div>
+                </div>
+                
+                <div style="background: #dcfce7; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-weight: 600; color: #065f46; margin-bottom: 8px;">🎨 Color Issues</div>
+                    <div style="font-size: 13px; color: #374151;">Color bleeding, fading</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #10b981; margin-top: 8px;">Minor</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Record Defects -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📝 Record Quality Defects</h3>
+            <div style="background: #f0fdfa; padding: 16px; border-left: 4px solid #14b8a6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #115e59;">Scenario:</strong> Final inspection এ 50 pcs T-Shirt এর মধ্যে 5 pcs এ stitching defect পাওয়া গেছে।
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center;">
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">🏭 Production Batch</div>
+                    <div style="font-size: 13px; color: #374151;">T-Shirt Batch: PO-001</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #dc2626; margin-top: 8px;">50 pcs</div>
+                    <div style="font-size: 12px; color: #6b7280;">Total Produced</div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <span class="material-symbols-outlined" style="font-size: 48px; color: #ef4444;">arrow_forward</span>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Inspection</div>
+                </div>
+                
+                <div style="background: #fef2f2; padding: 16px; border-radius: 8px; text-align: center;">
+                    <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">❌ Defects Found</div>
+                    <div style="font-size: 13px; color: #374151;">Stitching Issues</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #dc2626; margin-top: 8px;">5 pcs</div>
+                    <div style="font-size: 12px; color: #6b7280;">10% Defect Rate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Service Management -->
+    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 32px;">support_agent</span>
+            Step 4: Service Management (সেবা ব্যবস্থাপনা)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🛠️ Service Types Setup</h3>
+            <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #92400e;">First:</strong> আপনার company যে ধরনের service provide করে সেগুলো define করুন।
+            </div>
+            
+            <code style="background: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">Quality & Service → Service Types → Add</code>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 16px;">
+                <div style="background: #fef2f2; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">🔧 Alteration Service</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Name: Garment Alteration</li>
+                        <li>Code: SRV-ALTER</li>
+                        <li>Description: Size adjustment</li>
+                        <li>SLA: 3 days</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef2f2; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">🧵 Repair Service</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Name: Garment Repair</li>
+                        <li>Code: SRV-REPAIR</li>
+                        <li>Description: Fix defects</li>
+                        <li>SLA: 2 days</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef2f2; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #991b1b; margin-bottom: 8px;">📦 Replacement</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Name: Product Replacement</li>
+                        <li>Code: SRV-REPLACE</li>
+                        <li>Description: Replace defective items</li>
+                        <li>SLA: 5 days</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Request Process -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📞 Service Request Process</h3>
+            <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #92400e;">Scenario:</strong> Customer একটি T-Shirt এর size ছোট হয়ে গেছে, alteration service চাইছে।
+            </div>
+            
+            <div style="background: #fef3c7; padding: 16px; border-radius: 8px;">
+                <code style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: inline-block; margin-bottom: 8px;">Quality & Service → Service Requests → Add</code>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                    <li>Customer: ABC Fashion Store</li>
+                    <li>Service Type: Garment Alteration</li>
+                    <li>Product: T-Shirt (SKU: TS-001)</li>
+                    <li>Issue: Size too small</li>
+                    <li>Priority: Medium</li>
+                    <li>Expected Date: 3 days</li>
+                    <li>Status: Open</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complaint Management -->
+    <div style="background: #e0e7ff; border: 2px solid #6366f1; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #3730a3; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1; font-size: 32px;">report_problem</span>
+            Step 5: Complaint Management (অভিযোগ ব্যবস্থাপনা)
+        </h2>
+
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Complaint Types Setup</h3>
+            <div style="background: #e0e7ff; padding: 16px; border-left: 4px solid #6366f1; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #3730a3;">Setup:</strong> Common complaint categories তৈরি করুন।
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #065f46; margin-bottom: 8px;">🎨 Quality Issues</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Color fading</li>
+                        <li>Fabric defects</li>
+                        <li>Stitching problems</li>
+                        <li>Size variations</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">🚚 Delivery Issues</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Late delivery</li>
+                        <li>Wrong quantity</li>
+                        <li>Damaged packaging</li>
+                        <li>Missing items</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #e0e7ff; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #3730a3; margin-bottom: 8px;">💰 Billing Issues</div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Wrong pricing</li>
+                        <li>Invoice errors</li>
+                        <li>Payment disputes</li>
+                        <li>Discount issues</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complaint Process -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📞 Complaint Handling Process</h3>
+            <div style="background: #e0e7ff; padding: 16px; border-left: 4px solid #6366f1; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #3730a3;">Scenario:</strong> Customer complaint করেছে যে delivered T-Shirts এর color fading হচ্ছে।
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div style="background: #fef2f2; padding: 12px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">📞</div>
+                    <div style="font-weight: 600; margin-bottom: 4px; color: #991b1b;">1. Receive</div>
+                    <div style="font-size: 12px; color: #6b7280;">Customer calls/emails</div>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">📝</div>
+                    <div style="font-weight: 600; margin-bottom: 4px; color: #92400e;">2. Record</div>
+                    <div style="font-size: 12px; color: #6b7280;">Create complaint</div>
+                </div>
+                
+                <div style="background: #e0e7ff; padding: 12px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🔍</div>
+                    <div style="font-weight: 600; margin-bottom: 4px; color: #3730a3;">3. Investigate</div>
+                    <div style="font-size: 12px; color: #6b7280;">Find root cause</div>
+                </div>
+                
+                <div style="background: #dcfce7; padding: 12px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">✅</div>
+                    <div style="font-weight: 600; margin-bottom: 4px; color: #065f46;">4. Resolve</div>
+                    <div style="font-size: 12px; color: #6b7280;">Take action</div>
+                </div>
+                
+                <div style="background: #f0fdf4; padding: 12px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 8px;">📞</div>
+                    <div style="font-weight: 600; margin-bottom: 4px; color: #065f46;">5. Follow-up</div>
+                    <div style="font-size: 12px; color: #6b7280;">Customer satisfaction</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Summary Section -->
+    <div style="background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">checklist</span>
+            Quick Summary (সংক্ষিপ্ত সারাংশ)
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <div style="font-size: 24px; margin-bottom: 8px;">✅</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Quality Control</div>
+                <div style="font-size: 13px; opacity: 0.9;">Pre, during & post production checks</div>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <div style="font-size: 24px; margin-bottom: 8px;">🐛</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Defect Management</div>
+                <div style="font-size: 13px; opacity: 0.9;">Track and resolve quality issues</div>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <div style="font-size: 24px; margin-bottom: 8px;">🛠️</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Service Requests</div>
+                <div style="font-size: 13px; opacity: 0.9;">Handle customer service needs</div>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <div style="font-size: 24px; margin-bottom: 8px;">📞</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Complaint Management</div>
+                <div style="font-size: 13px; opacity: 0.9;">Resolve customer complaints</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Best Practices -->
+    <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; padding: 24px;">
+        <h2 style="color: #065f46; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">tips_and_updates</span>
+            Best Practices (সেরা পদ্ধতি)
+        </h2>
+        
+        <div style="display: grid; gap: 12px;">
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Regular Quality Audits:</strong>
+                <span style="color: #374151;">সপ্তাহে অন্তত একবার comprehensive quality audit করুন এবং trends analyze করুন</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Quick Response:</strong>
+                <span style="color: #374151;">Customer complaints এবং service requests এর জন্য 24 hours এর মধ্যে response দিন</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Root Cause Analysis:</strong>
+                <span style="color: #374151;">প্রতিটি defect এবং complaint এর জন্য proper root cause analysis করুন</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Documentation:</strong>
+                <span style="color: #374151;">সব quality checks, defects, এবং corrective actions properly document করুন</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Training:</strong>
+                <span style="color: #374151;">QC team এবং production staff দের regular quality training provide করুন</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Customer Feedback:</strong>
+                <span style="color: #374151;">Customer feedback regularly collect করুন এবং quality improvement এ use করুন</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

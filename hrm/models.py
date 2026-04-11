@@ -34,6 +34,17 @@ class Department(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        if self.parent_id:
+            if self.pk and self.parent_id == self.pk:
+                raise ValidationError({"parent": "Department cannot be parent of itself."})
+            if self.tenant_id and self.parent.tenant_id != self.tenant_id:
+                raise ValidationError({"parent": "Parent department must belong to same tenant."})
+
 
 class JobTitle(models.Model):
     """Position / designation; optionally tied to a default department."""
@@ -59,6 +70,14 @@ class JobTitle(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        if self.department_id and self.tenant_id and self.department.tenant_id != self.tenant_id:
+            raise ValidationError({"department": "Department must belong to same tenant."})
 
 
 class Shift(models.Model):
@@ -203,6 +222,8 @@ class Employee(models.Model):
     def clean(self):
         if self.reports_to_id and self.pk and self.reports_to_id == self.pk:
             raise ValidationError({"reports_to": "An employee cannot report to themselves."})
+        if self.reports_to_id and self.tenant_id and self.reports_to.tenant_id != self.tenant_id:
+            raise ValidationError({"reports_to": "Reporting manager must belong to same tenant."})
         if self.user_id and self.tenant_id:
             uid_tid = getattr(self.user, "tenant_id", None)
             # If the login has a workspace set, it must match this employee's tenant.
@@ -218,6 +239,10 @@ class Employee(models.Model):
                 )
         if self.default_shift_id and self.tenant_id and self.default_shift.tenant_id != self.tenant_id:
             raise ValidationError({"default_shift": "Default shift must belong to this workspace."})
+        if self.department_id and self.tenant_id and self.department.tenant_id != self.tenant_id:
+            raise ValidationError({"department": "Department must belong to this workspace."})
+        if self.job_title_id and self.tenant_id and self.job_title.tenant_id != self.tenant_id:
+            raise ValidationError({"job_title": "Job title must belong to this workspace."})
 
 
 class LeaveType(models.Model):
@@ -294,6 +319,48 @@ class LeaveRequest(models.Model):
     def clean(self):
         if self.start_date and self.end_date and self.end_date < self.start_date:
             raise ValidationError({"end_date": "End date must be on or after start date."})
+        if self.employee_id and self.leave_type_id:
+            if self.employee.tenant_id != self.leave_type.tenant_id:
+                raise ValidationError("Employee and leave type must belong to the same tenant.")
+        if self.employee_id and self.start_date and self.end_date:
+            overlap_qs = LeaveRequest.objects.filter(
+                employee=self.employee,
+                status__in=[LeaveRequest.Status.PENDING, LeaveRequest.Status.APPROVED],
+                start_date__lte=self.end_date,
+                end_date__gte=self.start_date,
+            )
+            if self.pk:
+                overlap_qs = overlap_qs.exclude(pk=self.pk)
+            if overlap_qs.exists():
+                raise ValidationError(
+                    "This leave overlaps with an existing pending/approved request."
+                )
+        if (
+            self.employee_id
+            and self.leave_type_id
+            and self.start_date
+            and self.end_date
+            and self.leave_type.default_days_per_year is not None
+        ):
+            year_start = self.start_date.replace(month=1, day=1)
+            year_end = self.start_date.replace(month=12, day=31)
+            used_days = 0
+            yearly = LeaveRequest.objects.filter(
+                employee=self.employee,
+                leave_type=self.leave_type,
+                status__in=[LeaveRequest.Status.PENDING, LeaveRequest.Status.APPROVED],
+                start_date__lte=year_end,
+                end_date__gte=year_start,
+            )
+            if self.pk:
+                yearly = yearly.exclude(pk=self.pk)
+            for req in yearly:
+                used_days += (req.end_date - req.start_date).days + 1
+            requested_days = (self.end_date - self.start_date).days + 1
+            if used_days + requested_days > int(self.leave_type.default_days_per_year):
+                raise ValidationError(
+                    f"Annual leave cap exceeded for {self.leave_type.name}."
+                )
 
 
 class Holiday(models.Model):
@@ -509,6 +576,22 @@ class EmployeeShiftDateRange(models.Model):
             raise ValidationError({"end_date": "End date must be on or after start date."})
         if self.shift_id and self.employee_id and self.shift.tenant_id != self.employee.tenant_id:
             raise ValidationError({"shift": "Shift must belong to the same workspace as the employee."})
+        if self.employee_id and self.start_date and self.end_date:
+            overlap_qs = EmployeeShiftDateRange.objects.filter(
+                employee=self.employee,
+                start_date__lte=self.end_date,
+                end_date__gte=self.start_date,
+            )
+            if self.pk:
+                overlap_qs = overlap_qs.exclude(pk=self.pk)
+            if overlap_qs.exists():
+                raise ValidationError(
+                    "Shift date range overlaps with an existing rule for this employee."
+                )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class EmployeeShiftException(models.Model):
@@ -931,6 +1014,21 @@ class AttendanceLocation(models.Model):
             return {int(x.strip()) for x in self.weekdays.split(",") if x.strip() != ""}
         except ValueError:
             return set()
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        if self.window_start and self.window_end and self.window_start == self.window_end:
+            raise ValidationError({"window_end": "Window end must differ from window start."})
+        try:
+            values = [int(x.strip()) for x in str(self.weekdays).split(",") if x.strip() != ""]
+        except ValueError:
+            raise ValidationError({"weekdays": "Weekdays must be comma-separated integers 0-6."})
+        bad = [v for v in values if v < 0 or v > 6]
+        if bad:
+            raise ValidationError({"weekdays": "Weekdays must be in range 0-6."})
 
 
 class EmployeeAttendanceLocation(models.Model):

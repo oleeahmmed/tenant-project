@@ -3,31 +3,32 @@
 {% block page_title %}Finance{% endblock %}
 
 {% block content %}
-<div class="w-full px-1 md:px-2 space-y-5">
-  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
-    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
-      <div>
-        <h2 class="text-lg font-semibold text-foreground">Finance overview</h2>
-        <p class="text-xs text-muted-foreground mt-0.5">Core accounting controls and financial reports.</p>
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">Finance overview</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">Core accounting controls and financial reports.</p>
+        </div>
       </div>
-    </div>
-    <div class="p-5 space-y-5">
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div class="simple-card rounded-xl border border-border p-4"><p class="text-xs text-muted-foreground">Accounts</p><p class="text-xl font-semibold">{{ accounts_n }}</p></div>
-        <div class="simple-card rounded-xl border border-border p-4"><p class="text-xs text-muted-foreground">Journals</p><p class="text-xl font-semibold">{{ journals_n }}</p></div>
-        <div class="simple-card rounded-xl border border-border p-4"><p class="text-xs text-muted-foreground">Ledger rows</p><p class="text-xl font-semibold">{{ ledger_n }}</p></div>
-        <div class="simple-card rounded-xl border border-border p-4"><p class="text-xs text-muted-foreground">AP posted</p><p class="text-xl font-semibold">{{ ap_open_n }}</p></div>
-        <div class="simple-card rounded-xl border border-border p-4"><p class="text-xs text-muted-foreground">AR posted</p><p class="text-xl font-semibold">{{ ar_open_n }}</p></div>
-      </div>
-      <div class="card-actions card-actions--flush">
-        <a href="{% url 'finance:account_list' %}" class="card-act card-act--muted card-act--lg">Chart of accounts</a>
-        <a href="{% url 'finance:journal_list' %}" class="card-act card-act--muted card-act--lg">Journal entries</a>
-        <a href="{% url 'finance:report_trial_balance' %}" class="card-act card-act--muted card-act--lg">Trial balance</a>
-        <a href="{% url 'finance:report_profit_loss' %}" class="card-act card-act--muted card-act--lg">Profit &amp; loss</a>
-        <a href="{% url 'finance:report_balance_sheet' %}" class="card-act card-act--muted card-act--lg">Balance sheet</a>
+      <div class="p-4 md:p-5 space-y-5">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div class="simple-card rounded-xl border border-border p-4"><p class="text-xs text-muted-foreground">Accounts</p><p class="text-xl font-semibold">{{ accounts_n }}</p></div>
+          <div class="simple-card rounded-xl border border-border p-4"><p class="text-xs text-muted-foreground">Journals</p><p class="text-xl font-semibold">{{ journals_n }}</p></div>
+          <div class="simple-card rounded-xl border border-border p-4"><p class="text-xs text-muted-foreground">Ledger rows</p><p class="text-xl font-semibold">{{ ledger_n }}</p></div>
+          <div class="simple-card rounded-xl border border-border p-4"><p class="text-xs text-muted-foreground">AP posted</p><p class="text-xl font-semibold">{{ ap_open_n }}</p></div>
+          <div class="simple-card rounded-xl border border-border p-4"><p class="text-xs text-muted-foreground">AR posted</p><p class="text-xl font-semibold">{{ ar_open_n }}</p></div>
+        </div>
+        <div class="card-actions card-actions--flush">
+          <a href="{% url 'finance:account_list' %}" class="card-act card-act--muted card-act--lg">Chart of accounts</a>
+          <a href="{% url 'finance:journal_list' %}" class="card-act card-act--muted card-act--lg">Journal entries</a>
+          <a href="{% url 'finance:report_trial_balance' %}" class="card-act card-act--muted card-act--lg">Trial balance</a>
+          <a href="{% url 'finance:report_profit_loss' %}" class="card-act card-act--muted card-act--lg">Profit &amp; loss</a>
+          <a href="{% url 'finance:report_balance_sheet' %}" class="card-act card-act--muted card-act--lg">Balance sheet</a>
+        </div>
       </div>
     </div>
   </div>
 </div>
 {% endblock %}
-

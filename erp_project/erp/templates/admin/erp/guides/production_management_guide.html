@@ -1,0 +1,421 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Production Management Guide" %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+    &rsaquo; {% trans "Production Management Guide" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1 style="margin-bottom: 30px; color: #1f2937;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 32px;">precision_manufacturing</span>
+        {% trans "Production Management Guide" %}
+    </h1>
+    
+    <p style="color: #6b7280; margin-bottom: 30px; font-size: 16px;">
+        এই guide এ দেখানো হয়েছে একটি Garments Manufacturing Company তে কিভাবে production process manage করতে হয়, BOM তৈরি করতে হয়, এবং production order execute করতে হয়।
+    </p>
+
+    <!-- Company Example -->
+    <div style="background: linear-gradient(135deg, #c4d82e 0%, #b8cc2a 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">factory</span>
+            Example Company: "Fashion Tex Ltd"
+        </h2>
+        <p style="margin: 0; font-size: 15px; opacity: 0.95;">
+            একটি garments manufacturing company যারা T-Shirt, Polo Shirt, এবং Jacket তৈরি করে। 
+            তাদের প্রতিদিন 500-1000 pcs garments production হয় এবং 50+ workers আছে।
+        </p>
+    </div>
+
+
+    <!-- Step 1: BOM Creation -->
+    <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #3b82f6; font-size: 32px;">list_alt</span>
+            Step 1: Bill of Materials (BOM) তৈরি করুন
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 BOM কি?</h3>
+            <div style="background: #dbeafe; padding: 16px; border-left: 4px solid #3b82f6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #1e40af;">BOM (Bill of Materials)</strong> হলো একটি product তৈরি করতে কি কি raw materials এবং কত quantity লাগবে তার list।
+            </div>
+            
+            <code style="background: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">Manufacturing → Bill of Materials → Add</code>
+            
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                <h4 style="color: #065f46; margin-bottom: 12px;">Example: T-Shirt BOM</h4>
+                <div style="display: grid; gap: 12px;">
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <strong style="color: #065f46;">Product:</strong> Basic T-Shirt (Size: M)
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #374151;">Materials Required:</strong>
+                        <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 13px;">
+                            <li>Cotton Fabric: 1.2 meter</li>
+                            <li>Thread (Polyester): 50 meter</li>
+                            <li>Label: 1 pcs</li>
+                            <li>Hang Tag: 1 pcs</li>
+                            <li>Poly Bag: 1 pcs</li>
+                        </ul>
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                        <strong style="color: #92400e;">Production Cost:</strong> ৳250 per piece
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOM Types -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🔧 BOM Types</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                <div style="background: #dbeafe; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #1e40af; margin-bottom: 8px;">📦 Standard BOM</div>
+                    <p style="margin: 0; font-size: 13px; color: #374151;">Regular products এর জন্য fixed materials list</p>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">🎨 Variant BOM</div>
+                    <p style="margin: 0; font-size: 13px; color: #374151;">Size/Color অনুযায়ী different materials</p>
+                </div>
+                
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #065f46; margin-bottom: 8px;">⚙️ Multi-level BOM</div>
+                    <p style="margin: 0; font-size: 13px; color: #374151;">Sub-assembly সহ complex products</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Step 2: Production Order -->
+    <div style="background: #fef2f2; border: 2px solid #ef4444; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #991b1b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #ef4444; font-size: 32px;">precision_manufacturing</span>
+            Step 2: Production Order তৈরি করুন
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🏭 Production Order Process</h3>
+            <div style="background: #fef2f2; padding: 16px; border-left: 4px solid #ef4444; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #991b1b;">Scenario:</strong> Fashion Tex Ltd কে 500 pcs T-Shirt তৈরি করতে হবে একটি buyer order এর জন্য।
+            </div>
+            
+            <code style="background: #fee2e2; color: #991b1b; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">Manufacturing → Production Orders → Add</code>
+            
+            <div style="display: grid; gap: 16px; margin-top: 16px;">
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
+                    <h4 style="color: #065f46; margin-bottom: 8px;">Production Order Details</h4>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li><strong>Order No:</strong> PO-2024-001</li>
+                        <li><strong>Product:</strong> Basic T-Shirt (M)</li>
+                        <li><strong>Quantity:</strong> 500 pcs</li>
+                        <li><strong>BOM:</strong> T-Shirt BOM (auto-selected)</li>
+                        <li><strong>Start Date:</strong> 01 Jan 2024</li>
+                        <li><strong>Expected Date:</strong> 05 Jan 2024</li>
+                        <li><strong>Status:</strong> Draft → Confirmed → In Progress</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px;">
+                    <h4 style="color: #92400e; margin-bottom: 8px;">📊 Material Requirements (Auto-calculated)</h4>
+                    <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+                        <tr style="background: #fef3c7;">
+                            <th style="padding: 8px; text-align: left; border-bottom: 2px solid #f59e0b;">Material</th>
+                            <th style="padding: 8px; text-align: right; border-bottom: 2px solid #f59e0b;">Required</th>
+                            <th style="padding: 8px; text-align: right; border-bottom: 2px solid #f59e0b;">Available</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid #fde68a;">Cotton Fabric</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #fde68a;">600 m</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #fde68a; color: #10b981;">800 m ✓</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid #fde68a;">Thread</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #fde68a;">25000 m</td>
+                            <td style="padding: 8px; text-align: right; border-bottom: 1px solid #fde68a; color: #10b981;">30000 m ✓</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">Labels</td>
+                            <td style="padding: 8px; text-align: right;">500 pcs</td>
+                            <td style="padding: 8px; text-align: right; color: #10b981;">1000 pcs ✓</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Production Stages -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">⚙️ Production Stages</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div style="background: #e0e7ff; padding: 12px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 4px;">1️⃣</div>
+                    <div style="font-weight: 600; color: #3730a3;">Draft</div>
+                    <div style="font-size: 12px; color: #6b7280;">Planning stage</div>
+                </div>
+                
+                <div style="background: #dbeafe; padding: 12px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 4px;">2️⃣</div>
+                    <div style="font-weight: 600; color: #1e40af;">Confirmed</div>
+                    <div style="font-size: 12px; color: #6b7280;">Ready to start</div>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 4px;">3️⃣</div>
+                    <div style="font-weight: 600; color: #92400e;">In Progress</div>
+                    <div style="font-size: 12px; color: #6b7280;">Production running</div>
+                </div>
+                
+                <div style="background: #f0fdf4; padding: 12px; border-radius: 6px; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 4px;">4️⃣</div>
+                    <div style="font-weight: 600; color: #065f46;">Completed</div>
+                    <div style="font-size: 12px; color: #6b7280;">Finished goods</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Step 3: Production Issue -->
+    <div style="background: #f0fdfa; border: 2px solid #14b8a6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #115e59; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #14b8a6; font-size: 32px;">output</span>
+            Step 3: Production Issue (Material Issue)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📤 Materials Issue করুন</h3>
+            <div style="background: #f0fdfa; padding: 16px; border-left: 4px solid #14b8a6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #115e59;">Purpose:</strong> Production শুরু করার আগে warehouse থেকে materials issue করতে হবে production floor এ।
+            </div>
+            
+            <code style="background: #ccfbf1; color: #115e59; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">Manufacturing → Production Issues → Add</code>
+            
+            <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; margin-top: 16px;">
+                <div style="background: #dbeafe; padding: 16px; border-radius: 8px;">
+                    <h4 style="color: #1e40af; margin-bottom: 8px;">📦 From Warehouse</h4>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Cotton Fabric: 600m</li>
+                        <li>Thread: 25000m</li>
+                        <li>Labels: 500 pcs</li>
+                        <li>Hang Tags: 500 pcs</li>
+                        <li>Poly Bags: 500 pcs</li>
+                    </ul>
+                    <div style="margin-top: 8px; padding: 8px; background: #fee2e2; border-radius: 4px; font-size: 12px; color: #991b1b;">
+                        ❌ Stock Decrease
+                    </div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <span class="material-symbols-outlined" style="font-size: 48px; color: #14b8a6;">arrow_forward</span>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Issue</div>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 16px; border-radius: 8px;">
+                    <h4 style="color: #92400e; margin-bottom: 8px;">🏭 To Production</h4>
+                    <div style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                        <strong>Production Order:</strong> PO-2024-001
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 8px;">
+                        <strong>Product:</strong> T-Shirt (M)
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 6px;">
+                        <strong>Quantity:</strong> 500 pcs
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: #f0fdfa; padding: 12px; border-radius: 6px; margin-top: 16px;">
+                <strong style="color: #115e59;">📊 Result:</strong> 
+                <span style="color: #374151;">Materials warehouse থেকে production floor এ transfer হয়ে গেছে এবং production order এর সাথে link হয়ে গেছে।</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Production Receipt -->
+    <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 32px;">fact_check</span>
+            Step 4: Production Receipt (Finished Goods)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">✅ Production Complete করুন</h3>
+            <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #92400e;">Scenario:</strong> 500 pcs T-Shirt production complete হয়েছে। এখন finished goods warehouse এ receive করতে হবে।
+            </div>
+            
+            <code style="background: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 4px; font-size: 13px; display: inline-block; margin-bottom: 12px;">Manufacturing → Production Receipts → Add</code>
+            
+            <div style="display: grid; gap: 16px; margin-top: 16px;">
+                <div style="background: #e0e7ff; padding: 16px; border-radius: 8px;">
+                    <h4 style="color: #3730a3; margin-bottom: 8px;">📋 Receipt Details</h4>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li><strong>Production Order:</strong> PO-2024-001</li>
+                        <li><strong>Product:</strong> Basic T-Shirt (M)</li>
+                        <li><strong>Planned Qty:</strong> 500 pcs</li>
+                        <li><strong>Produced Qty:</strong> 495 pcs (5 pcs rejected)</li>
+                        <li><strong>Warehouse:</strong> Finished Goods WH</li>
+                        <li><strong>Receipt Date:</strong> 05 Jan 2024</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
+                    <h4 style="color: #065f46; margin-bottom: 8px;">📊 Stock Impact</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #10b981;">
+                            <div style="font-size: 12px; color: #6b7280;">Finished Goods Stock</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #10b981;">+495 pcs</div>
+                        </div>
+                        <div style="background: white; padding: 12px; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                            <div style="font-size: 12px; color: #6b7280;">Production Order</div>
+                            <div style="font-size: 16px; font-weight: 600; color: #3b82f6;">Completed ✓</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="background: #fee2e2; padding: 16px; border-radius: 8px;">
+                    <h4 style="color: #991b1b; margin-bottom: 8px;">⚠️ Quality Issues (Optional)</h4>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Rejected Qty: 5 pcs</li>
+                        <li>Reason: Stitching defect</li>
+                        <li>Action: Rework or scrap</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Production Flow Diagram -->
+    <div style="background: #e0e7ff; border: 2px solid #6366f1; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #3730a3; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1; font-size: 32px;">account_tree</span>
+            Complete Production Flow (সম্পূর্ণ প্রক্রিয়া)
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <div style="display: grid; gap: 16px;">
+                <!-- Step 1 -->
+                <div style="display: grid; grid-template-columns: 60px 1fr; gap: 16px; align-items: start;">
+                    <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700;">1</div>
+                    <div style="background: #dbeafe; padding: 16px; border-radius: 8px;">
+                        <h4 style="color: #1e40af; margin: 0 0 8px 0;">Create BOM</h4>
+                        <p style="margin: 0; font-size: 13px; color: #374151;">Product এর জন্য materials list তৈরি করুন</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; color: #6b7280;">↓</div>
+                
+                <!-- Step 2 -->
+                <div style="display: grid; grid-template-columns: 60px 1fr; gap: 16px; align-items: start;">
+                    <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700;">2</div>
+                    <div style="background: #fee2e2; padding: 16px; border-radius: 8px;">
+                        <h4 style="color: #991b1b; margin: 0 0 8px 0;">Create Production Order</h4>
+                        <p style="margin: 0; font-size: 13px; color: #374151;">কত quantity তৈরি করতে হবে তা নির্ধারণ করুন</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; color: #6b7280;">↓</div>
+                
+                <!-- Step 3 -->
+                <div style="display: grid; grid-template-columns: 60px 1fr; gap: 16px; align-items: start;">
+                    <div style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700;">3</div>
+                    <div style="background: #ccfbf1; padding: 16px; border-radius: 8px;">
+                        <h4 style="color: #115e59; margin: 0 0 8px 0;">Issue Materials</h4>
+                        <p style="margin: 0; font-size: 13px; color: #374151;">Warehouse থেকে materials production floor এ issue করুন</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; color: #6b7280;">↓</div>
+                
+                <!-- Step 4 -->
+                <div style="display: grid; grid-template-columns: 60px 1fr; gap: 16px; align-items: start;">
+                    <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700;">4</div>
+                    <div style="background: #fef3c7; padding: 16px; border-radius: 8px;">
+                        <h4 style="color: #92400e; margin: 0 0 8px 0;">Receive Finished Goods</h4>
+                        <p style="margin: 0; font-size: 13px; color: #374151;">Production complete হলে finished goods warehouse এ receive করুন</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Section -->
+    <div style="background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">checklist</span>
+            Quick Summary (সংক্ষিপ্ত সারাংশ)
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <div style="font-size: 24px; margin-bottom: 8px;">📋</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">BOM</div>
+                <div style="font-size: 13px; opacity: 0.9;">Materials list</div>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <div style="font-size: 24px; margin-bottom: 8px;">🏭</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Production Order</div>
+                <div style="font-size: 13px; opacity: 0.9;">Quantity planning</div>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <div style="font-size: 24px; margin-bottom: 8px;">📤</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Material Issue</div>
+                <div style="font-size: 13px; opacity: 0.9;">Stock to production</div>
+            </div>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 16px; border-radius: 8px; backdrop-filter: blur(10px);">
+                <div style="font-size: 24px; margin-bottom: 8px;">✅</div>
+                <div style="font-weight: 600; margin-bottom: 4px;">Receipt</div>
+                <div style="font-size: 13px; opacity: 0.9;">Finished goods</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Best Practices -->
+    <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; padding: 24px;">
+        <h2 style="color: #065f46; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">tips_and_updates</span>
+            Best Practices (সেরা পদ্ধতি)
+        </h2>
+        
+        <div style="display: grid; gap: 12px;">
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Accurate BOM:</strong>
+                <span style="color: #374151;">BOM তে সঠিক materials এবং quantity দিন, নাহলে production cost ভুল হবে</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Material Availability:</strong>
+                <span style="color: #374151;">Production order confirm করার আগে materials stock check করুন</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Timely Issue:</strong>
+                <span style="color: #374151;">Production শুরু হওয়ার আগেই materials issue করে রাখুন</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Quality Check:</strong>
+                <span style="color: #374151;">Production receipt এর সময় quality check করুন এবং defects record করুন</span>
+            </div>
+            
+            <div style="background: white; padding: 16px; border-radius: 8px; border-left: 4px solid #10b981;">
+                <strong style="color: #065f46;">✅ Track Progress:</strong>
+                <span style="color: #374151;">Production order এর status regularly update করুন</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

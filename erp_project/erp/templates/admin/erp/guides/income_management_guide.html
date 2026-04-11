@@ -1,0 +1,553 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Income Management Guide" %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans "Home" %}</a>
+    &rsaquo; {% trans "Income Management Guide" %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 20px;">
+    <h1 style="margin-bottom: 30px; color: #1f2937;">
+        <span class="material-symbols-outlined" style="vertical-align: middle; font-size: 32px;">account_balance_wallet</span>
+        {% trans "Income Management Guide" %}
+    </h1>
+    
+    <p style="color: #6b7280; margin-bottom: 30px; font-size: 16px;">
+        এই guide এ দেখানো হয়েছে একটি Garments Manufacturing Company তে কিভাবে সব ধরনের আয় (Income) entry করতে হয় এবং কোন module ব্যবহার করতে হয়।
+    </p>
+
+    <!-- Company Example -->
+    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">factory</span>
+            Example Company: "Fashion Tex Ltd"
+        </h2>
+        <p style="margin: 0; font-size: 15px; opacity: 0.95;">
+            একটি garments manufacturing company যারা T-Shirt, Shirt, Pants তৈরি করে এবং export করে। 
+            তাদের 200 জন worker, 5টি production line, এবং monthly turnover ৳50 লাখ।
+        </p>
+    </div>
+
+    <!-- Type 1: Sales Revenue via Sales/POS Module -->
+    <div style="background: #dbeafe; border: 2px solid #60a5fa; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #3b82f6; font-size: 32px;">shopping_cart</span>
+            Type 1: Sales Revenue (বিক্রয় আয়) - Sales & POS Module দিয়ে
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📦 Product Sales - Invoice (পণ্য বিক্রয়)</h3>
+            <div style="background: #dbeafe; padding: 16px; border-left: 4px solid #3b82f6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #1e40af;">Scenario:</strong> Fashion Tex Ltd একটি retail store কে 500 pcs T-Shirt বিক্রয় করবে
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #166534; margin-bottom: 8px;">Step 1: Sales Quotation (Optional)</div>
+                    <code style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: block; margin-bottom: 8px;">Sales → Sales Quotations → Add</code>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Customer: "ABC Retail Store"</li>
+                        <li>Product: T-Shirt (Cotton)</li>
+                        <li>Quantity: 500 pcs</li>
+                        <li>Rate: ৳350/pc</li>
+                        <li>Total: ৳1,75,000</li>
+                        <li>Status: "Sent"</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #166534; margin-bottom: 8px;">Step 2: Sales Order</div>
+                    <code style="background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: block; margin-bottom: 8px;">Sales → Sales Orders → Add</code>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Link Quotation (if any)</li>
+                        <li>Confirm Order</li>
+                        <li>Status: "Confirmed"</li>
+                        <li>✅ Order Confirmed</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #dcfce7; padding: 16px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #166534; margin-bottom: 8px;">Step 3: Sales Invoice</div>
+                    <code style="background: #bbf7d0; color: #166534; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: block; margin-bottom: 8px;">Sales → Invoices → Add</code>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                        <li>Link to Sales Order</li>
+                        <li>Invoice Amount: ৳1,75,000</li>
+                        <li>Payment: Bank Transfer</li>
+                        <li>Status: "Paid"</li>
+                        <li>💰 Income Entry হবে</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="background: #dbeafe; padding: 12px; border-radius: 6px; margin-top: 16px;">
+                <strong style="color: #1e40af;">📊 Result:</strong> 
+                <span style="color: #374151;">Sales Invoice এর amount automatically Sales Revenue হিসেবে count হবে এবং Financial Dashboard এ দেখাবে।</span>
+            </div>
+        </div>
+
+        <!-- POS Sales -->
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🏪 POS Sales - Retail Counter (খুচরা বিক্রয়)</h3>
+            <div style="background: #dbeafe; padding: 16px; border-left: 4px solid #3b82f6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #1e40af;">Scenario:</strong> Factory outlet এ walk-in customer এর কাছে সরাসরি বিক্রয়
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px;">
+                <code style="background: #dbeafe; color: #1e40af; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: block; margin-bottom: 12px;">POS → Quick Sale → Add</code>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+                    <div>
+                        <strong style="color: #1f2937;">Steps:</strong>
+                        <ol style="margin: 8px 0; padding-left: 20px; font-size: 13px; color: #374151;">
+                            <li>Select Products (Barcode scan)</li>
+                            <li>Add Quantity</li>
+                            <li>Customer Info (optional)</li>
+                            <li>Select Payment Method</li>
+                            <li>Complete Sale</li>
+                        </ol>
+                    </div>
+                    <div style="background: #dcfce7; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #166534;">Example Sale:</strong>
+                        <div style="font-size: 13px; color: #374151; margin-top: 8px;">
+                            • 10 × T-Shirt @ ৳400 = ৳4,000<br>
+                            • 5 × Shirt @ ৳600 = ৳3,000<br>
+                            • Payment: Cash<br>
+                            <strong style="color: #166534;">Total: ৳7,000</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: #dcfce7; padding: 12px; border-radius: 6px; margin-top: 12px;">
+                <strong style="color: #166534;">💡 Auto Entry:</strong> POS sale complete হলেই automatically Sales Revenue হিসেবে record হবে।
+            </div>
+        </div>
+
+        <!-- More Sales Examples -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Other Sales Types (একই Process)</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                <div style="background: #dbeafe; padding: 12px; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                    <div style="font-weight: 600; color: #1e40af; font-size: 13px;">🌍 Export Sales</div>
+                    <div style="font-size: 12px; color: #1e3a8a;">10,000 pcs × ৳250 = ৳25,00,000</div>
+                </div>
+                <div style="background: #dbeafe; padding: 12px; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                    <div style="font-weight: 600; color: #1e40af; font-size: 13px;">🏢 Wholesale</div>
+                    <div style="font-size: 12px; color: #1e3a8a;">2,000 pcs × ৳300 = ৳6,00,000</div>
+                </div>
+                <div style="background: #dbeafe; padding: 12px; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                    <div style="font-weight: 600; color: #1e40af; font-size: 13px;">🛍️ Retail</div>
+                    <div style="font-size: 12px; color: #1e3a8a;">500 pcs × ৳400 = ৳2,00,000</div>
+                </div>
+                <div style="background: #dbeafe; padding: 12px; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                    <div style="font-weight: 600; color: #1e40af; font-size: 13px;">🎁 B2B Orders</div>
+                    <div style="font-size: 12px; color: #1e3a8a;">1,500 pcs × ৳320 = ৳4,80,000</div>
+                </div>
+            </div>
+            <div style="margin-top: 12px; padding: 10px; background: #bbf7d0; border-radius: 6px; text-align: center;">
+                <strong style="color: #166534;">Total Sales Revenue Today: ৳38,87,000</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Type 2: Service Income via Finance Module -->
+    <div style="background: #fef3c7; border: 2px solid #fbbf24; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #92400e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #f59e0b; font-size: 32px;">design_services</span>
+            Type 2: Service Income (সেবা আয়) - Finance Module দিয়ে (Journal Entry)
+        </h2>
+        
+        <!-- Design Service -->
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🎨 Design & Customization Service</h3>
+            <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #92400e;">Scenario:</strong> একটি buyer এর জন্য custom design service প্রদান করা হয়েছে
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px;">
+                <code style="background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: block; margin-bottom: 12px;">Finance & Accounting → Journal Entries → Add Journal Entry</code>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px;">
+                    <thead style="background: #1f2937; color: white;">
+                        <tr>
+                            <th style="padding: 8px; text-align: left;">Account</th>
+                            <th style="padding: 8px; text-align: right;">Debit (৳)</th>
+                            <th style="padding: 8px; text-align: right;">Credit (৳)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #dcfce7;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Bank Account (DBBL)</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">50,000</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                        </tr>
+                        <tr style="background: #fef3c7;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Service Income</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">50,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 12px; padding: 10px; background: #dbeafe; border-radius: 6px;">
+                    <strong>Description:</strong> "Custom T-Shirt Design Service - XYZ Fashion"<br>
+                    <strong>Date:</strong> 20/01/2026<br>
+                    <strong>Reference:</strong> SRV-2026-001
+                </div>
+            </div>
+        </div>
+
+        <!-- Consulting Service -->
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">💼 Consulting & Training Service</h3>
+            <div style="background: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #92400e;">Scenario:</strong> অন্য factory কে production training দেওয়া হয়েছে
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <tbody>
+                        <tr style="background: #dcfce7;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Cash</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">30,000</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                        </tr>
+                        <tr style="background: #fef3c7;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Service Income</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">30,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- More Service Examples -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Other Service Income (Same Process)</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                    <div style="font-weight: 600; color: #92400e; font-size: 13px;">✂️ Cutting Service</div>
+                    <div style="font-size: 12px; color: #78350f;">৳15,000</div>
+                </div>
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                    <div style="font-weight: 600; color: #92400e; font-size: 13px;">🧵 Stitching Service</div>
+                    <div style="font-size: 12px; color: #78350f;">৳25,000</div>
+                </div>
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                    <div style="font-weight: 600; color: #92400e; font-size: 13px;">📦 Packaging Service</div>
+                    <div style="font-size: 12px; color: #78350f;">৳10,000</div>
+                </div>
+                <div style="background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                    <div style="font-weight: 600; color: #92400e; font-size: 13px;">🎓 Training Service</div>
+                    <div style="font-size: 12px; color: #78350f;">৳20,000</div>
+                </div>
+            </div>
+            <div style="margin-top: 12px; padding: 10px; background: #fde68a; border-radius: 6px; text-align: center;">
+                <strong style="color: #92400e;">Total Service Income: ৳1,50,000</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Type 3: Other Income via Finance Module -->
+    <div style="background: #ede9fe; border: 2px solid #a78bfa; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #5b21b6; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #8b5cf6; font-size: 32px;">attach_money</span>
+            Type 3: Other Income (অন্যান্য আয়) - Finance Module দিয়ে (Journal Entry)
+        </h2>
+        
+        <!-- Interest Income -->
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🏦 Bank Interest Income (ব্যাংক সুদ)</h3>
+            <div style="background: #ede9fe; padding: 16px; border-left: 4px solid #8b5cf6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #5b21b6;">Scenario:</strong> Fixed Deposit থেকে মাসিক সুদ পাওয়া গেছে
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px;">
+                <code style="background: #ede9fe; color: #5b21b6; padding: 4px 8px; border-radius: 4px; font-size: 12px; display: block; margin-bottom: 12px;">Finance & Accounting → Journal Entries → Add</code>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px;">
+                    <thead style="background: #1f2937; color: white;">
+                        <tr>
+                            <th style="padding: 8px; text-align: left;">Account</th>
+                            <th style="padding: 8px; text-align: right;">Debit (৳)</th>
+                            <th style="padding: 8px; text-align: right;">Credit (৳)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #dcfce7;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Bank Account (DBBL)</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">12,500</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                        </tr>
+                        <tr style="background: #ede9fe;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Interest Income</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">12,500</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 12px; padding: 10px; background: #dbeafe; border-radius: 6px;">
+                    <strong>Description:</strong> "FD Interest - January 2026"<br>
+                    <strong>Date:</strong> 31/01/2026
+                </div>
+            </div>
+        </div>
+
+        <!-- Rent Income -->
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">🏢 Rent Income (ভাড়া আয়)</h3>
+            <div style="background: #ede9fe; padding: 16px; border-left: 4px solid #8b5cf6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #5b21b6;">Scenario:</strong> Factory এর একটি অংশ অন্য company কে ভাড়া দেওয়া হয়েছে
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <tbody>
+                        <tr style="background: #dcfce7;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Bank Account</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">75,000</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                        </tr>
+                        <tr style="background: #ede9fe;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Rent Income</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">75,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Scrap Sales -->
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">♻️ Scrap Material Sales (বর্জ্য বিক্রয়)</h3>
+            <div style="background: #ede9fe; padding: 16px; border-left: 4px solid #8b5cf6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #5b21b6;">Scenario:</strong> Fabric cutting এর waste material বিক্রয় করা হয়েছে
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <tbody>
+                        <tr style="background: #dcfce7;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Cash</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">18,000</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                        </tr>
+                        <tr style="background: #ede9fe;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Other Income (Scrap Sales)</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">18,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Commission Income -->
+        <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">💵 Commission Income (কমিশন আয়)</h3>
+            <div style="background: #ede9fe; padding: 16px; border-left: 4px solid #8b5cf6; border-radius: 4px; margin-bottom: 12px;">
+                <strong style="color: #5b21b6;">Scenario:</strong> Buyer referral থেকে commission পাওয়া গেছে
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <tbody>
+                        <tr style="background: #dcfce7;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Bank Account</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">25,000</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                        </tr>
+                        <tr style="background: #ede9fe;">
+                            <td style="padding: 8px; border: 1px solid #e5e7eb;">Commission Income</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">-</td>
+                            <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600;">25,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- More Other Income Examples -->
+        <div style="background: white; border-radius: 8px; padding: 20px;">
+            <h3 style="color: #1f2937; margin-bottom: 12px;">📋 Other Income Types (Same Process)</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                <div style="background: #ede9fe; padding: 12px; border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                    <div style="font-weight: 600; color: #5b21b6; font-size: 13px;">💰 Dividend Income</div>
+                    <div style="font-size: 12px; color: #6b21a8;">৳8,000</div>
+                </div>
+                <div style="background: #ede9fe; padding: 12px; border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                    <div style="font-weight: 600; color: #5b21b6; font-size: 13px;">🎁 Discount Received</div>
+                    <div style="font-size: 12px; color: #6b21a8;">৳15,000</div>
+                </div>
+                <div style="background: #ede9fe; padding: 12px; border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                    <div style="font-weight: 600; color: #5b21b6; font-size: 13px;">📱 Asset Sale</div>
+                    <div style="font-size: 12px; color: #6b21a8;">৳50,000</div>
+                </div>
+                <div style="background: #ede9fe; padding: 12px; border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                    <div style="font-weight: 600; color: #5b21b6; font-size: 13px;">🎯 Miscellaneous</div>
+                    <div style="font-size: 12px; color: #6b21a8;">৳12,000</div>
+                </div>
+            </div>
+            <div style="margin-top: 12px; padding: 10px; background: #c4b5fd; border-radius: 6px; text-align: center;">
+                <strong style="color: #5b21b6;">Total Other Income: ৳2,15,500</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Income Summary -->
+    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; padding: 24px; margin-bottom: 24px; color: white;">
+        <h2 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="font-size: 32px;">calendar_today</span>
+            📅 একদিনের সম্পূর্ণ Income Summary
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+            <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 16px; border-radius: 8px;">
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">🛒 Sales Revenue</div>
+                <div style="font-size: 24px; font-weight: 700;">৳38,87,000</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 16px; border-radius: 8px;">
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">💼 Service Income</div>
+                <div style="font-size: 24px; font-weight: 700;">৳1,50,000</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 16px; border-radius: 8px;">
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">💰 Other Income</div>
+                <div style="font-size: 24px; font-weight: 700;">৳2,15,500</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.3); backdrop-filter: blur(10px); padding: 16px; border-radius: 8px; border: 2px solid white;">
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">📊 TOTAL INCOME</div>
+                <div style="font-size: 28px; font-weight: 700;">৳42,52,500</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart of Accounts Structure -->
+    <div style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #1f2937; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #6366f1; font-size: 32px;">account_tree</span>
+            Chart of Accounts - Income Structure
+        </h2>
+        
+        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; font-family: monospace; font-size: 13px;">
+            <div style="margin-bottom: 16px;">
+                <strong style="color: #1f2937; font-size: 15px;">📂 INCOME (আয়)</strong>
+                <div style="margin-left: 20px; margin-top: 8px;">
+                    <div style="color: #3b82f6; font-weight: 600; margin-bottom: 8px;">├── 💰 Sales Revenue (বিক্রয় আয়)</div>
+                    <div style="margin-left: 30px; color: #6b7280;">
+                        ├── Product Sales (পণ্য বিক্রয়)<br>
+                        ├── Export Sales (রপ্তানি বিক্রয়)<br>
+                        ├── Wholesale Sales (পাইকারি বিক্রয়)<br>
+                        └── Retail Sales (খুচরা বিক্রয়)
+                    </div>
+                    
+                    <div style="color: #f59e0b; font-weight: 600; margin: 12px 0 8px 0;">├── 💼 Service Income (সেবা আয়)</div>
+                    <div style="margin-left: 30px; color: #6b7280;">
+                        ├── Design Service<br>
+                        ├── Consulting Service<br>
+                        ├── Training Service<br>
+                        ├── Cutting Service<br>
+                        ├── Stitching Service<br>
+                        └── Packaging Service
+                    </div>
+                    
+                    <div style="color: #8b5cf6; font-weight: 600; margin: 12px 0 8px 0;">└── 💵 Other Income (অন্যান্য আয়)</div>
+                    <div style="margin-left: 30px; color: #6b7280;">
+                        ├── Interest Income (সুদ আয়)<br>
+                        ├── Rent Income (ভাড়া আয়)<br>
+                        ├── Commission Income (কমিশন আয়)<br>
+                        ├── Scrap Sales (বর্জ্য বিক্রয়)<br>
+                        ├── Discount Received (ছাড় প্রাপ্ত)<br>
+                        ├── Dividend Income (লভ্যাংশ আয়)<br>
+                        └── Miscellaneous Income (বিবিধ আয়)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Important Notes -->
+    <div style="background: #dcfce7; border: 2px solid #86efac; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #166534; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #22c55e; font-size: 32px;">info</span>
+            ⚠️ গুরুত্বপূর্ণ নোট
+        </h2>
+        
+        <ul style="margin: 0; padding-left: 20px; color: #15803d;">
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>Sales Revenue Entry:</strong> Sales Invoice বা POS Sale create করলেই automatically Sales Revenue হিসেবে count হবে। আলাদা Journal Entry করার দরকার নেই।
+            </li>
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>Service Income:</strong> সব service income এর জন্য Finance Module এ Journal Entry করতে হবে।
+            </li>
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>Other Income:</strong> Interest, Rent, Commission ইত্যাদি সব other income এর জন্য Journal Entry করতে হবে।
+            </li>
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>Dashboard:</strong> Sales Dashboard এ sales revenue দেখাবে। সব income দেখতে Financial Dashboard ব্যবহার করুন।
+            </li>
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>Reports:</strong> Income Statement (Profit & Loss) Report এ সব income একসাথে দেখা যাবে।
+            </li>
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>Tax:</strong> সব income এর উপর VAT/Tax applicable হতে পারে। Tax consultant এর সাথে পরামর্শ করুন।
+            </li>
+            <li style="margin-bottom: 12px; font-size: 14px;">
+                <strong>Documentation:</strong> প্রতিটি income এর জন্য proper invoice/receipt রাখুন।
+            </li>
+        </ul>
+    </div>
+
+    <!-- Quick Reference -->
+    <div style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 24px;">
+        <h2 style="color: #1f2937; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color: #10b981; font-size: 32px;">quick_reference</span>
+            🚀 Quick Reference Guide
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+            <div style="background: #dbeafe; padding: 16px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                <div style="font-weight: 600; color: #1e40af; margin-bottom: 8px;">🛒 Product বিক্রয় করলে</div>
+                <div style="font-size: 13px; color: #1e3a8a;">
+                    Sales → Invoice → Save<br>
+                    অথবা POS → Quick Sale<br>
+                    ✅ Automatically Sales Revenue
+                </div>
+            </div>
+            
+            <div style="background: #fef3c7; padding: 16px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">💼 Service প্রদান করলে</div>
+                <div style="font-size: 13px; color: #78350f;">
+                    Finance → Journal Entry<br>
+                    Debit: Bank/Cash | Credit: Service Income
+                </div>
+            </div>
+            
+            <div style="background: #ede9fe; padding: 16px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+                <div style="font-weight: 600; color: #5b21b6; margin-bottom: 8px;">💰 Interest/Rent পেলে</div>
+                <div style="font-size: 13px; color: #6b21a8;">
+                    Finance → Journal Entry<br>
+                    Debit: Bank/Cash | Credit: Interest/Rent Income
+                </div>
+            </div>
+            
+            <div style="background: #dcfce7; padding: 16px; border-radius: 8px; border-left: 4px solid #22c55e;">
+                <div style="font-weight: 600; color: #166534; margin-bottom: 8px;">♻️ Scrap বিক্রয় করলে</div>
+                <div style="font-size: 13px; color: #15803d;">
+                    Finance → Journal Entry<br>
+                    Debit: Cash | Credit: Other Income
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+{% endblock %}

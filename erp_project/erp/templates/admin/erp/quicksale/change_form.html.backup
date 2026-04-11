@@ -1,0 +1,350 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .barcode-scanner-section {
+        background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+    .barcode-scanner-section h3 { margin: 0 0 12px 0; font-size: 16px; font-weight: 600; }
+    .barcode-input-wrapper { display: flex; gap: 10px; }
+    #barcode-input {
+        flex: 1; padding: 14px 18px; font-size: 20px;
+        border: 2px solid rgba(255,255,255,0.3); border-radius: 8px;
+        background: rgba(255,255,255,0.1); color: white; outline: none; font-family: monospace;
+    }
+    #barcode-input::placeholder { color: rgba(255,255,255,0.6); }
+    #barcode-input:focus { border-color: #10b981; }
+    .scan-btn {
+        padding: 14px 28px; background: #10b981; color: white; border: none;
+        border-radius: 8px; font-weight: 600; font-size: 16px; cursor: pointer;
+    }
+    .scan-btn:hover { background: #059669; }
+    .product-feedback { margin-top: 12px; padding: 12px 16px; border-radius: 8px; display: none; }
+    .product-feedback.show { display: block; }
+    .product-feedback.success { background: rgba(16,185,129,0.2); border: 1px solid #10b981; }
+    .product-feedback.error { background: rgba(239,68,68,0.2); border: 1px solid #ef4444; }
+    
+    .items-summary {
+        display: flex; gap: 20px; margin-bottom: 16px; padding: 12px 16px;
+        background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px;
+    }
+    .items-summary-item { display: flex; align-items: center; gap: 6px; }
+    .items-summary-item .value { font-weight: 700; font-size: 18px; color: #166534; }
+    .items-summary-item .label { font-size: 12px; color: #4ade80; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="barcode-scanner-section">
+    <h3>📷 {% trans "Scan Barcode / Enter SKU" %}</h3>
+    <div class="barcode-input-wrapper">
+        <input type="text" id="barcode-input" placeholder="{% trans 'Scan or type SKU and press Enter...' %}">
+        <button type="button" class="scan-btn" onclick="searchAndAddProduct()">➕ {% trans "Add" %}</button>
+    </div>
+    <div id="product-feedback" class="product-feedback"></div>
+</div>
+
+<div class="items-summary">
+    <div class="items-summary-item">
+        <span class="value" id="summary-items">0</span>
+        <span class="label">Items</span>
+    </div>
+    <div class="items-summary-item">
+        <span class="value" id="summary-qty">0</span>
+        <span class="label">Total Qty</span>
+    </div>
+    <div class="items-summary-item">
+        <span class="value">৳<span id="summary-amount">0</span></span>
+        <span class="label">Amount</span>
+    </div>
+</div>
+
+{{ block.super }}
+
+<script>
+var pendingProduct = null;
+
+window.addEventListener('load', function() {
+    initPOS();
+});
+
+function initPOS() {
+    var barcodeInput = document.getElementById('barcode-input');
+    if (barcodeInput) {
+        barcodeInput.focus();
+        barcodeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchAndAddProduct();
+            }
+        });
+    }
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F2') {
+            e.preventDefault();
+            document.getElementById('barcode-input').focus();
+        }
+    });
+    
+    // Listen for ALL input events on the page
+    document.body.addEventListener('input', handleInputChange);
+    document.body.addEventListener('change', handleInputChange);
+    
+    // Watch for DOM changes (new rows added)
+    var observer = new MutationObserver(function(mutations) {
+        if (pendingProduct) {
+            setTimeout(function() {
+                fillEmptyRowWithProduct(pendingProduct);
+                pendingProduct = null;
+            }, 100);
+        }
+        setTimeout(calculateAllTotals, 50);
+    });
+    
+    var inlineContainer = document.querySelector('.inline-group') || document.querySelector('[class*="inline-related"]');
+    if (inlineContainer) {
+        observer.observe(inlineContainer, { childList: true, subtree: true });
+    }
+    
+    // Initial calculation
+    setTimeout(calculateAllTotals, 300);
+}
+
+function handleInputChange(e) {
+    var name = e.target.name || '';
+    var id = e.target.id || '';
+    
+    // Inline item fields
+    if (name.indexOf('quantity') !== -1 || name.indexOf('unit_price') !== -1 || name.indexOf('product') !== -1) {
+        calculateAllTotals();
+    }
+    
+    // Payment fields
+    if (id === 'id_discount_amount') {
+        updatePaymentTotals();
+    }
+    if (id === 'id_amount_received') {
+        updateChange();
+    }
+}
+
+function calculateAllTotals() {
+    var subtotal = 0;
+    var totalQty = 0;
+    var itemCount = 0;
+    
+    var qtyInputs = document.querySelectorAll('input[name*="quantity"]');
+    var priceInputs = document.querySelectorAll('input[name*="unit_price"]');
+    var lineTotalInputs = document.querySelectorAll('input[name*="line_total"]');
+    var productSelects = document.querySelectorAll('select[name*="product"]');
+    
+    for (var i = 0; i < qtyInputs.length; i++) {
+        var qtyInput = qtyInputs[i];
+        var priceInput = priceInputs[i];
+        var lineTotalInput = lineTotalInputs[i];
+        var productSelect = productSelects[i];
+        
+        // Skip empty rows
+        if (productSelect && !productSelect.value) continue;
+        
+        var qty = parseFloat(qtyInput.value) || 0;
+        var price = parseFloat(priceInput ? priceInput.value : 0) || 0;
+        
+        if (qty <= 0) continue;
+        
+        var lineTotal = qty * price;
+        
+        // Update line total
+        if (lineTotalInput) {
+            lineTotalInput.value = lineTotal.toFixed(2);
+        }
+        
+        subtotal += lineTotal;
+        totalQty += qty;
+        itemCount++;
+    }
+    
+    // Update summary display
+    var summaryItems = document.getElementById('summary-items');
+    var summaryQty = document.getElementById('summary-qty');
+    var summaryAmount = document.getElementById('summary-amount');
+    
+    if (summaryItems) summaryItems.textContent = itemCount;
+    if (summaryQty) summaryQty.textContent = Math.round(totalQty);
+    if (summaryAmount) summaryAmount.textContent = Math.round(subtotal);
+    
+    // Update Django form subtotal field
+    var subtotalField = document.getElementById('id_subtotal');
+    if (subtotalField) {
+        subtotalField.value = subtotal.toFixed(2);
+    }
+    
+    updatePaymentTotals();
+}
+
+function updatePaymentTotals() {
+    var subtotalField = document.getElementById('id_subtotal');
+    var discountField = document.getElementById('id_discount_amount');
+    var totalField = document.getElementById('id_total_amount');
+    
+    var subtotal = parseFloat(subtotalField ? subtotalField.value : 0) || 0;
+    var discount = parseFloat(discountField ? discountField.value : 0) || 0;
+    
+    var total = subtotal - discount;
+    if (total < 0) total = 0;
+    
+    if (totalField) {
+        totalField.value = total.toFixed(2);
+    }
+    
+    updateChange();
+}
+
+function updateChange() {
+    var totalField = document.getElementById('id_total_amount');
+    var receivedField = document.getElementById('id_amount_received');
+    var changeField = document.getElementById('id_change_amount');
+    
+    var total = parseFloat(totalField ? totalField.value : 0) || 0;
+    var received = parseFloat(receivedField ? receivedField.value : 0) || 0;
+    
+    var change = received - total;
+    
+    if (changeField) {
+        changeField.value = change.toFixed(2);
+    }
+}
+
+function searchAndAddProduct() {
+    var barcodeInput = document.getElementById('barcode-input');
+    var sku = barcodeInput.value.trim();
+    
+    if (!sku) {
+        showFeedback('error', 'Please enter a SKU');
+        return;
+    }
+    
+    fetch('/erp/api/product/by-sku/?sku=' + encodeURIComponent(sku))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success && data.product) {
+                showFeedback('success', '✓ ' + data.product.name + ' (৳' + data.product.selling_price + ')');
+                addProductToInline(data.product);
+                barcodeInput.value = '';
+                barcodeInput.focus();
+            } else {
+                showFeedback('error', '❌ Not found: ' + sku);
+                barcodeInput.select();
+            }
+        })
+        .catch(function(e) {
+            console.error(e);
+            showFeedback('error', 'Error searching');
+        });
+}
+
+function showFeedback(type, msg) {
+    var fb = document.getElementById('product-feedback');
+    fb.className = 'product-feedback show ' + type;
+    fb.innerHTML = msg;
+    if (type === 'success') setTimeout(function() { fb.classList.remove('show'); }, 2000);
+}
+
+function addProductToInline(product) {
+    var emptyRow = findEmptyRow();
+    
+    if (emptyRow) {
+        fillRowWithProduct(emptyRow, product);
+    } else {
+        pendingProduct = product;
+        clickAddButton();
+    }
+}
+
+function findEmptyRow() {
+    var productSelects = document.querySelectorAll('select[name*="product"]');
+    for (var i = 0; i < productSelects.length; i++) {
+        var select = productSelects[i];
+        var row = select.closest('tr');
+        if (row && row.classList.contains('empty-form')) continue;
+        if (row && row.style.display === 'none') continue;
+        
+        if (!select.value || select.value === '') {
+            return row;
+        }
+    }
+    return null;
+}
+
+function fillEmptyRowWithProduct(product) {
+    var emptyRow = findEmptyRow();
+    if (emptyRow) {
+        fillRowWithProduct(emptyRow, product);
+    }
+}
+
+function clickAddButton() {
+    var addBtn = document.querySelector('.add-row a') ||
+                 document.querySelector('a.add-row') ||
+                 document.querySelector('[class*="inline"] a[href*="#"]');
+    
+    if (addBtn) {
+        addBtn.click();
+    } else {
+        var links = document.querySelectorAll('a');
+        for (var i = 0; i < links.length; i++) {
+            var text = links[i].textContent.toLowerCase();
+            if (text.indexOf('add another') !== -1 || text.indexOf('add') !== -1) {
+                links[i].click();
+                break;
+            }
+        }
+    }
+}
+
+function fillRowWithProduct(row, product) {
+    var productSelect = row.querySelector('select[name*="product"]');
+    if (productSelect) {
+        var optionExists = false;
+        for (var i = 0; i < productSelect.options.length; i++) {
+            if (productSelect.options[i].value == product.id) {
+                optionExists = true;
+                productSelect.selectedIndex = i;
+                break;
+            }
+        }
+        
+        if (!optionExists) {
+            var opt = document.createElement('option');
+            opt.value = product.id;
+            opt.text = product.name;
+            productSelect.appendChild(opt);
+            productSelect.value = product.id;
+        }
+        
+        productSelect.dispatchEvent(new Event('change', {bubbles: true}));
+    }
+    
+    var qtyInput = row.querySelector('input[name*="quantity"]');
+    if (qtyInput) {
+        qtyInput.value = '1';
+        qtyInput.dispatchEvent(new Event('input', {bubbles: true}));
+    }
+    
+    var priceInput = row.querySelector('input[name*="unit_price"]');
+    if (priceInput) {
+        priceInput.value = product.selling_price;
+        priceInput.dispatchEvent(new Event('input', {bubbles: true}));
+    }
+    
+    setTimeout(calculateAllTotals, 50);
+}
+</script>
+{% endblock %}

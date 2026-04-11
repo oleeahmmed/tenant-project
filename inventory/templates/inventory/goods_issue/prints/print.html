@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {# Short title — browser may repeat this in print header if headers are ON #}
+  <title>{{ doc.issue_number }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@9..40,500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* Match auth_tenants/base.html :root tokens (light shell) */
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 222.2 84% 4.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 222.2 84% 4.9%;
+      --primary: 222.2 47.4% 11.2%;
+      --primary-foreground: 210 40% 98%;
+      --secondary: 210 40% 96.1%;
+      --secondary-foreground: 222.2 47.4% 11.2%;
+      --muted: 210 40% 96.1%;
+      --muted-foreground: 215.4 16.3% 46.9%;
+      --accent: 210 40% 96.1%;
+      --accent-foreground: 222.2 47.4% 11.2%;
+      --border: 214.3 31.8% 91.4%;
+      --input: 214.3 31.8% 91.4%;
+      --ring: 222.2 84% 4.9%;
+      --radius: 0.5rem;
+      /* Space for fixed toolbar (1 or 2 rows when wrapping) */
+      --toolbar-reserve: clamp(5.5rem, 14vw, 8.5rem);
+      /* ERP-style blue chrome */
+      --print-brand: 221 64% 42%;
+      --print-brand-deep: 222 58% 32%;
+      --print-brand-fg: 210 40% 98%;
+      --print-brand-soft: 214 52% 96%;
+    }
+
+    @page { size: A4; margin: 10mm; }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      font-size: 10pt;
+      line-height: 1.4;
+      color: hsl(var(--foreground));
+      min-height: 100vh;
+    }
+
+    /* Screen: content starts *below* fixed toolbar; shell tint like app layout */
+    @media screen {
+      body {
+        padding-top: var(--toolbar-reserve);
+        padding-left: 12px;
+        padding-right: 12px;
+        padding-bottom: 1.5rem;
+        background: hsl(var(--secondary));
+        scroll-padding-top: var(--toolbar-reserve);
+      }
+    }
+
+    .toolbar {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      left: 12px;
+      z-index: 9999;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 14px;
+      background: hsl(var(--card));
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+    }
+    .toolbar a,
+    .toolbar button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 10pt;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+    .toolbar .back {
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+      border: 1px solid hsl(var(--border));
+    }
+    .toolbar .back:hover {
+      background: hsl(var(--accent));
+    }
+    .toolbar .print {
+      background: hsl(var(--primary));
+      color: hsl(var(--primary-foreground));
+      box-shadow: 0 1px 2px hsl(0 0% 0% / 0.08);
+    }
+    .toolbar .print:hover {
+      opacity: 0.92;
+    }
+    .toolbar .hint {
+      font-size: 8pt;
+      color: hsl(var(--muted-foreground));
+      max-width: min(440px, 58vw);
+      line-height: 1.4;
+    }
+    .toolbar .toolbar-title strong {
+      color: hsl(var(--foreground));
+    }
+    .toolbar .toolbar-title span {
+      color: hsl(var(--muted-foreground));
+      font-size: 9pt;
+    }
+
+    .page {
+      width: 210mm;
+      max-width: 100%;
+      min-height: 297mm;
+      margin: 0 auto;
+      padding: 18px 16px 20px;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius);
+      background: hsl(var(--card));
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+    }
+
+    /* Premium invoice header: white logo lockup + brand blue panel (garments / accessories) */
+    .print-sheet-top {
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow:
+        0 1px 0 hsl(var(--print-brand) / 0.12),
+        0 12px 40px -18px hsl(222 47% 18% / 0.18);
+      border: 1px solid hsl(var(--print-brand) / 0.22);
+    }
+    .company-banner {
+      display: flex;
+      width: 100%;
+      align-items: stretch;
+      min-height: 118px;
+    }
+    .company-banner__logo {
+      width: 132px;
+      flex-shrink: 0;
+      background: hsl(0 0% 100%);
+      background-image: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(214 40% 99%) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px 14px;
+      position: relative;
+    }
+    .company-banner__logo::after {
+      content: "";
+      position: absolute;
+      top: 14px;
+      bottom: 14px;
+      right: 0;
+      width: 1px;
+      background: linear-gradient(
+        180deg,
+        hsl(var(--print-brand) / 0) 0%,
+        hsl(var(--print-brand) / 0.22) 45%,
+        hsl(var(--print-brand) / 0.22) 55%,
+        hsl(var(--print-brand) / 0) 100%
+      );
+    }
+    .company-banner__logo img {
+      display: block;
+      max-width: 100%;
+      max-height: 88px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    .company-banner__logo-placeholder {
+      font-family: "DM Sans", Inter, sans-serif;
+      font-size: 8pt;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.35;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: hsl(var(--print-brand) / 0.45);
+    }
+    .company-banner__details {
+      flex: 1;
+      min-width: 0;
+      padding: 18px 22px 18px 24px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0;
+      background: linear-gradient(
+        135deg,
+        hsl(var(--print-brand-deep)) 0%,
+        hsl(var(--print-brand)) 48%,
+        hsl(221 58% 46%) 100%
+      );
+      color: hsl(var(--print-brand-fg));
+    }
+    .company-banner__eyebrow {
+      font-size: 7pt;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.72;
+      margin-bottom: 6px;
+    }
+    .company-banner__name {
+      font-family: "DM Sans", Inter, sans-serif;
+      font-size: 16pt;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      line-height: 1.2;
+      margin: 0 0 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid hsl(0 0% 100% / 0.22);
+    }
+    .company-banner__block {
+      margin-top: 10px;
+    }
+    .company-banner__block:first-of-type {
+      margin-top: 0;
+    }
+    .company-banner__label {
+      display: block;
+      font-size: 7pt;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      opacity: 0.65;
+      margin-bottom: 3px;
+    }
+    .company-banner__text {
+      font-size: 9pt;
+      font-weight: 500;
+      line-height: 1.5;
+      opacity: 0.95;
+      margin: 0;
+    }
+    .company-banner__contact {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px 22px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid hsl(0 0% 100% / 0.18);
+    }
+    .company-banner__contact-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .company-banner__contact-item .company-banner__label {
+      margin-bottom: 0;
+    }
+    .company-banner__contact-item span:last-child {
+      font-size: 8.5pt;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    /* Body panel: visually joined to header */
+    .print-doc-body {
+      margin-top: 0;
+      padding: 14px 12px 16px;
+      background: hsl(var(--print-brand-soft));
+      border: 1px solid hsl(var(--print-brand) / 0.28);
+      border-top: none;
+      border-radius: 0 0 14px 14px;
+    }
+
+    /* 3-part ribbon: left table | title | right table */
+    .doc-ribbon {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(132px, 26%) minmax(0, 1fr);
+      gap: 10px;
+      margin-top: 0;
+      margin-bottom: 16px;
+      align-items: stretch;
+    }
+    @media (max-width: 720px) {
+      .doc-ribbon {
+        grid-template-columns: 1fr;
+      }
+    }
+    .mini-doc {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid hsl(var(--print-brand) / 0.32);
+      font-size: 8.5pt;
+      table-layout: fixed;
+    }
+    .mini-doc td {
+      border: 1px solid hsl(var(--print-brand) / 0.28);
+      padding: 6px 8px;
+      vertical-align: middle;
+    }
+    .mini-doc .lbl {
+      background: hsl(var(--print-brand));
+      color: hsl(var(--print-brand-fg));
+      font-weight: 700;
+      width: 44%;
+    }
+    .mini-doc .val {
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+      font-weight: 500;
+    }
+    .doc-ribbon__title {
+      background: hsl(var(--print-brand));
+      color: hsl(var(--print-brand-fg));
+      font-weight: 700;
+      font-size: 10.5pt;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 12px 10px;
+      border: 1px solid hsl(var(--print-brand) / 0.85);
+      line-height: 1.25;
+    }
+
+    .section-title {
+      font-size: 10.5pt;
+      font-weight: 700;
+      margin: 10px 0 8px;
+      color: hsl(var(--print-brand));
+    }
+
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 14px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid hsl(var(--print-brand) / 0.35);
+    }
+    .items-table thead {
+      background: hsl(var(--print-brand));
+      color: hsl(var(--print-brand-fg));
+    }
+    .items-table th {
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      border: 1px solid hsl(var(--print-brand) / 0.9);
+    }
+    .items-table td {
+      padding: 7px 4px;
+      border: 1px solid hsl(var(--border));
+      font-size: 8.5pt;
+      background: hsl(var(--card));
+    }
+    .items-table tbody tr:nth-child(odd) td {
+      background: hsl(var(--print-brand) / 0.07);
+    }
+    .text-left {
+      text-align: left !important;
+      padding-left: 8px !important;
+    }
+    .text-right {
+      text-align: right !important;
+      padding-right: 8px !important;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bottom-section {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 6px;
+      align-items: flex-start;
+    }
+    .notes-section {
+      width: 55%;
+      border: 1px solid hsl(var(--print-brand) / 0.35);
+      padding: 12px;
+      min-height: 96px;
+      background: hsl(var(--card));
+      border-radius: var(--radius);
+    }
+    .notes-section h4 {
+      font-size: 8pt;
+      color: hsl(var(--print-brand));
+      margin-bottom: 8px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid hsl(var(--print-brand) / 0.22);
+      padding-bottom: 6px;
+    }
+    .notes-section p {
+      font-size: 9pt;
+      color: hsl(var(--foreground));
+    }
+
+    .totals-section {
+      width: 42%;
+    }
+    .totals-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid hsl(var(--border));
+    }
+    .totals-table td {
+      padding: 8px 10px;
+      border: 1px solid hsl(var(--border));
+      font-size: 9.5pt;
+    }
+    .totals-table .label {
+      text-align: left;
+      font-weight: 600;
+      background: hsl(var(--muted));
+      color: hsl(var(--foreground));
+    }
+    .totals-table .value {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      background: hsl(var(--card));
+    }
+    .totals-table tr.grand td {
+      background: hsl(var(--print-brand)) !important;
+      color: hsl(var(--print-brand-fg)) !important;
+      font-weight: 700;
+      font-size: 10.5pt;
+      border-color: hsl(var(--print-brand)) !important;
+    }
+
+    .invoice-thankyou {
+      text-align: center;
+      margin-top: 20px;
+      padding: 18px 16px 8px;
+      border-top: 1px solid hsl(var(--print-brand) / 0.2);
+    }
+    .invoice-thankyou__title {
+      font-family: "DM Sans", Inter, sans-serif;
+      font-size: 11pt;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: hsl(var(--print-brand));
+      margin: 0 0 8px;
+    }
+    .invoice-thankyou__sub {
+      font-size: 8.5pt;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+      margin: 0;
+      line-height: 1.5;
+      max-width: 42em;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .meta-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 14px;
+      margin-top: 12px;
+      border-top: 1px solid hsl(var(--border));
+      font-size: 8pt;
+      color: hsl(var(--muted-foreground));
+    }
+
+    @media print {
+      .toolbar {
+        display: none !important;
+      }
+      body {
+        padding: 0 !important;
+        background: hsl(var(--background)) !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      .page {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        min-height: auto !important;
+        max-width: none !important;
+      }
+      .print-sheet-top {
+        box-shadow: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar no-print">
+    <div class="toolbar-title">
+      <strong>{{ doc.issue_number }}</strong>
+      <span> · Goods issue</span>
+    </div>
+    <span class="hint"><strong>No date/URL in print:</strong> Chrome/Edge → Print → <em>More settings</em> → turn <strong>off</strong> “Headers and footers”. Save as PDF: Destination → Save as PDF.</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a class="back" href="{% url 'inventory:goods_issue_detail' doc.pk %}">← Back</a>
+      <button type="button" class="print" id="btn-print-gi">PRINT / Save as PDF</button>
+    </div>
+  </div>
+
+  <div class="page" id="print-root">
+    <div class="print-sheet-top">
+    <div class="company-banner">
+      <div class="company-banner__logo">
+        {% if company.logo_url %}
+        <img src="{{ company.logo_url }}" alt="{{ company.name|default:'Company' }}" loading="eager" decoding="async" />
+        {% else %}
+        <span class="company-banner__logo-placeholder">Company<br />Logo</span>
+        {% endif %}
+      </div>
+      <div class="company-banner__details">
+        <p class="company-banner__eyebrow">Garments &amp; accessories</p>
+        <h1 class="company-banner__name">{{ company.name|default:"Company" }}</h1>
+        <div class="company-banner__block">
+          <span class="company-banner__label">Registered address</span>
+          <p class="company-banner__text">{{ company.address|default:"Address not configured" }}</p>
+        </div>
+        <div class="company-banner__contact">
+          <div class="company-banner__contact-item">
+            <span class="company-banner__label">Telephone</span>
+            <span>{{ company.phone|default:"—" }}</span>
+          </div>
+          <div class="company-banner__contact-item">
+            <span class="company-banner__label">Email</span>
+            <span>{{ company.email|default:"—" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="print-doc-body">
+    <div class="doc-ribbon">
+      <table class="mini-doc" aria-label="Document details">
+        <tr>
+          <td class="lbl">Date:</td>
+          <td class="val">{{ doc.issue_date|date:"d-m-Y" }}</td>
+        </tr>
+        <tr>
+          <td class="lbl">Issue #:</td>
+          <td class="val">{{ doc.issue_number }}</td>
+        </tr>
+        <tr>
+          <td class="lbl">Warehouse:</td>
+          <td class="val">{{ doc.warehouse.code }}{% if doc.warehouse.name %} — {{ doc.warehouse.name }}{% endif %}</td>
+        </tr>
+      </table>
+      <div class="doc-ribbon__title">Goods issue</div>
+      <table class="mini-doc" aria-label="Terms and status">
+        <tr>
+          <td class="lbl">Type:</td>
+          <td class="val">{{ doc.get_issue_type_display }}</td>
+        </tr>
+        <tr>
+          <td class="lbl">Status:</td>
+          <td class="val">{{ doc.get_status_display }}</td>
+        </tr>
+        <tr>
+          <td class="lbl">Issued to:</td>
+          <td class="val">{{ doc.issued_to|default:"—" }}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section-title">Contents</div>
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width:5%;">#</th>
+          <th style="width:14%;">SKU</th>
+          <th style="width:35%;">Product</th>
+          <th style="width:14%;">Quantity</th>
+          <th style="width:14%;">Unit cost</th>
+          <th style="width:14%;">Line total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in doc.items.all %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td class="text-left">{{ line.product.sku }}</td>
+          <td class="text-left">{{ line.product.name }}</td>
+          <td class="text-right">{{ line.quantity|floatformat:8 }}</td>
+          <td class="text-right">{{ line.unit_cost|floatformat:8 }}</td>
+          <td class="text-right">{{ line.line_total|floatformat:8 }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;padding:16px;color:hsl(var(--muted-foreground));">No lines.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="bottom-section">
+      <div class="notes-section">
+        <h4>Notes / special instructions</h4>
+        {% if doc.reference %}<p><strong>Reference:</strong> {{ doc.reference }}</p>{% endif %}
+        {% if doc.notes %}<p><strong>Notes:</strong> {{ doc.notes }}</p>{% endif %}
+        {% if not doc.reference and not doc.notes %}<p style="color:hsl(var(--muted-foreground));">—</p>{% endif %}
+      </div>
+      <div class="totals-section">
+        <table class="totals-table">
+          <tr><td class="label">Line items</td><td class="value">{{ doc.items.count }}</td></tr>
+          <tr class="grand"><td class="label">Total amount</td><td class="value">{{ total_amount|floatformat:8 }}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="invoice-thankyou">
+      <p class="invoice-thankyou__title">Thank you for your business</p>
+      <p class="invoice-thankyou__sub">We value your partnership. For any queries regarding this goods issue, please contact us using the details above.</p>
+    </div>
+
+    <div class="meta-footer">
+      <span>Generated {{ print_generated_at|date:"Y-m-d H:i" }}</span>
+      <span>{{ company.name }} · Goods issue</span>
+    </div>
+    </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var tabTitle = document.title;
+      window.addEventListener("beforeprint", function () {
+        tabTitle = document.title;
+        /* Shrink browser print header text; URL/footer still need “Headers and footers” off in the dialog */
+        document.title = "{{ doc.issue_number|escapejs }}";
+      });
+      window.addEventListener("afterprint", function () {
+        document.title = tabTitle;
+      });
+      var btn = document.getElementById("btn-print-gi");
+      if (btn) btn.addEventListener("click", function () {
+        window.print();
+      });
+    })();
+  </script>
+</body>
+</html>

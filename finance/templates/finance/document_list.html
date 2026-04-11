@@ -1,44 +1,229 @@
 {% extends "auth_tenants/base.html" %}
+{% load static %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block page_title %}Finance · {{ page_title }}{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css" rel="stylesheet"/>
+<link href="{% static 'foundation/css/tom_select_inv.css' %}" rel="stylesheet"/>
+{% endblock %}
 {% block content %}
-<div class="w-full px-1 md:px-2 space-y-5">
-  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
-    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
-      <div class="flex items-center gap-2">
-        <a href="{% url 'finance:finance_dashboard' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent"><i data-lucide="arrow-left" class="h-4 w-4"></i></a>
-        <h2 class="text-lg font-semibold text-foreground">{{ page_title }}</h2>
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  {% if messages %}
+  <ul class="rounded-lg border border-border bg-card p-3 text-sm">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">{{ page_title }}</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">Search, filter, and open documents</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a href="{% url 'finance:finance_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+          </a>
+          {% if page_title == 'AP invoices' %}<a href="{% url 'finance:ap_invoice_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"><i data-lucide="plus" class="h-4 w-4"></i> New</a>{% endif %}
+          {% if page_title == 'AR invoices' %}<a href="{% url 'finance:ar_invoice_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"><i data-lucide="plus" class="h-4 w-4"></i> New</a>{% endif %}
+          {% if page_title == 'AP payments' %}<a href="{% url 'finance:ap_payment_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"><i data-lucide="plus" class="h-4 w-4"></i> New</a>{% endif %}
+          {% if page_title == 'AR receipts' %}<a href="{% url 'finance:ar_receipt_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"><i data-lucide="plus" class="h-4 w-4"></i> New</a>{% endif %}
+          {% if page_title == 'Bank accounts' %}<a href="{% url 'finance:bank_account_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"><i data-lucide="plus" class="h-4 w-4"></i> New</a>{% endif %}
+          {% if page_title == 'Cash transactions' %}<a href="{% url 'finance:cash_transaction_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"><i data-lucide="plus" class="h-4 w-4"></i> New</a>{% endif %}
+          {% if page_title == 'Fixed assets' %}<a href="{% url 'finance:fixed_asset_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"><i data-lucide="plus" class="h-4 w-4"></i> New</a>{% endif %}
+          {% if page_title == 'Asset depreciation' %}<a href="{% url 'finance:asset_depreciation_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"><i data-lucide="plus" class="h-4 w-4"></i> New</a>{% endif %}
+          {% if page_title == 'Budgets' %}<a href="{% url 'finance:budget_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"><i data-lucide="plus" class="h-4 w-4"></i> New</a>{% endif %}
+        </div>
       </div>
-      {% if page_title == 'AP invoices' %}<a href="{% url 'finance:ap_invoice_create' %}" class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Add</a>{% endif %}
-      {% if page_title == 'AR invoices' %}<a href="{% url 'finance:ar_invoice_create' %}" class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Add</a>{% endif %}
-      {% if page_title == 'AP payments' %}<a href="{% url 'finance:ap_payment_create' %}" class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Add</a>{% endif %}
-      {% if page_title == 'AR receipts' %}<a href="{% url 'finance:ar_receipt_create' %}" class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Add</a>{% endif %}
-      {% if page_title == 'Bank accounts' %}<a href="{% url 'finance:bank_account_create' %}" class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Add</a>{% endif %}
-      {% if page_title == 'Cash transactions' %}<a href="{% url 'finance:cash_transaction_create' %}" class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Add</a>{% endif %}
-      {% if page_title == 'Fixed assets' %}<a href="{% url 'finance:fixed_asset_create' %}" class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Add</a>{% endif %}
-      {% if page_title == 'Asset depreciation' %}<a href="{% url 'finance:asset_depreciation_create' %}" class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Add</a>{% endif %}
-      {% if page_title == 'Budgets' %}<a href="{% url 'finance:budget_create' %}" class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Add</a>{% endif %}
-    </div>
-    <div class="ui-table-wrap overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead><tr class="border-b border-border bg-muted/40"><th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Item</th><th class="px-4 py-3 text-right text-xs font-semibold uppercase text-muted-foreground">Actions</th></tr></thead>
-        <tbody class="divide-y divide-border">
-        {% for obj in object_list %}
-          <tr><td class="px-4 py-3">{{ obj }}</td><td class="px-4 py-3 text-right">
-            {% if page_title == 'AP invoices' and obj.status == 'draft' %}<form method="post" action="{% url 'finance:ap_invoice_post' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded-md border border-border px-2 py-1 text-xs hover:bg-accent">Post</button></form>{% endif %}
-            {% if page_title == 'AR invoices' and obj.status == 'draft' %}<form method="post" action="{% url 'finance:ar_invoice_post' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded-md border border-border px-2 py-1 text-xs hover:bg-accent">Post</button></form>{% endif %}
-            {% if page_title == 'AP payments' and obj.status == 'draft' %}<form method="post" action="{% url 'finance:ap_payment_post' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded-md border border-border px-2 py-1 text-xs hover:bg-accent">Post</button></form>{% endif %}
-            {% if page_title == 'AR receipts' and obj.status == 'draft' %}<form method="post" action="{% url 'finance:ar_receipt_post' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded-md border border-border px-2 py-1 text-xs hover:bg-accent">Post</button></form>{% endif %}
-            {% if page_title == 'Cash transactions' and obj.status == 'draft' %}<form method="post" action="{% url 'finance:cash_transaction_post' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded-md border border-border px-2 py-1 text-xs hover:bg-accent">Post</button></form>{% endif %}
-            {% if page_title == 'Asset depreciation' and obj.status == 'draft' %}<form method="post" action="{% url 'finance:asset_depreciation_post' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded-md border border-border px-2 py-1 text-xs hover:bg-accent">Post</button></form>{% endif %}
-          </td></tr>
-        {% empty %}
-          <tr><td colspan="2" class="px-4 py-10 text-center text-muted-foreground">No records.</td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
+
+      <form method="get" class="inv-list-filter px-4 py-4">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <input type="text" name="q" value="{{ selected.q }}" placeholder="Search…" class="inv-list-control" />
+          <select name="status" class="inv-list-control">
+            <option value="">All status</option>
+            {% for v,l in status_choices %}<option value="{{ v }}" {% if selected.status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+          </select>
+          {% if party_autocomplete_url %}
+          <select name="party" class="inv-list-control inv-filter-autocomplete" data-autocomplete-url="{{ party_autocomplete_url }}" data-value-key="id">
+            <option value="">All {{ party_label|lower }}</option>
+            {% if filtered_party %}
+              <option value="{{ filtered_party.id }}" selected>
+                {% if filtered_party.supplier_code %}{{ filtered_party.supplier_code }} — {% endif %}
+                {% if filtered_party.customer_code %}{{ filtered_party.customer_code }} — {% endif %}
+                {{ filtered_party.name }}
+              </option>
+            {% endif %}
+          </select>
+          {% else %}
+          <div class="hidden xl:block"></div>
+          {% endif %}
+          <select name="sort" class="inv-list-control">
+            <option value="-id" {% if selected.sort == '-id' %}selected{% endif %}>Newest first</option>
+            <option value="id" {% if selected.sort == 'id' %}selected{% endif %}>Oldest first</option>
+            {% if page_title != 'Bank accounts' and page_title != 'Fixed assets' and page_title != 'Budgets' %}
+            <option value="posting_date" {% if selected.sort == 'posting_date' %}selected{% endif %}>Date (oldest)</option>
+            <option value="-posting_date" {% if selected.sort == '-posting_date' %}selected{% endif %}>Date (newest)</option>
+            {% endif %}
+          </select>
+          <select name="page_size" class="inv-list-control">
+            <option value="10" {% if selected.page_size == '10' %}selected{% endif %}>10 / page</option>
+            <option value="20" {% if selected.page_size == '20' %}selected{% endif %}>20 / page</option>
+            <option value="50" {% if selected.page_size == '50' %}selected{% endif %}>50 / page</option>
+          </select>
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+            <i data-lucide="search" class="h-4 w-4"></i> Apply filters
+          </button>
+          <a href="{{ request.path }}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent">
+            <i data-lucide="rotate-ccw" class="h-4 w-4"></i> Reset
+          </button>
+        </div>
+      </form>
+
+      <div class="ui-table-wrap overflow-x-auto border-t border-border/50 bg-card">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-border bg-muted/40">
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Document</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            {% for obj in object_list %}
+            <tr class="hover:bg-accent/40 transition-colors">
+              <td class="px-4 py-3 font-medium">{{ obj }}</td>
+              <td class="px-4 py-3">
+                {% if obj.status %}
+                  <span class="rounded-full bg-muted px-2 py-0.5 text-xs">{{ obj.get_status_display }}</span>
+                {% else %}
+                  <span class="text-muted-foreground">—</span>
+                {% endif %}
+              </td>
+              <td class="px-4 py-3 text-right whitespace-nowrap">
+                {% if page_title == 'Bank accounts' or page_title == 'Fixed assets' or page_title == 'Budgets' %}
+                <span class="text-muted-foreground text-sm">—</span>
+                {% elif page_title == 'Cash transactions' and obj.status != 'draft' %}
+                <span class="text-muted-foreground text-sm">—</span>
+                {% elif page_title == 'Asset depreciation' and obj.status != 'draft' %}
+                <span class="text-muted-foreground text-sm">—</span>
+                {% else %}
+                <div class="relative flex justify-end">
+                  <button type="button" class="fin-row-menu-trigger table-action-btn border border-border/70 bg-background shadow-sm ring-1 ring-black/[0.04] dark:ring-white/10" data-fin-row-menu="fd-actions-{{ obj.pk }}" aria-haspopup="menu" aria-expanded="false" title="Actions">
+                    <i data-lucide="more-vertical" class="h-4 w-4"></i>
+                  </button>
+                  <div id="fd-actions-{{ obj.pk }}" class="fin-row-menu-panel fixed z-[200] hidden w-[min(100vw-1.5rem,17.5rem)] overflow-hidden rounded-2xl border border-border bg-card/95 p-2 text-left shadow-[0_12px_40px_-8px_rgba(15,23,42,0.22)] ring-1 ring-border/60 backdrop-blur-md dark:bg-card dark:shadow-[0_12px_40px_-8px_rgba(0,0,0,0.55)]" role="menu">
+                    <div class="mb-2 rounded-xl bg-muted/50 px-3 py-2 text-left">
+                      <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Actions</p>
+                      <p class="truncate text-xs font-semibold text-foreground">{{ obj }}</p>
+                    </div>
+                    <div class="flex flex-col gap-0.5">
+                      {% if page_title == 'AP invoices' %}
+                        <a href="{% url 'finance:ap_invoice_detail' obj.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/20"><i data-lucide="eye" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">View</span><span class="block text-[11px] text-muted-foreground">Open document</span></span></a>
+                        {% if obj.status == 'draft' %}<a href="{% url 'finance:ap_invoice_edit' obj.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500/12 text-amber-700 ring-1 ring-amber-500/25 dark:text-amber-400"><i data-lucide="pencil" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">Edit</span><span class="block text-[11px] text-muted-foreground">Draft only</span></span></a>{% endif %}
+                        {% if obj.status == 'draft' %}<form method="post" action="{% url 'finance:ap_invoice_post' obj.pk %}" class="w-full">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border/80"><i data-lucide="send" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">Post</span><span class="block text-[11px] text-muted-foreground">Post to ledger</span></span></button></form>{% endif %}
+                        {% if obj.status == 'posted' %}<form method="post" action="{% url 'finance:ap_invoice_cancel' obj.pk %}" class="w-full border-t border-border pt-1" onsubmit="return confirm('Cancel this invoice?');">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-destructive/10"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/20"><i data-lucide="x-circle" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-destructive">Cancel</span><span class="block text-[11px] text-muted-foreground">Reverse posting</span></span></button></form>{% endif %}
+                        {% if obj.status == 'draft' %}<form method="post" action="{% url 'finance:ap_invoice_delete' obj.pk %}" class="w-full border-t border-border pt-1" onsubmit="return confirm('Delete this draft?');">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-destructive/10"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/20"><i data-lucide="trash-2" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-destructive">Delete</span><span class="block text-[11px] text-muted-foreground">Draft only</span></span></button></form>{% endif %}
+                      {% elif page_title == 'AR invoices' %}
+                        <a href="{% url 'finance:ar_invoice_detail' obj.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/20"><i data-lucide="eye" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">View</span><span class="block text-[11px] text-muted-foreground">Open document</span></span></a>
+                        {% if obj.status == 'draft' %}<a href="{% url 'finance:ar_invoice_edit' obj.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500/12 text-amber-700 ring-1 ring-amber-500/25 dark:text-amber-400"><i data-lucide="pencil" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">Edit</span><span class="block text-[11px] text-muted-foreground">Draft only</span></span></a>{% endif %}
+                        {% if obj.status == 'draft' %}<form method="post" action="{% url 'finance:ar_invoice_post' obj.pk %}" class="w-full">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border/80"><i data-lucide="send" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">Post</span><span class="block text-[11px] text-muted-foreground">Post to ledger</span></span></button></form>{% endif %}
+                        {% if obj.status == 'posted' %}<form method="post" action="{% url 'finance:ar_invoice_cancel' obj.pk %}" class="w-full border-t border-border pt-1" onsubmit="return confirm('Cancel this invoice?');">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-destructive/10"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/20"><i data-lucide="x-circle" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-destructive">Cancel</span><span class="block text-[11px] text-muted-foreground">Reverse posting</span></span></button></form>{% endif %}
+                        {% if obj.status == 'draft' %}<form method="post" action="{% url 'finance:ar_invoice_delete' obj.pk %}" class="w-full border-t border-border pt-1" onsubmit="return confirm('Delete this draft?');">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-destructive/10"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/20"><i data-lucide="trash-2" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-destructive">Delete</span><span class="block text-[11px] text-muted-foreground">Draft only</span></span></button></form>{% endif %}
+                      {% elif page_title == 'AP payments' %}
+                        <a href="{% url 'finance:ap_payment_detail' obj.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/20"><i data-lucide="eye" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">View</span><span class="block text-[11px] text-muted-foreground">Open document</span></span></a>
+                        {% if obj.status == 'draft' %}<a href="{% url 'finance:ap_payment_edit' obj.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500/12 text-amber-700 ring-1 ring-amber-500/25 dark:text-amber-400"><i data-lucide="pencil" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">Edit</span><span class="block text-[11px] text-muted-foreground">Draft only</span></span></a>{% endif %}
+                        {% if obj.status == 'draft' %}<form method="post" action="{% url 'finance:ap_payment_post' obj.pk %}" class="w-full">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border/80"><i data-lucide="send" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">Post</span><span class="block text-[11px] text-muted-foreground">Post to ledger</span></span></button></form>{% endif %}
+                        {% if obj.status == 'posted' %}<form method="post" action="{% url 'finance:ap_payment_cancel' obj.pk %}" class="w-full border-t border-border pt-1" onsubmit="return confirm('Cancel this payment?');">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-destructive/10"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/20"><i data-lucide="x-circle" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-destructive">Cancel</span><span class="block text-[11px] text-muted-foreground">Reverse posting</span></span></button></form>{% endif %}
+                        {% if obj.status == 'draft' %}<form method="post" action="{% url 'finance:ap_payment_delete' obj.pk %}" class="w-full border-t border-border pt-1" onsubmit="return confirm('Delete this draft?');">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-destructive/10"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/20"><i data-lucide="trash-2" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-destructive">Delete</span><span class="block text-[11px] text-muted-foreground">Draft only</span></span></button></form>{% endif %}
+                      {% elif page_title == 'AR receipts' %}
+                        <a href="{% url 'finance:ar_receipt_detail' obj.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/20"><i data-lucide="eye" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">View</span><span class="block text-[11px] text-muted-foreground">Open document</span></span></a>
+                        {% if obj.status == 'draft' %}<a href="{% url 'finance:ar_receipt_edit' obj.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500/12 text-amber-700 ring-1 ring-amber-500/25 dark:text-amber-400"><i data-lucide="pencil" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">Edit</span><span class="block text-[11px] text-muted-foreground">Draft only</span></span></a>{% endif %}
+                        {% if obj.status == 'draft' %}<form method="post" action="{% url 'finance:ar_receipt_post' obj.pk %}" class="w-full">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border/80"><i data-lucide="send" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">Post</span><span class="block text-[11px] text-muted-foreground">Post to ledger</span></span></button></form>{% endif %}
+                        {% if obj.status == 'posted' %}<form method="post" action="{% url 'finance:ar_receipt_cancel' obj.pk %}" class="w-full border-t border-border pt-1" onsubmit="return confirm('Cancel this receipt?');">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-destructive/10"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/20"><i data-lucide="x-circle" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-destructive">Cancel</span><span class="block text-[11px] text-muted-foreground">Reverse posting</span></span></button></form>{% endif %}
+                        {% if obj.status == 'draft' %}<form method="post" action="{% url 'finance:ar_receipt_delete' obj.pk %}" class="w-full border-t border-border pt-1" onsubmit="return confirm('Delete this draft?');">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-destructive/10"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/20"><i data-lucide="trash-2" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-destructive">Delete</span><span class="block text-[11px] text-muted-foreground">Draft only</span></span></button></form>{% endif %}
+                      {% elif page_title == 'Cash transactions' %}
+                        {% if obj.status == 'draft' %}<form method="post" action="{% url 'finance:cash_transaction_post' obj.pk %}" class="w-full">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border/80"><i data-lucide="send" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">Post</span><span class="block text-[11px] text-muted-foreground">Post to ledger</span></span></button></form>{% endif %}
+                      {% elif page_title == 'Asset depreciation' %}
+                        {% if obj.status == 'draft' %}<form method="post" action="{% url 'finance:asset_depreciation_post' obj.pk %}" class="w-full">{% csrf_token %}<button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border/80"><i data-lucide="send" class="h-4 w-4"></i></span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-foreground">Post</span><span class="block text-[11px] text-muted-foreground">Post run</span></span></button></form>{% endif %}
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="px-4 py-10 text-center text-muted-foreground">No records.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if is_paginated %}
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border/50 bg-card px-4 py-3 text-sm">
+        <p class="text-muted-foreground">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} ({{ page_obj.paginator.count }} results)</p>
+        <div class="flex items-center gap-2">
+          {% if page_obj.has_previous %}<a class="rounded-md border border-border px-3 py-1.5 hover:bg-accent" href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+          {% if page_obj.has_next %}<a class="rounded-md border border-border px-3 py-1.5 hover:bg-accent" href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
 </div>
 {% endblock %}
-
+{% block extra_js %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script src="{% static 'inventory/js/filter_autocomplete.js' %}"></script>
+<script>
+(function () {
+  function closeAll() {
+    document.querySelectorAll('.fin-row-menu-panel').forEach(function (p) {
+      p.classList.add('hidden');
+      var id = p.id;
+      var trig = document.querySelector('[data-fin-row-menu="' + id + '"]');
+      if (trig) { trig.setAttribute('aria-expanded', 'false'); }
+    });
+  }
+  function placePanel(trigger, panel) {
+    var rect = trigger.getBoundingClientRect();
+    var w = panel.offsetWidth || 200;
+    var h = panel.offsetHeight || 160;
+    var left = rect.right - w;
+    if (left < 8) left = 8;
+    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    var top = rect.bottom + 6;
+    if (top + h > window.innerHeight - 8) top = Math.max(8, rect.top - h - 6);
+    panel.style.left = left + 'px';
+    panel.style.top = top + 'px';
+  }
+  document.querySelectorAll('.fin-row-menu-trigger').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var pid = btn.getAttribute('data-fin-row-menu');
+      var panel = pid ? document.getElementById(pid) : null;
+      if (!panel) return;
+      var opening = panel.classList.contains('hidden');
+      closeAll();
+      if (opening) {
+        panel.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            placePanel(btn, panel);
+            if (window.lucide) window.lucide.createIcons();
+          });
+        });
+      }
+    });
+  });
+  document.addEventListener('click', closeAll);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
+  window.addEventListener('scroll', closeAll, true);
+  window.addEventListener('resize', closeAll);
+})();
+</script>
+{% endblock %}

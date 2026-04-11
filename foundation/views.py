@@ -48,6 +48,18 @@ class FoundationDashboardView(
     template_name = "foundation/dashboard.html"
     page_title = "Foundation setup"
 
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        tenant = getattr(request, "hrm_tenant", None)
+        if (
+            tenant is not None
+            and getattr(request.user, "role", None) in ("staff", "tenant_admin")
+            and not request.user.has_tenant_permission("foundation.view")
+        ):
+            messages.error(request, "You do not have permission for this Foundation action.")
+            return redirect("dashboard")
+        return response
+
 
 # ── Warehouses ───────────────────────────────────────────────────────────────────
 

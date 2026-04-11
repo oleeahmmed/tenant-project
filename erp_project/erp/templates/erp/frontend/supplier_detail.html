@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ supplier.name }} - Supplier Details{% endblock %}
+
+{% block content %}
+<!-- Page header section -->
+<div class="block-header">
+    <div class="row clearfix">
+        <div class="col-lg-6 col-md-12 col-sm-12">
+            <h1>{{ supplier.name }}</h1>
+            <span>Supplier Details</span>
+        </div>
+        <div class="col-lg-6 col-md-12 col-sm-12 text-lg-right">
+            <a href="{% url 'erp:supplier_update' supplier.pk %}" class="btn btn-warning">
+                <i class="fa fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'erp:supplier_list' %}" class="btn btn-secondary">
+                <i class="fa fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Supplier Info -->
+<div class="row clearfix">
+    <div class="col-lg-8 col-md-12">
+        <div class="card">
+            <div class="header">
+                <h2>Supplier Information</h2>
+            </div>
+            <div class="body">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <th width="200">Name:</th>
+                            <td><strong>{{ supplier.name }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td><a href="mailto:{{ supplier.email }}">{{ supplier.email|default:"Not provided" }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Phone:</th>
+                            <td><a href="tel:{{ supplier.phone }}">{{ supplier.phone }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Address:</th>
+                            <td>{{ supplier.address|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>City:</th>
+                            <td>{{ supplier.city|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Country:</th>
+                            <td>{{ supplier.country|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Tax Number:</th>
+                            <td>{{ supplier.tax_number|default:"Not provided" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                {% if supplier.is_active %}
+                                <span class="badge badge-success">Active</span>
+                                {% else %}
+                                <span class="badge badge-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ supplier.created_at|date:"d M, Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Updated:</th>
+                            <td>{{ supplier.updated_at|date:"d M, Y H:i" }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-12">
+        <!-- Quick Info -->
+        <div class="card">
+            <div class="header">
+                <h2>Quick Info</h2>
+            </div>
+            <div class="body">
+                <div class="text-center mb-3">
+                    <i class="fa fa-truck fa-3x text-primary"></i>
+                    <p class="mt-2 mb-0">Supplier</p>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <p class="text-muted mb-1">Location</p>
+                    <h6 class="mb-0">{{ supplier.city }}, {{ supplier.country }}</h6>
+                </div>
+                <div class="mb-3">
+                    <p class="text-muted mb-1">Contact</p>
+                    <h6 class="mb-0">{{ supplier.phone }}</h6>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="card">
+            <div class="header">
+                <h2>Actions</h2>
+            </div>
+            <div class="body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'erp:supplier_update' supplier.pk %}" class="btn btn-warning btn-block mb-2">
+                        <i class="fa fa-edit"></i> Edit Supplier
+                    </a>
+                    <button type="button" class="btn btn-danger btn-block" onclick="confirmDelete()">
+                        <i class="fa fa-trash"></i> Delete Supplier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete supplier "<strong>{{ supplier.name }}</strong>"?</p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'erp:supplier_delete' supplier.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete() {
+    $('#deleteModal').modal('show');
+}
+</script>
+{% endblock %}

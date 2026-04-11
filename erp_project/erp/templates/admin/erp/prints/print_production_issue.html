@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Issue - {{ issue.issue_number }}</title>
+    <style>
+        @page { size: A4; margin: 10mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.3; color: #000; background: #fff; }
+        .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 15px; border: 2px solid #d0d0d0; background: #fff; display: flex; flex-direction: column; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #f59e0b; }
+        .header-left { width: 30%; }
+        .logo-box { width: 100px; height: 100px; border: 1px solid #ccc; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 10pt; color: #999; }
+        .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .company-name { font-size: 12pt; font-weight: bold; margin-bottom: 3px; }
+        .company-address { font-size: 8pt; line-height: 1.4; color: #333; }
+        .header-center { width: 40%; text-align: center; }
+        .title { font-size: 20pt; font-weight: bold; color: #f59e0b; letter-spacing: 1px; margin-bottom: 10px; }
+        .issue-info-box { display: inline-block; border: 2px solid #f59e0b; padding: 10px 20px; background: #fef3c7; border-radius: 5px; margin-top: 5px; }
+        .issue-number { font-size: 16pt; font-weight: bold; color: #f59e0b; margin-bottom: 5px; }
+        .issue-date { font-size: 12pt; font-weight: bold; color: #d97706; }
+        .header-right { width: 30%; text-align: right; font-size: 9pt; line-height: 1.5; }
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 10pt; font-weight: bold; margin-top: 10px; }
+        .status-draft { background: #e0e0e0; color: #424242; }
+        .status-pending { background: #fff9c4; color: #f57f17; }
+        .status-issued { background: #fef3c7; color: #d97706; }
+        .status-cancelled { background: #ffcdd2; color: #c62828; }
+        .info-bar { display: table; width: 100%; margin-bottom: 15px; border-collapse: collapse; }
+        .info-bar-row { display: table-row; }
+        .info-bar-cell { display: table-cell; padding: 8px 6px; border: 1px solid #fcd34d; background: #fef3c7; text-align: center; font-size: 9pt; font-weight: bold; color: #f59e0b; }
+        .content { flex: 1; }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .items-table thead { background: #f59e0b; color: #fff; }
+        .items-table th { padding: 10px 6px; text-align: center; font-size: 9pt; font-weight: bold; border: 1px solid #f59e0b; }
+        .items-table td { padding: 8px 6px; border: 1px solid #e0e0e0; text-align: center; font-size: 9pt; }
+        .items-table tbody tr:nth-child(odd) { background: #fef3c7; }
+        .items-table tbody tr:nth-child(even) { background: #fff; }
+        .text-left { text-align: left !important; padding-left: 8px !important; }
+        .text-right { text-align: right !important; padding-right: 10px !important; }
+        .notes-section { border: 1px solid #d0d0d0; padding: 12px; min-height: 80px; margin-top: 15px; }
+        .notes-section h4 { font-size: 9pt; color: #666; margin-bottom: 8px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
+        .signature-section { display: flex; justify-content: space-between; margin-top: 40px; margin-bottom: 20px; }
+        .signature-box { width: 30%; text-align: center; }
+        .signature-line { border-top: 1px solid #000; margin-top: 50px; padding-top: 8px; font-size: 9pt; }
+        .footer { text-align: center; font-size: 12pt; color: #f59e0b; font-weight: bold; margin-top: auto; padding-top: 15px; border-top: 2px solid #f59e0b; }
+        .copyright { text-align: center; font-size: 8pt; color: #999; margin-top: 10px; }
+        .print-btn { position: fixed; top: 15px; right: 15px; padding: 12px 24px; background: #f59e0b; color: #fff; border: none; border-radius: 5px; font-size: 11pt; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); z-index: 9999; }
+        .print-btn:hover { background: #d97706; }
+        @media print { .print-btn { display: none !important; } .page { border: none; padding: 0; min-height: auto; } body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ PRINT</button>
+    <div class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-box">{% if company.logo %}<img src="{{ company.logo.url }}" alt="Logo">{% else %}LOGO{% endif %}</div>
+                <div class="company-name">{{ company.name|default:"Company Name" }}</div>
+                <div class="company-address">{{ company.address|default:"Address" }}<br>{{ company.phone|default:"Phone" }}<br>{{ company.email|default:"Email" }}</div>
+            </div>
+            <div class="header-center">
+                <div class="title">PRODUCTION ISSUE</div>
+                <div class="issue-info-box">
+                    <div class="issue-number">{{ issue.issue_number }}</div>
+                    <div class="issue-date">{{ issue.issue_date|date:"d F, Y" }}</div>
+                </div>
+                <div class="status-badge status-{{ issue.status }}">{{ issue.get_status_display|upper }}</div>
+            </div>
+            <div class="header-right">
+                <strong>Production Order:</strong><br>
+                {{ issue.production_order.order_number|default:"-" }}<br><br>
+                <strong>Warehouse:</strong><br>
+                {{ issue.warehouse.name|default:"-" }}
+            </div>
+        </div>
+
+        <div class="info-bar">
+            <div class="info-bar-row">
+                <div class="info-bar-cell"><strong>Issued By:</strong><br>{{ issue.issued_by|default:"-" }}</div>
+                <div class="info-bar-cell"><strong>Issue Date:</strong><br>{{ issue.issue_date|date:"d M, Y" }}</div>
+                <div class="info-bar-cell"><strong>Status:</strong><br>{{ issue.get_status_display }}</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <h4 style="font-size: 11pt; color: #f59e0b; margin-bottom: 10px; border-bottom: 2px solid #f59e0b; padding-bottom: 5px;">📦 Components Issued for Production</h4>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 15%;">SKU</th>
+                        <th style="width: 35%;">COMPONENT</th>
+                        <th style="width: 12%;">BASE QTY</th>
+                        <th style="width: 12%;">ISSUED QTY</th>
+                        <th style="width: 8%;">UNIT</th>
+                        <th style="width: 13%;">UNIT COST</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in issue.items.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.product.sku }}</td>
+                        <td class="text-left">{{ item.product.name }}</td>
+                        <td>{{ item.base_quantity|floatformat:2 }}</td>
+                        <td>{{ item.issued_quantity|floatformat:2 }}</td>
+                        <td>{{ item.product.unit }}</td>
+                        <td class="text-right">{{ item.unit_cost|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% with item_count=issue.items.count %}
+                    {% for i in "12345678901234567890" %}
+                    {% if forloop.counter|add:item_count <= 15 %}
+                    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+                </tbody>
+            </table>
+
+            <div class="notes-section">
+                <h4>Notes / Remarks:</h4>
+                <p style="font-size: 9pt;">{{ issue.notes|default:"" }}</p>
+            </div>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box"><div class="signature-line">Issued By</div></div>
+            <div class="signature-box"><div class="signature-line">Received By (Production)</div></div>
+            <div class="signature-box"><div class="signature-line">Warehouse Manager</div></div>
+        </div>
+
+        <div class="footer">Material Issue Slip</div>
+        <div class="copyright">© {{ company.name|default:"Company" }} | {{ company.website|default:"www.company.com" }}</div>
+    </div>
+</body>
+</html>

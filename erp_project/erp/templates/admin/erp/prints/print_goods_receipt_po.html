@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goods Receipt PO - {{ receipt.receipt_number }}</title>
+    <style>
+        @page { size: A4; margin: 10mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; line-height: 1.3; color: #000; background: #fff; }
+        .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 15px; border: 2px solid #d0d0d0; background: #fff; display: flex; flex-direction: column; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 2px solid #0d9488; }
+        .header-left { width: 30%; }
+        .logo-box { width: 100px; height: 100px; border: 1px solid #ccc; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 10pt; color: #999; }
+        .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .company-name { font-size: 12pt; font-weight: bold; margin-bottom: 3px; }
+        .company-address { font-size: 8pt; line-height: 1.4; color: #333; }
+        .header-center { width: 40%; text-align: center; }
+        .title { font-size: 20pt; font-weight: bold; color: #0d9488; letter-spacing: 1px; margin-bottom: 10px; }
+        .receipt-info-box { display: inline-block; border: 2px solid #0d9488; padding: 10px 20px; background: #ccfbf1; border-radius: 5px; margin-top: 5px; }
+        .receipt-number { font-size: 16pt; font-weight: bold; color: #0d9488; margin-bottom: 5px; }
+        .receipt-date { font-size: 12pt; font-weight: bold; color: #0f766e; }
+        .header-right { width: 30%; text-align: right; font-size: 9pt; line-height: 1.5; }
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 10pt; font-weight: bold; margin-top: 10px; }
+        .status-draft { background: #e0e0e0; color: #424242; }
+        .status-pending { background: #fff9c4; color: #f57f17; }
+        .status-completed { background: #c8e6c9; color: #2e7d32; }
+        .status-cancelled { background: #ffcdd2; color: #c62828; }
+        .info-bar { display: table; width: 100%; margin-bottom: 15px; border-collapse: collapse; }
+        .info-bar-row { display: table-row; }
+        .info-bar-cell { display: table-cell; padding: 8px 6px; border: 1px solid #5eead4; background: #ccfbf1; text-align: center; font-size: 9pt; font-weight: bold; color: #0d9488; }
+        .content { flex: 1; }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .items-table thead { background: #0d9488; color: #fff; }
+        .items-table th { padding: 8px 4px; text-align: center; font-size: 8pt; font-weight: bold; border: 1px solid #0d9488; }
+        .items-table td { padding: 6px 4px; border: 1px solid #e0e0e0; text-align: center; font-size: 8pt; }
+        .items-table tbody tr:nth-child(odd) { background: #ccfbf1; }
+        .items-table tbody tr:nth-child(even) { background: #fff; }
+        .text-left { text-align: left !important; padding-left: 6px !important; }
+        .text-right { text-align: right !important; padding-right: 8px !important; }
+        .notes-section { border: 1px solid #d0d0d0; padding: 12px; min-height: 80px; margin-top: 15px; }
+        .notes-section h4 { font-size: 9pt; color: #666; margin-bottom: 8px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; }
+        .signature-section { display: flex; justify-content: space-between; margin-top: 40px; margin-bottom: 20px; }
+        .signature-box { width: 30%; text-align: center; }
+        .signature-line { border-top: 1px solid #000; margin-top: 50px; padding-top: 8px; font-size: 9pt; }
+        .footer { text-align: center; font-size: 12pt; color: #0d9488; font-weight: bold; margin-top: auto; padding-top: 15px; border-top: 2px solid #0d9488; }
+        .copyright { text-align: center; font-size: 8pt; color: #999; margin-top: 10px; }
+        .print-btn { position: fixed; top: 15px; right: 15px; padding: 12px 24px; background: #0d9488; color: #fff; border: none; border-radius: 5px; font-size: 11pt; font-weight: bold; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); z-index: 9999; }
+        .print-btn:hover { background: #0f766e; }
+        @media print { .print-btn { display: none !important; } .page { border: none; padding: 0; min-height: auto; } body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ PRINT</button>
+    <div class="page">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo-box">{% if company.logo %}<img src="{{ company.logo.url }}" alt="Logo">{% else %}LOGO{% endif %}</div>
+                <div class="company-name">{{ company.name|default:"Company Name" }}</div>
+                <div class="company-address">{{ company.address|default:"Address" }}<br>{{ company.phone|default:"Phone" }}<br>{{ company.email|default:"Email" }}</div>
+            </div>
+            <div class="header-center">
+                <div class="title">GOODS RECEIPT (PO)</div>
+                <div class="receipt-info-box">
+                    <div class="receipt-number">{{ receipt.receipt_number }}</div>
+                    <div class="receipt-date">{{ receipt.receipt_date|date:"d F, Y" }}</div>
+                </div>
+                <div class="status-badge status-{{ receipt.status }}">{{ receipt.get_status_display|upper }}</div>
+            </div>
+            <div class="header-right">
+                <strong>Supplier:</strong><br>
+                <strong style="font-size: 11pt;">{{ receipt.supplier.name }}</strong><br>
+                {{ receipt.supplier.address|default:"" }}<br>
+                {% if receipt.supplier.city %}{{ receipt.supplier.city }}{% endif %}<br>
+                <strong>Phone:</strong> {{ receipt.supplier.phone|default:"-" }}<br>
+                <strong>Email:</strong> {{ receipt.supplier.email|default:"-" }}
+            </div>
+        </div>
+
+        <div class="info-bar">
+            <div class="info-bar-row">
+                <div class="info-bar-cell"><strong>Purchase Order:</strong><br>{{ receipt.purchase_order.order_number|default:"-" }}</div>
+                <div class="info-bar-cell"><strong>Warehouse:</strong><br>{{ receipt.warehouse.name }}</div>
+                <div class="info-bar-cell"><strong>Received By:</strong><br>{{ receipt.received_by|default:"-" }}</div>
+                <div class="info-bar-cell"><strong>Inspected By:</strong><br>{{ receipt.inspected_by|default:"-" }}</div>
+                <div class="info-bar-cell"><strong>Supplier DN:</strong><br>{{ receipt.supplier_delivery_note|default:"-" }}</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 4%;">#</th>
+                        <th style="width: 10%;">SKU</th>
+                        <th style="width: 26%;">PRODUCT</th>
+                        <th style="width: 8%;">ORDERED</th>
+                        <th style="width: 8%;">RECEIVED</th>
+                        <th style="width: 8%;">REJECTED</th>
+                        <th style="width: 8%;">ACCEPTED</th>
+                        <th style="width: 10%;">UNIT PRICE</th>
+                        <th style="width: 10%;">LINE TOTAL</th>
+                        <th style="width: 8%;">REASON</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in receipt.items.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.product.sku }}</td>
+                        <td class="text-left">{{ item.product.name }}</td>
+                        <td>{{ item.ordered_quantity|floatformat:0 }}</td>
+                        <td>{{ item.received_quantity|floatformat:0 }}</td>
+                        <td>{{ item.rejected_quantity|floatformat:0 }}</td>
+                        <td>{{ item.accepted_quantity|floatformat:0 }}</td>
+                        <td class="text-right">{{ item.unit_price|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.line_total|floatformat:2 }}</td>
+                        <td>{{ item.rejection_reason|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% with item_count=receipt.items.count %}
+                    {% for i in "12345678901234567890" %}
+                    {% if forloop.counter|add:item_count <= 15 %}
+                    <tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                    {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+                </tbody>
+            </table>
+
+            <div class="notes-section">
+                <h4>Notes / Rejection Reasons:</h4>
+                <p style="font-size: 9pt;">{{ receipt.notes|default:"" }}</p>
+            </div>
+        </div>
+
+        <div class="signature-section">
+            <div class="signature-box"><div class="signature-line">Received By</div></div>
+            <div class="signature-box"><div class="signature-line">Inspected By</div></div>
+            <div class="signature-box"><div class="signature-line">Authorized By</div></div>
+        </div>
+
+        <div class="footer">Goods Receipt Confirmed</div>
+        <div class="copyright">© {{ company.name|default:"Company" }} | {{ company.website|default:"www.company.com" }}</div>
+    </div>
+</body>
+</html>
