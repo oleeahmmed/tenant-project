@@ -3,24 +3,28 @@
 {% block page_title %}HRM · {% if object %}Edit{% else %}Add{% endif %} ZKTeco device{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-2xl space-y-6">
+<div class="mx-auto max-w-2xl space-y-6 px-1 py-2 md:px-2">
   <a href="{% url 'hrm:zk_device_list' %}" class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
     <i data-lucide="arrow-left" class="h-4 w-4"></i> Back to devices
   </a>
-  <form method="post" class="simple-card space-y-4 rounded-xl border border-border p-6 shadow-card">
-    {% csrf_token %}
-    {% for field in form %}
-    <div>
-      <label class="mb-1.5 block text-xs font-medium text-muted-foreground" for="{{ field.id_for_label }}">{{ field.label }}</label>
-      {{ field }}
-      {% if field.help_text %}<p class="mt-1 text-xs text-muted-foreground">{{ field.help_text }}</p>{% endif %}
-      {% for e in field.errors %}<p class="mt-1 text-xs text-destructive">{{ e }}</p>{% endfor %}
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card overflow-hidden">
+      <form method="post" class="space-y-4 p-6">
+        {% csrf_token %}
+        {% for field in form %}
+        <div>
+          <label class="mb-1.5 block text-xs font-medium text-muted-foreground" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<p class="mt-1 text-xs text-muted-foreground">{{ field.help_text }}</p>{% endif %}
+          {% for e in field.errors %}<p class="mt-1 text-xs text-destructive">{{ e }}</p>{% endfor %}
+        </div>
+        {% endfor %}
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+          <a href="{% url 'hrm:zk_device_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
+        </div>
+      </form>
     </div>
-    {% endfor %}
-    <div class="flex gap-2 pt-2">
-      <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
-      <a href="{% url 'hrm:zk_device_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
-    </div>
-  </form>
+  </div>
 </div>
 {% endblock %}

@@ -11,11 +11,13 @@ MODULE_TO_APP_LABELS = {
     "sales": ["sales"],
     "production": ["production"],
     "jiraclone": ["jiraclone"],
+    "chat": ["chat"],
     "pos": ["pos"],
     "hrm": ["hrm"],
     "recruitment": ["recruitment"],
     "payroll": ["payroll"],
     "auth_tenants": ["auth_tenants"],
+    "support": ["support"],
 }
 
 CRUD_ACTIONS = ("view", "add", "change", "delete")

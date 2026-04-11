@@ -1,0 +1,56 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Support{% endblock %}
+{% block page_title %}Support · Tickets{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card overflow-hidden rounded-xl border border-border bg-card shadow-card">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-muted/20 px-5 py-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Helpdesk</p>
+          <h2 class="text-xl font-bold text-foreground mt-0.5">Support tickets</h2>
+          <p class="text-sm text-muted-foreground mt-1">Tenant-scoped requests and replies.</p>
+        </div>
+        <a href="{% url 'support:ticket_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+          New ticket
+        </a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[640px] text-sm">
+          <thead class="border-b border-border bg-muted/30 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <tr>
+              <th class="px-5 py-3">Ref</th>
+              <th class="px-5 py-3">Subject</th>
+              <th class="px-5 py-3">Area</th>
+              <th class="px-5 py-3">Status</th>
+              <th class="px-5 py-3">Priority</th>
+              <th class="px-5 py-3">Updated</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            {% for t in tickets %}
+            <tr class="hover:bg-muted/20">
+              <td class="px-5 py-3 font-mono text-xs"><a href="{% url 'support:ticket_detail' t.pk %}" class="text-primary hover:underline">{{ t.reference }}</a></td>
+              <td class="px-5 py-3 font-medium text-foreground">{{ t.subject }}</td>
+              <td class="px-5 py-3 text-muted-foreground">{{ t.get_product_area_display }}</td>
+              <td class="px-5 py-3">{{ t.get_status_display }}</td>
+              <td class="px-5 py-3">{{ t.get_priority_display }}</td>
+              <td class="px-5 py-3 text-muted-foreground">{{ t.updated_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="px-5 py-10 text-center text-muted-foreground">No tickets yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if is_paginated %}
+      <div class="border-t border-border px-5 py-3 text-sm text-muted-foreground">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

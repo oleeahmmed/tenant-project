@@ -11,7 +11,7 @@
       <a href="{% url 'jiraclone:issue_detail' project_key=project.key pk=issue.pk %}" class="hover:text-foreground">{{ issue.issue_key }}</a>
       {% endif %}
     </nav>
-    <div class="inv-list-card overflow-hidden rounded-xl border border-border bg-card shadow-card">
+    <div class="inv-list-card overflow-hidden">
       <div class="border-b border-border bg-muted/20 px-5 py-4">
         <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Issue</p>
         <h2 class="text-lg font-semibold text-foreground mt-0.5">{{ page_title }}</h2>

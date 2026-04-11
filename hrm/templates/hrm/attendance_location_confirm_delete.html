@@ -3,14 +3,18 @@
 {% block page_title %}HRM · Delete location{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-md">
-  <form method="post" class="simple-card rounded-xl border border-border p-6 shadow-card">
-    {% csrf_token %}
-    <p class="text-sm">Delete <strong>{{ object.name }}</strong>?</p>
-    <div class="mt-4 flex gap-2">
-      <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground">Delete</button>
-      <a href="{% url 'hrm:attendance_location_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm">Cancel</a>
+<div class="mx-auto max-w-md px-1 py-2 md:px-2">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card overflow-hidden">
+      <form method="post" class="p-6">
+        {% csrf_token %}
+        <p class="text-sm text-foreground">Delete <strong>{{ object.name }}</strong>?</p>
+        <div class="mt-4 flex gap-2">
+          <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground">Delete</button>
+          <a href="{% url 'hrm:attendance_location_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
+        </div>
+      </form>
     </div>
-  </form>
+  </div>
 </div>
 {% endblock %}

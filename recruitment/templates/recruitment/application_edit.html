@@ -12,8 +12,10 @@
     </div>
   </div>
 
-  <div class="simple-card max-w-3xl rounded-xl border border-border p-6 shadow-card">
-    <form method="post" enctype="multipart/form-data" class="space-y-4">
+  <div class="mx-auto max-w-3xl">
+    <div class="inv-list-shell sm:p-1.5">
+      <div class="inv-list-card overflow-hidden">
+    <form method="post" enctype="multipart/form-data" class="space-y-4 p-6">
       {% csrf_token %}
       <div class="grid gap-4 sm:grid-cols-2">
         <div>
@@ -65,6 +67,8 @@
         <a href="{% url 'hrm:recruitment_application_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
       </div>
     </form>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

@@ -4,7 +4,8 @@
 {% block content %}
 <div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
   <div class="mx-auto max-w-lg">
-    <div class="inv-list-card border border-border overflow-hidden">
+    <div class="inv-list-shell sm:p-1.5">
+      <div class="inv-list-card overflow-hidden">
       <div class="border-b border-border bg-muted/30 px-4 py-3 flex justify-between items-center">
         <h2 class="text-lg font-semibold">{{ page_title }}</h2>
         <a href="{% url 'pos:register_list' %}" class="text-sm text-muted-foreground hover:text-foreground">Cancel</a>
@@ -20,6 +21,7 @@
         {% endfor %}
         <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
       </form>
+      </div>
     </div>
   </div>
 </div>

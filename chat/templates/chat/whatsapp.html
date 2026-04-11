@@ -1,0 +1,312 @@
+{% extends "auth_tenants/base.html" %}
+{% load static %}
+{% load chat_extras %}
+{% block title %}Chat{% endblock %}
+{% block page_title %}{{ page_title|default:"WhatsApp · Chat" }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* WhatsApp-specific surfaces (chat bubbles + pattern); shell uses theme from base.html */
+  :root {
+    --wa-chat-bg: #e5ddd5;
+    --wa-bubble-out: #dcf8c6;
+    --wa-bubble-in: #ffffff;
+    --wa-teal: #075e54;
+    --wa-teal-mid: #128c7e;
+    --wa-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c9c5b8' fill-opacity='0.14'%3E%3Cpath d='M0 0h30v30H0zM30 30h30v30H30z'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  .dark {
+    --wa-chat-bg: hsl(var(--muted) / 0.55);
+    --wa-bubble-out: hsl(142 35% 22%);
+    --wa-bubble-in: hsl(var(--card));
+    --wa-teal: hsl(173 38% 28%);
+    --wa-teal-mid: hsl(173 32% 34%);
+  }
+  .wa-split {
+    display: flex;
+    min-height: min(78vh, calc(100vh - 11rem));
+    max-height: min(88vh, calc(100vh - 9rem));
+  }
+  .wa-teal-bar {
+    background: linear-gradient(180deg, var(--wa-teal-mid) 0%, var(--wa-teal) 100%);
+    color: #fff;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+  }
+  .wa-teal-bar .wa-icon-btn { color: rgba(255,255,255,.92); }
+  .wa-teal-bar .wa-icon-btn:hover { background: rgba(255,255,255,.12); }
+  .wa-msg-panel {
+    background-color: var(--wa-chat-bg);
+    background-image: var(--wa-pattern);
+  }
+  .wa-bubble {
+    max-width: 68%;
+    padding: 6px 8px 4px 10px;
+    border-radius: 8px;
+    box-shadow: 0 1px 0.5px rgba(0,0,0,.13);
+  }
+  .wa-msg-theirs .wa-bubble { background: var(--wa-bubble-in); border-radius: 0 8px 8px 8px; }
+  .wa-msg-mine .wa-bubble { background: var(--wa-bubble-out); border-radius: 8px 0 8px 8px; }
+  .wa-compose-bar {
+    background: hsl(var(--muted) / 0.55);
+    border-top: 1px solid hsl(var(--border) / 0.6);
+  }
+  .dark .wa-compose-bar { background: hsl(var(--muted) / 0.4); }
+  .wa-list-row.active {
+    background: hsl(var(--muted) / 0.75);
+  }
+  .dark .wa-list-row.active { background: hsl(var(--accent)); }
+  /* Hide duplicate floating chat launcher while already in chat (base.html FAB) */
+  body a[aria-label="Open WhatsApp-style chat in new tab"] { display: none !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if not workspace_tenant %}
+<div class="inv-list-shell sm:p-1.5">
+  <div class="simple-card overflow-hidden rounded-xl border border-border bg-card shadow-card">
+    <div class="border-b border-border bg-muted/20 px-5 py-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Chat</p>
+      <h2 class="text-lg font-semibold text-foreground mt-0.5">No workspace tenant</h2>
+      <p class="text-sm text-muted-foreground mt-1">Choose a tenant from the HRM dashboard, then open Chat again.</p>
+      <a href="{% url 'dashboard' %}" class="mt-4 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Back to dashboard</a>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="inv-list-shell sm:p-1.5">
+  <div class="inv-list-card flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-card min-h-[min(78vh,calc(100vh-10rem))] max-h-[min(88vh,calc(100vh-8rem))]">
+    <!-- Card header (matches inventory-style strip) -->
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-muted/20 px-4 py-3 sm:px-5">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Messaging</p>
+        <h2 class="text-base font-bold text-foreground sm:text-lg">WhatsApp-style chat</h2>
+        <p class="text-xs text-muted-foreground mt-0.5 hidden sm:block">{{ workspace_tenant.name }}</p>
+      </div>
+      <div class="inline-flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/30 p-1 shadow-sm">
+        <a href="{% url 'dashboard' %}" class="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Dashboard</a>
+        <a href="?new=group" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+          <i data-lucide="users" class="h-4 w-4"></i> New group
+        </a>
+      </div>
+    </div>
+
+    <!-- Split: list + conversation -->
+    <div class="wa-split flex min-h-0 flex-1 border-t border-border/50">
+      <!-- Sidebar -->
+      <aside class="flex w-full min-w-0 max-w-full flex-col border-border bg-[#f0f2f5] dark:bg-muted/25 md:max-w-[400px] md:border-r shrink-0">
+        <div class="wa-teal-bar flex shrink-0 items-center justify-between px-3 py-3 sm:px-4">
+          <div class="flex min-w-0 items-center gap-2">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/15 text-lg font-semibold text-white ring-2 ring-white/25">
+              {{ user.name|slice:":1"|upper }}
+            </div>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-semibold text-white">Chats</p>
+              <p class="truncate text-xs text-white/80">{{ workspace_tenant.name }}</p>
+            </div>
+          </div>
+          <div class="flex gap-0.5">
+            <a href="?new=group" class="wa-icon-btn inline-flex h-10 w-10 items-center justify-center rounded-full" title="New group" aria-label="New group">
+              <i data-lucide="users-round" class="h-5 w-5"></i>
+            </a>
+          </div>
+        </div>
+        <div class="border-b border-black/5 bg-[#f0f2f5] px-3 py-2 dark:border-border">
+          <div class="relative">
+            <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
+            <input type="search" id="wa-search-input" placeholder="Search or start new chat" autocomplete="off"
+              class="inv-list-control w-full rounded-xl border-0 bg-white py-2.5 pl-10 pr-3 text-sm shadow-sm dark:bg-card" />
+          </div>
+        </div>
+        {% if messages %}
+          {% for message in messages %}
+            <div class="mx-3 mt-2 rounded-lg border px-3 py-2 text-sm {% if message.tags == 'error' %}border-destructive/30 bg-destructive/10 text-destructive{% else %}border-green-500/30 bg-green-500/10 text-green-800 dark:text-green-400{% endif %}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+
+        {% now "Y-m-d" as today_iso %}
+        <div id="wa-chat-list" class="scrollbar-thin min-h-0 flex-1 overflow-y-auto bg-white dark:bg-card/50">
+          {% for r in rooms %}
+          <a href="?room={{ r.pk }}"
+             class="wa-list-row flex gap-3 border-b border-border/50 px-3 py-2.5 transition-colors hover:bg-muted/40 {% if active_room and active_room.pk == r.pk %}active{% endif %}"
+             data-name="{{ r|chat_title:user|default:r.title|lower }}">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted text-base font-semibold text-muted-foreground ring-1 ring-border">
+              {{ r|chat_title:user|slice:":1"|upper }}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-baseline justify-between gap-2">
+                <span class="truncate font-medium text-foreground">{{ r|chat_title:user }}</span>
+                {% if r.last_msg %}
+                <span class="shrink-0 text-[11px] text-muted-foreground">
+                  {% if r.last_msg.created_at|date:"Y-m-d" == today_iso %}
+                    {{ r.last_msg.created_at|date:"g:i A" }}
+                  {% else %}
+                    {{ r.last_msg.created_at|date:"M j" }}
+                  {% endif %}
+                </span>
+                {% endif %}
+              </div>
+              <p class="truncate text-[13px] text-muted-foreground">
+                {% if r.last_msg %}
+                  {{ r.last_msg|msg_sidebar_preview:user }}
+                {% else %}
+                  <span class="italic opacity-80">No messages yet</span>
+                {% endif %}
+              </p>
+            </div>
+          </a>
+          {% empty %}
+          <div class="px-4 py-10 text-center text-sm text-muted-foreground">No chats yet. Start one below.</div>
+          {% endfor %}
+        </div>
+
+        <div class="inv-list-filter shrink-0 border-t border-border/60 bg-muted/30 px-3 py-3 sm:px-4">
+          <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">New chat</p>
+          <div class="mt-2 flex max-h-px min-h-[140px] flex-col gap-1 overflow-y-auto rounded-xl border border-border/80 bg-card p-1 shadow-sm">
+            {% for u in tenant_users %}
+            <form method="post" action="{% url 'chat:start_direct' %}" class="m-0">
+              {% csrf_token %}
+              <input type="hidden" name="user_id" value="{{ u.pk }}" />
+              <button type="submit" class="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-accent">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{{ u.name|slice:":1"|upper }}</span>
+                <span class="truncate font-medium text-foreground">{{ u.name }}</span>
+              </button>
+            </form>
+            {% empty %}
+            <p class="px-2 py-3 text-center text-xs text-muted-foreground">No other users in this tenant.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main chat -->
+      <section class="flex min-w-0 flex-1 flex-col bg-background" id="wa-main-panel">
+        {% if active_room %}
+        <header class="wa-teal-bar flex shrink-0 items-center gap-3 px-3 py-2.5 sm:px-4">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/15 text-lg font-semibold text-white ring-2 ring-white/25">
+            {{ active_room|chat_title:user|slice:":1"|upper }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-semibold text-white">{{ active_room|chat_title:user }}</p>
+            <p class="truncate text-xs text-white/80">{% if active_room.kind == 'group' %}Group{% else %}Direct{% endif %} · {{ workspace_tenant.name }}</p>
+          </div>
+        </header>
+
+        <div class="wa-msg-panel scrollbar-thin flex min-h-0 flex-1 flex-col overflow-y-auto px-2 py-3 sm:px-6" id="wa-messages-panel">
+          {% for m in chat_messages %}
+          <div class="wa-msg-row mb-1 flex {% if m.sender_id == user.pk %}wa-msg-mine justify-end{% else %}wa-msg-theirs{% endif %}" data-msg-id="{{ m.pk }}">
+            <div class="wa-bubble">
+              {% if m.message_type == 'text' %}
+                <div class="text-sm text-foreground whitespace-pre-wrap break-words">{{ m.body }}</div>
+              {% elif m.message_type == 'image' and m.image %}
+                <a href="{{ m.image.url }}" target="_blank" rel="noopener"><img class="max-h-64 max-w-[min(100%,280px)] rounded-md" src="{{ m.image.url }}" alt="" /></a>
+                {% if m.body %}<p class="mt-1 text-sm text-foreground">{{ m.body }}</p>{% endif %}
+              {% elif m.message_type == 'file' and m.file %}
+                <a class="text-sm text-primary underline break-all" href="{{ m.file.url }}" target="_blank" rel="noopener">{{ m.file_display_name|default:m.file.name }}</a>
+              {% elif m.message_type == 'voice' and m.voice %}
+                <audio class="h-9 max-w-[260px]" controls src="{{ m.voice.url }}"></audio>
+              {% else %}
+                <div class="text-sm text-foreground">{{ m.body }}</div>
+              {% endif %}
+              <div class="mt-0.5 text-right text-[10px] text-muted-foreground">{{ m.created_at|date:"g:i A" }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <form id="wa-message-form" method="post" enctype="multipart/form-data" action="{% url 'chat:send_message' room_id=active_room.pk %}" class="wa-compose-bar flex shrink-0 flex-wrap items-end gap-2 px-2 py-2 sm:px-4">
+          {% csrf_token %}
+          <p id="wa-compose-error" class="hidden w-full text-xs text-destructive" role="alert"></p>
+          <label class="relative inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted" title="Attach file">
+            <input type="file" name="file" class="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0" accept="*/*" />
+            <i data-lucide="paperclip" class="pointer-events-none h-5 w-5"></i>
+          </label>
+          <label class="relative inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted" title="Photo / gallery">
+            <input type="file" name="image" class="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0" accept="image/*" />
+            <i data-lucide="image" class="pointer-events-none h-5 w-5"></i>
+          </label>
+          <label class="relative inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted" title="Upload audio file">
+            <input type="file" name="voice" id="wa-voice-file" class="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0" accept="audio/*" />
+            <i data-lucide="music" class="pointer-events-none h-5 w-5"></i>
+          </label>
+          <button type="button" id="wa-mic-btn" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted" title="Record voice (click again to stop & send)">
+            <i data-lucide="mic" class="h-5 w-5"></i>
+          </button>
+          <textarea name="body" rows="1" placeholder="Type a message"
+            class="inv-list-control wa-compose-input min-h-[44px] flex-1 min-w-[8rem] resize-none rounded-2xl border-border/80 py-2.5"></textarea>
+          <button type="submit" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#00a884] text-white shadow-sm transition hover:brightness-105" aria-label="Send">
+            <i data-lucide="send" class="h-5 w-5"></i>
+          </button>
+        </form>
+        <script type="application/json" id="wa-chat-config">{{ chat_json|safe }}</script>
+        <script>window.WA_USER_ID = {{ user.pk }};</script>
+        {% else %}
+        <div class="flex flex-1 flex-col items-center justify-center gap-4 bg-muted/30 px-6 text-center">
+          <div class="rounded-full bg-muted p-6 text-muted-foreground">
+            <i data-lucide="message-circle" class="h-16 w-16"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-light text-foreground">WhatsApp Web</h3>
+            <p class="mt-2 max-w-md text-sm text-muted-foreground">Select a chat on the left or start a new conversation. Messages are scoped to your workspace.</p>
+          </div>
+        </div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+</div>
+
+{% if show_group_modal %}
+<div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" id="wa-group-modal" role="dialog">
+  <div class="simple-card w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+    <div class="border-b border-border bg-muted/20 px-5 py-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Group</p>
+      <h3 class="text-lg font-semibold text-foreground">New group</h3>
+    </div>
+    <form method="post" action="{% url 'chat:create_group' %}" class="space-y-4 border-t border-border/50 p-5">
+      {% csrf_token %}
+      <div>
+        <label for="id_title" class="mb-1 block text-sm font-medium text-foreground">Group name</label>
+        <input type="text" name="title" id="id_title" required maxlength="255" placeholder="Team name" class="inv-list-control w-full rounded-lg" />
+      </div>
+      <div>
+        <label for="id_members" class="mb-1 block text-sm font-medium text-foreground">Members</label>
+        <p class="mb-2 text-xs text-muted-foreground">Hold Ctrl (Windows) or ⌘ (Mac) to select multiple.</p>
+        <select name="members" id="id_members" multiple required class="inv-list-control min-h-[140px] w-full rounded-lg">
+          {% for u in tenant_users %}
+          <option value="{{ u.pk }}">{{ u.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex flex-wrap justify-end gap-2 pt-2">
+        <a href="{% url 'chat:chat_app' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Cancel</a>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Create</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+{% if workspace_tenant %}
+<script src="{% static 'chat/js/chat_app.js' %}"></script>
+<script>
+(function(){
+  var q = document.getElementById('wa-search-input');
+  var list = document.getElementById('wa-chat-list');
+  if (q && list) {
+    q.addEventListener('input', function(){
+      var term = (q.value || '').toLowerCase();
+      list.querySelectorAll('.wa-list-row').forEach(function(row){
+        var n = (row.getAttribute('data-name') || '');
+        row.style.display = !term || n.indexOf(term) !== -1 ? '' : 'none';
+      });
+    });
+  }
+  if (window.lucide) lucide.createIcons();
+})();
+</script>
+{% endif %}
+{% endblock %}

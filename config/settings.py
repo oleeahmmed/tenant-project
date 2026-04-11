@@ -10,7 +10,25 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 ALLOWED_HOSTS = ["*"]
 
+# When DEBUG=False, still serve /media/ in small deployments (set True); production should use nginx.
+FORCE_SERVE_MEDIA = os.getenv("FORCE_SERVE_MEDIA", "True" if DEBUG else "False") == "True"
+
+# CSRF: required for POST + multipart (fetch/FormData). Include every origin you use in the browser.
+_csrf_origins = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://[::1]:8000",
+    "http://[::1]",
+]
+_extra_csrf = (os.getenv("CSRF_TRUSTED_ORIGINS") or "").strip()
+if _extra_csrf:
+    _csrf_origins.extend([x.strip() for x in _extra_csrf.split(",") if x.strip()])
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_csrf_origins))
+
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -31,7 +49,10 @@ INSTALLED_APPS = [
     "sales",
     "production",
     "jiraclone",
+    "channels",
+    "chat",
     "pos",
+    "support",
 ]
 
 MIDDLEWARE = [
@@ -47,6 +68,14 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
+
+# Django Channels — chat WebSockets (InMemory ok for single process / dev; use Redis in production)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
 
 TEMPLATES = [{
     "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -94,6 +123,18 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ── Media (user uploads) ──────────────────────────────────────────────────────
 MEDIA_URL  = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Chat / uploads (images, voice notes) — ASGI + multipart
+DATA_UPLOAD_MAX_MEMORY_SIZE = 26_214_400  # 25 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 26_214_400
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000
+FILE_UPLOAD_TEMP_DIR = str(BASE_DIR / "tmp_uploads")
+# Ensure dirs exist (Windows + Docker)
+for _d in (MEDIA_ROOT, Path(FILE_UPLOAD_TEMP_DIR)):
+    try:
+        Path(_d).mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
 
 # ── DRF ───────────────────────────────────────────────────────────────────────
 REST_FRAMEWORK = {

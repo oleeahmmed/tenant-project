@@ -1,8 +1,9 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path, re_path
 from django.shortcuts import redirect
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,10 +17,21 @@ urlpatterns = [
     path('dashboard/sales/', include('sales.urls')),
     path('dashboard/production/', include('production.urls')),
     path('dashboard/jiraclone/', include(('jiraclone.urls', 'jiraclone'), namespace='jiraclone')),
+    path('dashboard/chat/', include(('chat.urls', 'chat'), namespace='chat')),
     path('dashboard/pos/', include(('pos.urls', 'pos'), namespace='pos')),
+    path('dashboard/support/', include(('support.urls', 'support'), namespace='support')),
     path('api/hrm/', include('hrm.api.urls')),
     path('api/auth/', include('auth_tenants.api.urls')),
     path('api/foundation/', include(('foundation.api.urls', 'foundation_api'), namespace='foundation_api')),
     path('api/inventory/', include(('inventory.api.urls', 'inventory_api'), namespace='inventory_api')),
     path('api/jiraclone/', include(('jiraclone.api_urls', 'jiraclone_api'), namespace='jiraclone_api')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# Media: django.conf.urls.static.static only adds routes when DEBUG=True.
+# With DEBUG=False, uploads still land in MEDIA_ROOT but /media/ URLs 404 unless nginx or:
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+elif getattr(settings, "FORCE_SERVE_MEDIA", False):
+    urlpatterns += [
+        re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
+    ]

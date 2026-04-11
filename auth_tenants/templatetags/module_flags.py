@@ -1,6 +1,21 @@
 from django import template
 
+from hrm.tenant_scope import get_hrm_tenant
+
+from auth_tenants.services.nav_visibility import workspace_nav_flags
+
 register = template.Library()
+
+
+@register.simple_tag(takes_context=True)
+def workspace_nav(context):
+    """
+    Usage: {% workspace_nav as wnav %}
+    Then: {% if wnav.chat %}, {% if wnav.any_workspace %}, {% if wnav.foundation %}, etc.
+    """
+    request = context["request"]
+    tenant = get_hrm_tenant(request)
+    return workspace_nav_flags(request.user, tenant)
 
 
 @register.filter

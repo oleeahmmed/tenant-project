@@ -77,9 +77,9 @@
     </form>
 
     <div class="ui-table-wrap overflow-x-auto border-t border-border/50 bg-card">
-      <table class="w-full text-sm">
-      <thead>
-        <tr class="border-b border-border bg-muted/40">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-border bg-muted/40">
           <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Document #</th>
           <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date</th>
           {% if doc_kind == "pr" %}
@@ -97,9 +97,9 @@
           <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total</th>
           {% endif %}
           <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-border">
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
         {% for d in documents %}
         <tr class="hover:bg-accent/40 transition-colors">
           <td class="px-4 py-3 font-medium">{{ d.doc_no }}</td>
@@ -364,7 +364,7 @@
                   <form method="post" action="{% url 'purchase:purchase_order_delete' d.pk %}" class="mt-0.5 border-t border-border pt-1" onsubmit="return confirm('Delete {{ d.doc_no|escapejs }}? This cannot be undone.');">
                   {% elif doc_kind == "grn" %}
                   <form method="post" action="{% url 'purchase:goods_receipt_delete' d.pk %}" class="mt-0.5 border-t border-border pt-1" onsubmit="return confirm('Delete {{ d.doc_no|escapejs }}? This cannot be undone.');">
-                  {% else %}
+                {% else %}
                   <form method="post" action="{% url 'purchase:purchase_return_delete' d.pk %}" class="mt-0.5 border-t border-border pt-1" onsubmit="return confirm('Delete {{ d.doc_no|escapejs }}? This cannot be undone.');">
                   {% endif %}
                     {% csrf_token %}
@@ -383,14 +383,14 @@
                 </div>
               </div>
             </div>
-          </td>
-        </tr>
-        {% empty %}
+              </td>
+            </tr>
+            {% empty %}
         <tr><td colspan="{% if doc_kind == 'pr' %}5{% elif doc_kind == 'po' %}6{% else %}7{% endif %}" class="px-4 py-8 text-center text-muted-foreground">No records yet.</td></tr>
-        {% endfor %}
-      </tbody>
-      </table>
-    </div>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
     {% if is_paginated %}
     <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border/50 bg-card px-4 py-3 text-sm">

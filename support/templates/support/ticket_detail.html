@@ -1,0 +1,65 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}{{ ticket.reference }}{% endblock %}
+{% block page_title %}{{ ticket.reference }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl space-y-6 px-1 py-4 md:px-2">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card overflow-hidden">
+      <div class="p-6">
+    <div class="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-4">
+      <div>
+        <p class="font-mono text-xs text-muted-foreground">{{ ticket.reference }}</p>
+        <h2 class="mt-1 text-xl font-semibold text-foreground">{{ ticket.subject }}</h2>
+        <p class="mt-2 text-sm text-muted-foreground">
+          <span class="text-foreground">{{ ticket.get_status_display }}</span>
+          · {{ ticket.get_priority_display }}
+          · {{ ticket.get_product_area_display }}
+        </p>
+        <p class="mt-2 text-xs text-muted-foreground">Requester: {{ ticket.requester.name }} · Assignee: {% if ticket.assignee %}{{ ticket.assignee.name }}{% else %}—{% endif %}</p>
+      </div>
+      <a href="{% url 'support:ticket_list' %}" class="text-sm text-primary hover:underline">All tickets</a>
+    </div>
+
+    {% if is_agent and agent_form %}
+    <form method="post" class="mt-6 space-y-4 rounded-lg border border-border bg-muted/20 p-4">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="agent" />
+      <p class="text-sm font-medium text-foreground">Agent controls</p>
+      <div class="grid gap-4 sm:grid-cols-2">
+        {% for field in agent_form %}
+        <div>
+          <label class="mb-1 block text-xs font-medium text-muted-foreground" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+        </div>
+        {% endfor %}
+      </div>
+      <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+    </form>
+    {% endif %}
+
+    <div class="mt-8 space-y-4">
+      <h3 class="text-sm font-semibold text-foreground">Conversation</h3>
+      {% for m in thread_messages %}
+      <div class="rounded-lg border border-border bg-background px-4 py-3 {% if m.is_internal %}border-amber-500/40 bg-amber-500/5{% endif %}">
+        <p class="text-xs text-muted-foreground">{{ m.author.name }} · {{ m.created_at|date:"Y-m-d H:i" }}{% if m.is_internal %} · internal{% endif %}</p>
+        <div class="mt-2 whitespace-pre-wrap text-sm text-foreground">{{ m.body }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <form method="post" class="mt-8 space-y-3 border-t border-border pt-6">
+      {% csrf_token %}
+      <label class="block text-sm font-medium text-foreground" for="id_body">Reply</label>
+      {{ reply_form.body }}
+      {% if is_agent %}
+      <label class="flex items-center gap-2 text-sm text-muted-foreground">
+        {{ reply_form.is_internal }} Internal note (hidden from requester)
+      </label>
+      {% endif %}
+      <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Send</button>
+    </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
