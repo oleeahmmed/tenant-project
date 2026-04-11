@@ -21,4 +21,5 @@ urlpatterns = [
     path('api/auth/', include('auth_tenants.api.urls')),
     path('api/foundation/', include(('foundation.api.urls', 'foundation_api'), namespace='foundation_api')),
     path('api/inventory/', include(('inventory.api.urls', 'inventory_api'), namespace='inventory_api')),
+    path('api/jiraclone/', include(('jiraclone.api_urls', 'jiraclone_api'), namespace='jiraclone_api')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

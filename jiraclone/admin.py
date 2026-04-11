@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Issue, IssueComment, IssueStatus, IssueType, JiraProject, TenantLabel
+from .models import Issue, IssueComment, IssueStatus, IssueType, JiraProject, ProjectTeam, TenantLabel
+
+
+@admin.register(ProjectTeam)
+class ProjectTeamAdmin(admin.ModelAdmin):
+    list_display = ("name", "project", "order")
+    list_filter = ("project",)
+    filter_horizontal = ("members",)
 
 
 @admin.register(JiraProject)

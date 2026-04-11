@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import messages
 from django.db.models import Q
 from django.http import Http404
@@ -5,13 +7,13 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from hrm.tenant_scope import get_hrm_tenant
 
-from .forms import IssueCommentForm, IssueForm, ProjectForm
+from .forms import IssueCommentForm, IssueForm, ProjectForm, ProjectTeamForm
 from .mixins import JiraCloneAdminMixin, JiraCloneDashboardAccessMixin, JiraClonePageContextMixin
-from .models import Issue, JiraProject
+from .models import Issue, JiraProject, ProjectTeam
 
 
 def ensure_request_tenant(request):
@@ -168,11 +170,12 @@ class BoardView(
         project = self.object
         statuses = list(project.issue_statuses.order_by("order"))
         ctx["statuses"] = statuses
+        # Board swimlanes: top-level issues only (subtasks open in the drawer).
         issues = (
-            Issue.objects.filter(project=project)
+            Issue.objects.filter(project=project, parent__isnull=True)
             .select_related("issue_type", "status")
             .prefetch_related("assignees")
-            .order_by("-number")
+            .order_by("board_order", "number")
         )
         by_status = {s.id: [] for s in statuses}
         for issue in issues:
@@ -182,6 +185,9 @@ class BoardView(
         ctx["board_columns"] = [
             {"status": s, "issues": by_status.get(s.id, [])} for s in statuses
         ]
+        ctx["can_manage_board"] = self.request.user.has_tenant_permission("jiraclone.manage")
+        ctx["statuses_json"] = json.dumps([{"id": s.id, "name": s.name} for s in statuses])
+        ctx["team_count"] = project.teams.count()
         return ctx
 
 
@@ -372,3 +378,106 @@ class IssueStatusQuickUpdateView(JiraCloneAdminMixin, JiraClonePageContextMixin,
             "jiraclone:project_board",
             project_key=issue.project.key,
         )
+
+
+class ProjectTeamListView(JiraCloneAdminMixin, JiraClonePageContextMixin, ProjectByKeyMixin, DetailView):
+    """Teams under a project: members drive assignee options on the board."""
+
+    model = JiraProject
+    template_name = "jiraclone/team_list.html"
+    context_object_name = "project"
+    page_title = "Teams"
+
+    def get_queryset(self):
+        return JiraProject.objects.filter(tenant=self.request.hrm_tenant)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["teams"] = self.object.teams.prefetch_related("members").order_by("order", "name")
+        return ctx
+
+
+class ProjectTeamCreateView(JiraCloneAdminMixin, JiraClonePageContextMixin, CreateView):
+    model = ProjectTeam
+    form_class = ProjectTeamForm
+    template_name = "jiraclone/team_form.html"
+    page_title = "Add team"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.jira_project = get_project_or_404(request, kwargs["project_key"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["project"] = self.jira_project
+        return kwargs
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.project = self.jira_project
+        self.object.save()
+        form.save_m2m()
+        messages.success(self.request, "Team saved.")
+        return redirect("jiraclone:project_teams", project_key=self.jira_project.key)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["project"] = self.jira_project
+        return ctx
+
+
+class ProjectTeamUpdateView(JiraCloneAdminMixin, JiraClonePageContextMixin, UpdateView):
+    model = ProjectTeam
+    form_class = ProjectTeamForm
+    template_name = "jiraclone/team_form.html"
+    context_object_name = "team"
+    page_title = "Edit team"
+    pk_url_kwarg = "pk"
+
+    def get_queryset(self):
+        return ProjectTeam.objects.filter(project__tenant=self.request.hrm_tenant)
+
+    def get_object(self, queryset=None):
+        qs = self.get_queryset()
+        key = (self.kwargs.get("project_key") or "").strip().upper()
+        return get_object_or_404(qs, pk=self.kwargs["pk"], project__key=key)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["project"] = self.object.project
+        return kwargs
+
+    def form_valid(self, form):
+        messages.success(self.request, "Team updated.")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("jiraclone:project_teams", kwargs={"project_key": self.object.project.key})
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["project"] = self.object.project
+        return ctx
+
+
+class ProjectTeamDeleteView(JiraCloneAdminMixin, JiraClonePageContextMixin, DeleteView):
+    model = ProjectTeam
+    template_name = "jiraclone/team_confirm_delete.html"
+    context_object_name = "team"
+    page_title = "Delete team"
+
+    def get_queryset(self):
+        return ProjectTeam.objects.filter(project__tenant=self.request.hrm_tenant)
+
+    def get_object(self, queryset=None):
+        qs = self.get_queryset()
+        key = (self.kwargs.get("project_key") or "").strip().upper()
+        return get_object_or_404(qs, pk=self.kwargs["pk"], project__key=key)
+
+    def get_success_url(self):
+        return reverse_lazy("jiraclone:project_teams", kwargs={"project_key": self.object.project.key})
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["project"] = self.object.project
+        return ctx

@@ -48,6 +48,27 @@ class JiraProject(TenantScopedModel):
         return f"{self.key} — {self.name}"
 
 
+class ProjectTeam(models.Model):
+    """Board team: members are the only users offered as assignees when teams exist."""
+
+    project = models.ForeignKey(JiraProject, on_delete=models.CASCADE, related_name="teams")
+    name = models.CharField(max_length=120)
+    order = models.PositiveSmallIntegerField(default=0)
+    members = models.ManyToManyField(
+        User,
+        blank=True,
+        related_name="jira_project_teams",
+        help_text="People who can be assigned issues on this project board.",
+    )
+
+    class Meta:
+        ordering = ["order", "id"]
+        unique_together = [("project", "name")]
+
+    def __str__(self):
+        return f"{self.project.key}: {self.name}"
+
+
 class IssueType(models.Model):
     project = models.ForeignKey(JiraProject, on_delete=models.CASCADE, related_name="issue_types")
     name = models.CharField(max_length=50)
@@ -120,6 +141,16 @@ class Issue(models.Model):
     parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.CASCADE, related_name="subtasks")
     epic = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="children_in_epic")
     labels = models.ManyToManyField(TenantLabel, blank=True, related_name="issues")
+    due_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Due date (shown on board card like Jira).",
+    )
+    board_order = models.PositiveIntegerField(
+        default=0,
+        db_index=True,
+        help_text="Order within a status column on the board (top-level issues only).",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -148,6 +179,15 @@ class Issue(models.Model):
             with transaction.atomic():
                 agg = Issue.objects.filter(project=self.project).aggregate(Max("number"))
                 self.number = (agg["number__max"] or 0) + 1
+                if not self.parent_id:
+                    bo = (
+                        Issue.objects.filter(
+                            project=self.project,
+                            status_id=self.status_id,
+                            parent__isnull=True,
+                        ).aggregate(Max("board_order"))["board_order__max"]
+                    )
+                    self.board_order = (bo if bo is not None else -1) + 1
         self.full_clean()
         super().save(*args, **kwargs)
 

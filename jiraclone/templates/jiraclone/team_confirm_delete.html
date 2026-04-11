@@ -1,0 +1,24 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Delete team{% endblock %}
+{% block page_title %}Jira clone · Delete team{% endblock %}
+{% block content %}
+<div class="inv-list-shell sm:p-1.5">
+  <div class="mx-auto max-w-md">
+  <div class="inv-list-card overflow-hidden rounded-xl border border-border bg-card shadow-card">
+    <div class="border-b border-border bg-muted/20 px-5 py-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Delete team</p>
+      <h2 class="text-lg font-semibold text-foreground mt-0.5">{{ team.name }}</h2>
+    </div>
+    <div class="border-t border-border/50 p-5">
+    <p class="text-sm text-foreground">Remove this team from the project?</p>
+    <p class="mt-2 text-sm text-muted-foreground leading-relaxed">Assignees on issues are unchanged; you may want to review assignments.</p>
+    <form method="post" class="mt-6 flex flex-wrap gap-2">
+      {% csrf_token %}
+      <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Delete</button>
+      <a href="{% url 'jiraclone:project_teams' project_key=project.key %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
+    </form>
+    </div>
+  </div>
+  </div>
+</div>
+{% endblock %}
