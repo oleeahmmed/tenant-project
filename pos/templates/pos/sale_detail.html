@@ -1,0 +1,68 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}{{ sale.doc_no }}{% endblock %}
+{% block page_title %}POS · {{ sale.doc_no }}{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="mx-auto max-w-3xl">
+    <div class="flex flex-wrap justify-between gap-2 mb-4">
+      <a href="{% url 'pos:sale_list' %}" class="text-sm text-muted-foreground hover:text-foreground">← Sales</a>
+      <div class="flex gap-2">
+        <a href="{% url 'pos:sale_receipt' sale.pk %}" target="_blank" rel="noopener" class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent">Receipt</a>
+        {% if sale.status == 'completed' %}
+        <form method="post" action="{% url 'pos:sale_void' sale.pk %}" onsubmit="return confirm('Void this sale?');">
+          {% csrf_token %}
+          <button type="submit" class="rounded-lg border border-destructive/40 px-3 py-2 text-sm text-destructive hover:bg-destructive/10">Void</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    <div class="inv-list-card border border-border overflow-hidden">
+      <div class="border-b border-border bg-muted/30 px-4 py-3">
+        <p class="font-mono text-lg font-bold">{{ sale.doc_no }}</p>
+        <p class="text-sm text-muted-foreground">{{ sale.sale_datetime }} · {{ sale.session.register.code }} · {{ sale.get_status_display }}</p>
+      </div>
+      <div class="p-4 space-y-4">
+        {% if sale.customer %}
+        <p class="text-sm"><span class="text-muted-foreground">Customer:</span> {{ sale.customer }}</p>
+        {% endif %}
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-border">
+                <th class="text-left py-2">Product</th>
+                <th class="text-right py-2">Qty</th>
+                <th class="text-right py-2">Price</th>
+                <th class="text-right py-2">Line</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for line in sale.lines.all %}
+              <tr class="border-b border-border/80">
+                <td class="py-2">{{ line.product.sku }} — {{ line.product.name }}</td>
+                <td class="py-2 text-right">{{ line.quantity }}</td>
+                <td class="py-2 text-right">{{ line.unit_price|floatformat:4 }}</td>
+                <td class="py-2 text-right">{{ line.line_total|floatformat:2 }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="flex justify-end gap-6 text-sm border-t border-border pt-3">
+          <span>Subtotal {{ sale.subtotal|floatformat:2 }}</span>
+          <span>Tax {{ sale.tax_amount|floatformat:2 }}</span>
+          <span>Discount {{ sale.discount_amount|floatformat:2 }}</span>
+          <span class="font-bold">Total {{ sale.total_amount|floatformat:2 }}</span>
+        </div>
+        <div>
+          <p class="text-xs font-semibold uppercase text-muted-foreground mb-2">Payments</p>
+          <ul class="text-sm space-y-1">
+            {% for p in sale.payments.all %}
+            <li>{{ p.payment_method.name }}: {{ p.amount|floatformat:2 }} {% if p.reference %}({{ p.reference }}){% endif %}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

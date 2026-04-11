@@ -1,0 +1,41 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Receipt {{ sale.doc_no }}{% endblock %}
+{% block page_title %}POS · Receipt{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto p-4 print:p-0">
+  <div class="flex justify-end gap-2 mb-4 print:hidden">
+    <button type="button" onclick="window.print()" class="rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">Print</button>
+    <a href="{% url 'pos:sale_detail' sale.pk %}" class="rounded-lg border border-border px-4 py-2 text-sm">Back</a>
+  </div>
+  <div class="border border-border rounded-lg p-6 bg-card print:border-0">
+    <h1 class="text-xl font-bold">{{ sale.tenant.name }}</h1>
+    <p class="text-sm text-muted-foreground mt-1">POS receipt</p>
+    <p class="font-mono text-lg font-semibold mt-4">{{ sale.doc_no }}</p>
+    <p class="text-sm text-muted-foreground">{{ sale.sale_datetime|date:"Y-m-d H:i" }}</p>
+    <p class="text-sm text-muted-foreground">{{ sale.session.register.code }} · {{ sale.warehouse.code }}</p>
+    {% if sale.customer %}<p class="text-sm mt-2">Customer: {{ sale.customer }}</p>{% endif %}
+    <hr class="my-4 border-border" />
+    <table class="w-full text-sm">
+      {% for line in sale.lines.all %}
+      <tr>
+        <td class="py-1 pr-2">{{ line.product.sku }}</td>
+        <td class="py-1">{{ line.quantity }} × {{ line.unit_price|floatformat:2 }}</td>
+        <td class="py-1 text-right">{{ line.line_total|floatformat:2 }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <hr class="my-4 border-border" />
+    <div class="flex justify-between text-sm"><span>Subtotal</span><span>{{ sale.subtotal|floatformat:2 }}</span></div>
+    <div class="flex justify-between text-sm"><span>Tax</span><span>{{ sale.tax_amount|floatformat:2 }}</span></div>
+    <div class="flex justify-between text-sm"><span>Discount</span><span>{{ sale.discount_amount|floatformat:2 }}</span></div>
+    <div class="flex justify-between text-lg font-bold mt-2"><span>Total</span><span>{{ sale.total_amount|floatformat:2 }}</span></div>
+    <div class="mt-4 text-sm">
+      <p class="font-semibold">Payments</p>
+      {% for p in sale.payments.all %}
+      <p>{{ p.payment_method.name }}: {{ p.amount|floatformat:2 }}</p>
+      {% endfor %}
+    </div>
+    <p class="text-xs text-muted-foreground mt-6">Thank you.</p>
+  </div>
+</div>
+{% endblock %}

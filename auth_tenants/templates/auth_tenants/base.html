@@ -628,6 +628,37 @@
             </ul>
           </li>
           <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if request.resolver_match and request.resolver_match.namespace == 'pos' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-pos">
+              <i data-lucide="scan-line" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                POS
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-pos" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'pos' %}hidden{% endif %}">
+              <li><a href="{% url 'pos:dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'pos' and request.resolver_match.url_name == 'dashboard' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a></li>
+              <li><a href="{% url 'pos:pos_guide' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'pos' and request.resolver_match.url_name == 'pos_guide' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">বাংলা গাইড</a></li>
+              <li><a href="{% url 'pos:register_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'pos' and 'register' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Registers</a></li>
+              <li><a href="{% url 'pos:open_session' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'pos' and request.resolver_match.url_name == 'open_session' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Open session</a></li>
+              <li><a href="{% url 'pos:cashier' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'pos' and request.resolver_match.url_name == 'cashier' or request.resolver_match and request.resolver_match.namespace == 'pos' and request.resolver_match.url_name == 'checkout' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Cashier</a></li>
+              <li><a href="{% url 'pos:sale_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'pos' and 'sale_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Sales</a></li>
+              <li><a href="{% url 'pos:session_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'pos' and request.resolver_match.url_name == 'session_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Sessions</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if request.resolver_match and request.resolver_match.namespace == 'jiraclone' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-jiraclone">
+              <i data-lucide="clipboard-list" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                Jira clone
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-jiraclone" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'jiraclone' %}hidden{% endif %}">
+              <li><a href="{% url 'jiraclone:jira_dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'jira_dashboard' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a></li>
+              <li><a href="{% url 'jiraclone:project_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'project_list' or request.resolver_match and request.resolver_match.url_name == 'project_create' or request.resolver_match and request.resolver_match.url_name == 'project_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Projects</a></li>
+            </ul>
+          </li>
+          <li>
             <a href="{% url 'hrm:recruitment_job_list' %}" class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors duration-200 {% if request.resolver_match and request.resolver_match.namespace == 'hrm' and request.resolver_match.url_name == 'recruitment_job_list' or request.resolver_match and request.resolver_match.namespace == 'hrm' and request.resolver_match.url_name == 'recruitment_job_edit' or request.resolver_match and request.resolver_match.namespace == 'hrm' and request.resolver_match.url_name == 'recruitment_application_list' or request.resolver_match and request.resolver_match.namespace == 'hrm' and request.resolver_match.url_name == 'recruitment_application_edit' or request.resolver_match and request.resolver_match.namespace == 'hrm' and request.resolver_match.url_name == 'recruitment_application_delete' %}nav-active{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">
               <i data-lucide="briefcase" class="h-4 w-4 shrink-0"></i>
               <span class="sidebar-text">Recruitment</span>

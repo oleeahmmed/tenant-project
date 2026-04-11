@@ -1,0 +1,100 @@
+{% extends "auth_tenants/base.html" %}
+{% load static %}
+{% block title %}Cashier{% endblock %}
+{% block page_title %}POS · Cashier · {{ register.code }}{% endblock %}
+{% block content %}
+<input type="hidden" id="pos-checkout-url" value="{% url 'pos:checkout' %}" />
+{% csrf_token %}
+<div class="w-full min-w-0 max-w-full space-y-4 px-1 py-2 md:px-2 md:py-3">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <div>
+      <p class="text-xs text-muted-foreground">Session {{ pos_session.pk }} · {{ register.name }} · Warehouse {{ warehouse.code }}</p>
+      <h2 class="text-xl font-bold text-foreground">Cashier</h2>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{% url 'pos:dashboard' %}" class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent">Overview</a>
+      <a href="{% url 'pos:close_session' %}" class="rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent">Close session</a>
+    </div>
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-2">
+    <div class="inv-list-card border border-border p-4 space-y-3">
+      <label class="text-sm font-medium">Search product (SKU / name)</label>
+      <input id="pos-product-search" type="search" class="inv-list-control w-full" placeholder="Type to search…" autocomplete="off" />
+      <div id="pos-product-results" class="hidden max-h-48 overflow-y-auto rounded-lg border border-border bg-card shadow-lg"></div>
+    </div>
+    <div class="inv-list-card border border-border p-4 space-y-3">
+      <label class="text-sm font-medium">Customer (optional)</label>
+      <select id="pos-customer" class="inv-list-control w-full">
+        <option value="">Walk-in</option>
+        {% for c in customers %}
+        <option value="{{ c.pk }}">{{ c.customer_code }} — {{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="inv-list-card border border-border overflow-hidden">
+    <div class="border-b border-border bg-muted/30 px-4 py-2 font-semibold">Cart</div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-border bg-muted/40">
+            <th class="px-2 py-2 text-left">Product</th>
+            <th class="px-2 py-2 text-left">Qty</th>
+            <th class="px-2 py-2 text-left">Price</th>
+            <th class="px-2 py-2 text-right">Line</th>
+            <th class="px-2 py-2"></th>
+          </tr>
+        </thead>
+        <tbody id="pos-cart-body"></tbody>
+      </table>
+    </div>
+    <div class="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-4 border-t border-border">
+      <div>
+        <label class="text-xs text-muted-foreground">Tax</label>
+        <input type="number" id="pos-tax" value="0" step="0.01" min="0" class="inv-list-control w-full" />
+      </div>
+      <div>
+        <label class="text-xs text-muted-foreground">Discount</label>
+        <input type="number" id="pos-discount" value="0" step="0.01" min="0" class="inv-list-control w-full" />
+      </div>
+      <div class="md:col-span-2 flex flex-col justify-end">
+        <p class="text-sm text-muted-foreground">Subtotal <span id="pos-cart-subtotal">0.00</span></p>
+        <p class="text-lg font-bold text-foreground">Total <span id="pos-grand">0.00</span></p>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-3 items-end p-4 border-t border-border bg-muted/20">
+      <div class="flex-1 min-w-[200px]">
+        <label class="text-xs font-medium text-muted-foreground">Payment method</label>
+        <select id="pos-pay-method" class="inv-list-control w-full mt-1">
+          <option value="">—</option>
+          {% for pm in payment_methods %}
+          <option value="{{ pm.pk }}">{{ pm.name }} ({{ pm.code }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="pos-pay-split" class="rounded border-border" />
+        <label for="pos-pay-split" class="text-sm">Split payment</label>
+      </div>
+      <div class="flex gap-2 flex-1 min-w-[200px]">
+        <select id="pos-pay-method-2" class="inv-list-control flex-1">
+          <option value="">2nd method</option>
+          {% for pm in payment_methods %}
+          <option value="{{ pm.pk }}">{{ pm.name }}</option>
+          {% endfor %}
+        </select>
+        <input type="number" id="pos-pay-amount-2" step="0.01" min="0" placeholder="Amount 2" class="inv-list-control w-32" />
+      </div>
+      <button type="button" id="pos-checkout" class="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+        Complete sale
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'pos/js/cashier.js' %}"></script>
+{% endblock %}

@@ -30,6 +30,8 @@ INSTALLED_APPS = [
     "purchase",
     "sales",
     "production",
+    "jiraclone",
+    "pos",
 ]
 
 MIDDLEWARE = [

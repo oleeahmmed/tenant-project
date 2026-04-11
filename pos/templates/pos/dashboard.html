@@ -1,0 +1,53 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}POS{% endblock %}
+{% block page_title %}POS · Overview{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">Point of sale</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">Registers, shifts, and retail tickets — uses Foundation products, customers &amp; payment methods.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Back</a>
+          <a href="{% url 'pos:pos_guide' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">বাংলা গাইড</a>
+          <a href="{% url 'pos:register_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Registers</a>
+          <a href="{% url 'pos:open_session' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Open session</a>
+          <a href="{% url 'pos:cashier' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Cashier</a>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 gap-4 p-4 md:grid-cols-3 border-t border-border/50">
+        <div class="rounded-xl border border-border bg-card p-4">
+          <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Today (completed)</p>
+          <p class="mt-1 text-3xl font-semibold text-foreground">{{ today_count }} tickets</p>
+          <p class="text-sm text-muted-foreground mt-1">Total {{ today_total|floatformat:2 }}</p>
+        </div>
+        <div class="rounded-xl border border-border bg-card p-4">
+          <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Open sessions</p>
+          {% if open_sessions %}
+          <ul class="mt-2 space-y-1 text-sm">
+            {% for s in open_sessions %}
+            <li>{{ s.register.code }} — {{ s.opened_by.name }} (since {{ s.opened_at|date:"H:i" }})</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="mt-2 text-sm text-muted-foreground">None — open a session to sell.</p>
+          {% endif %}
+        </div>
+        <div class="rounded-xl border border-border bg-card p-4">
+          <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Shortcuts</p>
+          <ul class="mt-2 space-y-1 text-sm">
+            <li><a href="{% url 'pos:pos_guide' %}" class="text-primary hover:underline">বাংলা গাইড (গল্পে শেখা)</a></li>
+            <li><a href="{% url 'pos:sale_list' %}" class="text-primary hover:underline">Sales history</a></li>
+            <li><a href="{% url 'pos:session_list' %}" class="text-primary hover:underline">Session history</a></li>
+            <li><a href="{% url 'foundation:foundation_dashboard' %}" class="text-muted-foreground hover:text-foreground">Foundation masters</a></li>
+            <li><a href="{% url 'finance:finance_dashboard' %}" class="text-muted-foreground hover:text-foreground">Finance</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

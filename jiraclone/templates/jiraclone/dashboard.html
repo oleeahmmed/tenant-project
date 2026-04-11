@@ -1,0 +1,56 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Jira clone{% endblock %}
+{% block page_title %}Jira clone · Overview{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">Projects &amp; work</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">Jira-style projects, issues, and boards — scoped to your tenant.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+          </a>
+          <a href="{% url 'jiraclone:project_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">All projects</a>
+          <a href="{% url 'jiraclone:project_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+            <i data-lucide="plus" class="h-4 w-4"></i> Create project
+          </a>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 gap-4 p-4 md:grid-cols-3 border-t border-border/50">
+        <div class="rounded-xl border border-border bg-card p-4">
+          <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Active projects</p>
+          <p class="mt-1 text-3xl font-semibold text-foreground">{{ project_count }}</p>
+        </div>
+        <div class="rounded-xl border border-border bg-card p-4">
+          <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Open issues (not Done)</p>
+          <p class="mt-1 text-3xl font-semibold text-foreground">{{ issue_open_count }}</p>
+        </div>
+        <div class="rounded-xl border border-border bg-card p-4">
+          <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Quick links</p>
+          <ul class="mt-2 space-y-1 text-sm">
+            <li><a href="{% url 'jiraclone:project_list' %}" class="text-primary hover:underline">Browse projects</a></li>
+            <li><a href="{% url 'foundation:foundation_dashboard' %}" class="text-muted-foreground hover:text-foreground">Foundation setup</a></li>
+          </ul>
+        </div>
+      </div>
+      {% if projects %}
+      <div class="border-t border-border/50 px-4 py-4">
+        <h3 class="text-sm font-semibold text-foreground mb-3">Your projects</h3>
+        <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {% for p in projects %}
+          <a href="{% url 'jiraclone:project_detail' project_key=p.key %}" class="rounded-xl border border-border bg-muted/30 px-4 py-3 transition hover:bg-accent/50">
+            <p class="font-mono text-xs text-muted-foreground">{{ p.key }}</p>
+            <p class="font-semibold text-foreground">{{ p.name }}</p>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

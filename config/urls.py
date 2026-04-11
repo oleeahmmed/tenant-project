@@ -15,6 +15,8 @@ urlpatterns = [
     path('dashboard/purchase/', include('purchase.urls')),
     path('dashboard/sales/', include('sales.urls')),
     path('dashboard/production/', include('production.urls')),
+    path('dashboard/jiraclone/', include(('jiraclone.urls', 'jiraclone'), namespace='jiraclone')),
+    path('dashboard/pos/', include(('pos.urls', 'pos'), namespace='pos')),
     path('api/hrm/', include('hrm.api.urls')),
     path('api/auth/', include('auth_tenants.api.urls')),
     path('api/foundation/', include(('foundation.api.urls', 'foundation_api'), namespace='foundation_api')),

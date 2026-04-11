@@ -1,0 +1,65 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}{{ project.key }} · Board{% endblock %}
+{% block page_title %}Jira clone · {{ project.key }} · Board{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <p class="font-mono text-xs text-muted-foreground">{{ project.key }}</p>
+      <h2 class="text-xl font-bold text-foreground">Board</h2>
+      <p class="text-sm text-muted-foreground">Columns follow your workflow statuses (like Jira). Use the dropdown on a card to move an issue.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{% url 'jiraclone:project_detail' project_key=project.key %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">List view</a>
+      <a href="{% url 'jiraclone:issue_create' project_key=project.key %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+        <i data-lucide="plus" class="h-4 w-4"></i> Create issue
+      </a>
+    </div>
+  </div>
+
+  <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+    {% for col in board_columns %}
+    <div class="flex w-[min(100vw-2rem,280px)] shrink-0 flex-col rounded-xl border border-border bg-card">
+      <div class="border-b border-border bg-muted/40 px-3 py-2 space-y-2">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{{ col.status.name }}</p>
+            <p class="text-[11px] text-muted-foreground">{{ col.issues|length }} issue{{ col.issues|length|pluralize }}</p>
+          </div>
+          <a href="{% url 'jiraclone:issue_create' project_key=project.key %}?status_id={{ col.status.pk }}" class="shrink-0 inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground hover:opacity-90" title="Create issue in this column">
+            <i data-lucide="plus" class="h-3 w-3"></i> Create
+          </a>
+        </div>
+      </div>
+      <div class="flex flex-1 flex-col gap-2 p-2 min-h-[120px]">
+        {% for issue in col.issues %}
+        <div class="rounded-lg border border-border bg-background p-3 shadow-sm">
+          <a href="{% url 'jiraclone:issue_detail' project_key=project.key pk=issue.pk %}" class="text-sm font-medium text-foreground hover:text-primary">{{ issue.issue_key }}</a>
+          <p class="mt-1 text-sm text-foreground line-clamp-3">{{ issue.summary }}</p>
+          <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span>{{ issue.issue_type.name }}</span>
+            {% if issue.assignees.all %}
+            <span>· {% for u in issue.assignees.all %}{{ u.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+            {% endif %}
+          </div>
+          <form method="post" action="{% url 'jiraclone:issue_status_quick' project_key=project.key pk=issue.pk %}" class="mt-2">
+            {% csrf_token %}
+            <label class="sr-only" for="move-{{ issue.pk }}">Move to</label>
+            <select name="status_id" id="move-{{ issue.pk }}" class="inv-list-control text-xs py-1" onchange="this.form.submit()">
+              {% for opt in statuses %}
+              <option value="{{ opt.pk }}" {% if opt.pk == issue.status_id %}selected{% endif %}>{{ opt.name }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
+        {% empty %}
+        <p class="text-xs text-muted-foreground px-1 py-2">No issues</p>
+        {% endfor %}
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-muted-foreground">No statuses configured for this project.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

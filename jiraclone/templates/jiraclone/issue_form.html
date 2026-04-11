@@ -1,0 +1,44 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block page_title %}Jira clone · {{ page_title }}{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="mx-auto max-w-2xl">
+    <nav class="text-sm text-muted-foreground mb-4">
+      <a href="{% url 'jiraclone:project_detail' project_key=project.key %}" class="hover:text-foreground">{{ project.key }}</a>
+      {% if issue %}
+      <span class="mx-1">/</span>
+      <a href="{% url 'jiraclone:issue_detail' project_key=project.key pk=issue.pk %}" class="hover:text-foreground">{{ issue.issue_key }}</a>
+      {% endif %}
+    </nav>
+    <div class="inv-list-card overflow-hidden border border-border">
+      <div class="border-b border-border bg-muted/30 px-4 py-3">
+        <h2 class="text-lg font-semibold text-foreground">{{ page_title }}</h2>
+      </div>
+      <form method="post" class="space-y-4 p-4">
+        {% csrf_token %}
+        <p class="text-xs text-muted-foreground rounded-lg border border-border/80 bg-muted/20 px-3 py-2">Assignees: hold <kbd class="rounded border border-border px-1">Ctrl</kbd> (Windows) or <kbd class="rounded border border-border px-1">⌘</kbd> (Mac) and click to select multiple people.</p>
+        {% if form.non_field_errors %}
+        <div class="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% for field in form %}
+        <div>
+          <label for="{{ field.id_for_label }}" class="mb-1 block text-sm font-medium text-foreground">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<p class="mt-1 text-xs text-muted-foreground">{{ field.help_text }}</p>{% endif %}
+          {% if field.errors %}<p class="mt-1 text-xs text-destructive">{{ field.errors }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+          {% if issue %}
+          <a href="{% url 'jiraclone:issue_detail' project_key=project.key pk=issue.pk %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
+          {% else %}
+          <a href="{% url 'jiraclone:project_detail' project_key=project.key %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

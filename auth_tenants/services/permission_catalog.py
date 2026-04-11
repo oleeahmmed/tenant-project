@@ -10,6 +10,8 @@ MODULE_TO_APP_LABELS = {
     "purchase": ["purchase"],
     "sales": ["sales"],
     "production": ["production"],
+    "jiraclone": ["jiraclone"],
+    "pos": ["pos"],
     "hrm": ["hrm"],
     "recruitment": ["recruitment"],
     "payroll": ["payroll"],

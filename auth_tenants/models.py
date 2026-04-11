@@ -18,6 +18,8 @@ class Permission(models.Model):
         ("purchase", "Purchase"),
         ("sales", "Sales"),
         ("production", "Production"),
+        ("jiraclone", "Jira clone"),
+        ("pos", "POS"),
         ("hrm", "HRM"),
         ("recruitment", "Recruitment"),
         ("payroll", "Payroll"),
@@ -76,6 +78,8 @@ class TenantModuleSubscription(models.Model):
         PURCHASE = "purchase", "Purchase"
         SALES = "sales", "Sales"
         PRODUCTION = "production", "Production"
+        JIRACLONE = "jiraclone", "Jira clone"
+        POS = "pos", "POS"
         PAYROLL = "payroll", "Payroll"
 
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="module_subscriptions")
@@ -207,11 +211,25 @@ class User(AbstractBaseUser, PermissionsMixin):
             if not has_grant_matrix:
                 # Backward-compatible fallback when matrix not configured yet.
                 return True
-            return TenantPermissionGrant.objects.filter(
+            grant = TenantPermissionGrant.objects.filter(
                 tenant_id=self.tenant_id,
                 permission__codename=perm,
-                is_enabled=True,
-            ).exists()
+            ).select_related("permission").first()
+            if grant is not None:
+                return grant.is_enabled
+            # Matrix exists but this codename has no row yet (e.g. new module like POS): allow if
+            # tenant has that module enabled and permission exists in catalog.
+            perm_obj = Permission.objects.filter(codename=perm, is_active=True).only("category").first()
+            if not perm_obj:
+                return False
+            if perm_obj.category in ("system",):
+                return False
+            if perm_obj.category == "auth_tenants":
+                return True
+            t = Tenant.objects.filter(pk=self.tenant_id).first()
+            if not t:
+                return False
+            return t.is_module_enabled(perm_obj.category)
 
         if self.role != "staff":
             return False

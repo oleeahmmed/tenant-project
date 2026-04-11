@@ -1,0 +1,118 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}POS ব্যবহার গাইড{% endblock %}
+{% block page_title %}POS · বাংলা গাইড{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div>
+        <h2 class="text-lg font-semibold text-foreground">একটি দোকানের POS চালানোর সহজ গল্প</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">Finance গাইডের মতোই — নতুন মালিক ও ক্যাশিয়ার একই পেজে পুরো ফ্লো বুঝতে পারবে।</p>
+      </div>
+      <a href="{% url 'pos:dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        Back
+      </a>
+    </div>
+
+    <div class="p-5 space-y-6">
+      <section class="rounded-xl border border-border bg-background p-4">
+        <p class="text-xs font-semibold uppercase tracking-wide text-primary">গল্পের চরিত্র</p>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          <strong class="text-foreground">রিমা</strong> একটি ছোট মুদি দোকানের মালিক। সে আজ প্রথমবার সিস্টেমে POS চালু করছে।
+          <strong class="text-foreground">সজল</strong> দোকানের ক্যাশিয়ার — সে শুধু বিক্রি ধরবে, টাকা মিলিয়ে নিবে।
+          আমরা দেখব রিমা কী কী সেটআপ করে, তারপর সজল কীভাবে একটা সেশন খুলে বিক্রি সম্পন্ন করে।
+        </p>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part A: আগে যা লাগবে (Foundation + permission)</h3>
+        <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>
+            <strong class="text-foreground">ওয়ারহাউস</strong>: POS রেজিস্টার বানাতে গেলে “ডিফল্ট ওয়ারহাউস” বেছে নিতে হয়।
+            এই ওয়ারহাউস <strong class="text-foreground">ঐ টেন্যান্টের</strong> হতে হবে — অন্য কোম্পানির ওয়ারহাউস বেছে নিলে সিস্টেম বলবে
+            “Warehouse must belong to the same tenant.” রিমা আগে থেকেই <strong class="text-foreground">Foundation → Warehouses</strong> এ নিজের শাখার ওয়ারহাউস বানিয়ে রাখে।
+          </li>
+          <li>
+            <strong class="text-foreground">পণ্য ও দাম</strong>: <strong class="text-foreground">Products</strong> এ SKU, নাম, <strong class="text-foreground">list price</strong> ঠিক থাকলে ক্যাশিয়ার সার্চ করে কার্টে তুলতে পারবে।
+          </li>
+          <li>
+            <strong class="text-foreground">পেমেন্ট মেথড</strong>: কমপক্ষে একটা <strong class="text-foreground">Cash</strong> টাইপের মেথড রাখুন (কোডে <code class="text-foreground">cash</code> থাকলে সেশন বন্ধ করার সময় প্রত্যাশিত নগদ হিসাব সহজ হয়)।
+          </li>
+          <li>
+            <strong class="text-foreground">টেন্যান্টে POS মডিউল চালু</strong>: সুপার অ্যাডমিন বা টেন্যান্ট সেটিংসে <strong class="text-foreground">POS</strong> মডিউল এনেবল থাকতে হবে।
+          </li>
+          <li>
+            <strong class="text-foreground">অনুমতি (permission)</strong>:
+            <strong class="text-foreground">pos.view</strong> দিয়ে ড্যাশবোর্ড/লিস্ট দেখা যায়;
+            <strong class="text-foreground">pos.manage</strong> দিয়ে রেজিস্টার, সেশন খোলা/বন্ধ, ক্যাশিয়ার, চেকআউট;
+            <strong class="text-foreground">pos.delete</strong> ভয়েডের মতো অপারেশন।
+            টেন্যান্ট অ্যাডমিনের জন্য গ্র্যান্ট ম্যাট্রিক্স থাকলেও নতুন মডিউলের কোডগুলো যদি তালিকায় না থাকে, সিস্টেম এখন
+            <strong class="text-foreground">মডিউল চালু থাকলে</strong> টেন্যান্ট অ্যাডমিনকে সেই মডিউলের অনুমতি দিতে পারে — যাতে POS হঠাৎ লক না হয়।
+            স্টাফ ইউজারদের রোলে <code class="text-foreground">pos.view</code> / <code class="text-foreground">pos.manage</code> যোগ করতে হবে।
+          </li>
+        </ul>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part B: রিমার প্রথম দিন (রেজিস্টার ও সেশন)</h3>
+        <ol class="mt-3 space-y-3 text-sm text-muted-foreground">
+          <li>
+            <strong class="text-foreground">1) রেজিস্টার তৈরি</strong> — <strong class="text-foreground">POS → Registers → Add</strong>।
+            কোড (যেমন <code class="text-foreground">R1</code>), নাম, আর <strong class="text-foreground">ডিফল্ট ওয়ারহাউস</strong> বেছে নিন।
+            এখন ফর্ম সেভের আগেই টেন্যান্ট সেট হয়, তাই “ওয়ারহাউস একই টেন্যান্টের হতে হবে” এরর আর এমনিতে আসবে না।
+          </li>
+          <li>
+            <strong class="text-foreground">2) সেশন খোলা</strong> — <strong class="text-foreground">Open session</strong>।
+            কোন রেজিস্টারে কাজ হবে আর দিনের শুরুতে ড্রয়ারে কত নগদ আছে (<strong class="text-foreground">opening cash</strong>) লিখুন।
+            খোলার পর সিস্টেম আপনাকে <strong class="text-foreground">Cashier</strong> স্ক্রিনে নিয়ে যায়।
+          </li>
+          <li>
+            <strong class="text-foreground">3) বিক্রি</strong> — পণ্য সার্চ করে লাইন যোগ, ট্যাক্স/ডিসকাউন্ট লাগলে ফিল্ড পূরণ, পেমেন্ট মেথড বেছে <strong class="text-foreground">Complete sale</strong>।
+            স্প্লিট পেমেন্ট চাইলে চেকবক্স দিয়ে দুই ভাগ করুন।
+          </li>
+          <li>
+            <strong class="text-foreground">4) রসিদ ও ভয়েড</strong> — বিক্রির পর রসিদ প্রিন্ট; ভুল হলে <strong class="text-foreground">Void</strong> (যদি অনুমতি থাকে)।
+          </li>
+          <li>
+            <strong class="text-foreground">5) সেশন বন্ধ</strong> — <strong class="text-foreground">Close session</strong>।
+            আপনার গোনা নগদ লিখুন; সিস্টেম প্রত্যাশিত নগদ দেখাবে (খোলার নগদ + ক্যাশ পেমেন্টে যা এসেছে)। পার্থক্য ড্রয়ার মিলিয়ে বুঝবেন।
+          </li>
+        </ol>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part C: সজলের কাজের ধারা (ক্যাশিয়ার চেকলিস্ট)</h3>
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">সকালে</p>
+            <p class="mt-1">মালিক সেশন খুললে সজল ক্যাশিয়ার পেজে পণ্য স্ক্যান/সার্চ করে বিক্রি চালায়।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">দুপুরে</p>
+            <p class="mt-1">প্রয়োজনে গ্রাহক বেছে নিন (Walk-in ছাড়া)।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">শেষে</p>
+            <p class="mt-1">ক্যাশ ক্লোজিং — নোট গুনে <strong class="text-foreground">closing cash</strong> দিন; নোট লিখতে পারেন।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">Finance এর সাথে লিংক</p>
+            <p class="mt-1">POS টিকেট এখন মূলত রিটেইল রেকর্ড; পরবর্তীতে ইনভেন্টরি/ফাইন্যান্স পোস্টিং যোগ করা যেতে পারে।</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">সমস্যা হলে কী দেখবেন</h3>
+        <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li><strong class="text-foreground">“No POS session”</strong> — আগে সেশন খুলুন বা সেশন এক্সপায়ার হলে আবার খুলুন।</li>
+          <li><strong class="text-foreground">“Payments must equal total”</strong> — স্প্লিট পেমেন্টে দুই অংশের যোগ মোটের সমান কিনা দেখুন।</li>
+          <li><strong class="text-foreground">Permission denied</strong> — রোলে <code class="text-foreground">pos.view</code>/<code class="text-foreground">pos.manage</code> আছে কিনা, আর POS মডিউল টেন্যান্টে চালু কিনা।</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

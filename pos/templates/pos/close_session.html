@@ -1,0 +1,26 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Close session{% endblock %}
+{% block page_title %}POS · Close session{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="mx-auto max-w-md">
+    <div class="inv-list-card border border-border overflow-hidden">
+      <div class="border-b border-border px-4 py-3">
+        <p class="font-mono text-sm text-muted-foreground">{{ session.register.code }}</p>
+        <h2 class="text-lg font-semibold">Close shift</h2>
+        <p class="text-sm text-muted-foreground mt-1">Expected cash (opening + cash sales): <strong>{{ expected_cash|floatformat:2 }}</strong></p>
+      </div>
+      <form method="post" class="p-4 space-y-4">
+        {% csrf_token %}
+        {% for field in form %}
+        <div>
+          <label class="block text-sm font-medium mb-1" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+        </div>
+        {% endfor %}
+        <button type="submit" class="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Close session</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Open session{% endblock %}
+{% block page_title %}POS · Open session{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="mx-auto max-w-md">
+    <div class="inv-list-card border border-border overflow-hidden">
+      <div class="border-b border-border px-4 py-3">
+        <h2 class="text-lg font-semibold">Open shift</h2>
+        <p class="text-sm text-muted-foreground mt-1">Choose register and opening cash in drawer, then go to Cashier.</p>
+      </div>
+      <form method="post" class="p-4 space-y-4">
+        {% csrf_token %}
+        {% for field in form %}
+        <div>
+          <label class="block text-sm font-medium mb-1" for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+        </div>
+        {% endfor %}
+        <button type="submit" class="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Open session</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
