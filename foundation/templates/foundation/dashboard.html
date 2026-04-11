@@ -3,47 +3,49 @@
 {% block page_title %}Foundation setup{% endblock %}
 
 {% block content %}
-<div class="space-y-8">
-  <div>
-    <h2 class="text-xl font-bold text-foreground">Foundation setup</h2>
-    <p class="text-sm text-muted-foreground mt-0.5">
-      Shared master data for ERP, POS, and inventory — warehouses, products, parties, and financial defaults.
-    </p>
-  </div>
-
-  <div class="grid gap-6 lg:grid-cols-2">
-    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
-      <h3 class="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
-        <i data-lucide="package" class="h-4 w-4 text-primary shrink-0"></i>
-        Inventory &amp; master data
-      </h3>
-      <p class="text-xs text-muted-foreground mb-4">Warehousing, catalog, trading partners, and payment rails.</p>
-      <ul class="space-y-1.5 text-sm">
-        <li><a href="{% url 'foundation:warehouse_list' %}" class="text-primary hover:underline">Warehouses</a></li>
-        <li><a href="{% url 'foundation:category_list' %}" class="text-primary hover:underline">Categories</a></li>
-        <li><a href="{% url 'foundation:product_list' %}" class="text-primary hover:underline">Products</a></li>
-        <li><a href="{% url 'foundation:uom_list' %}" class="text-primary hover:underline">Units of measure</a></li>
-        <li><a href="{% url 'foundation:uom_conversion_list' %}" class="text-primary hover:underline">UOM conversions</a></li>
-        <li><a href="{% url 'foundation:customer_list' %}" class="text-primary hover:underline">Customers</a></li>
-        <li><a href="{% url 'foundation:supplier_list' %}" class="text-primary hover:underline">Suppliers</a></li>
-        <li><a href="{% url 'foundation:sales_person_list' %}" class="text-primary hover:underline">Sales persons</a></li>
-        <li><a href="{% url 'foundation:payment_method_list' %}" class="text-primary hover:underline">Payment methods</a></li>
-      </ul>
-    </div>
-
-    <div class="simple-card overflow-hidden rounded-xl border border-border p-5 shadow-card">
-      <h3 class="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
-        <i data-lucide="landmark" class="h-4 w-4 text-primary shrink-0"></i>
-        Financial
-      </h3>
-      <p class="text-xs text-muted-foreground mb-4">Currencies, taxes, and terms used on documents.</p>
-      <ul class="space-y-1.5 text-sm">
-        <li><a href="{% url 'foundation:currency_list' %}" class="text-primary hover:underline">Currencies</a></li>
-        <li><a href="{% url 'foundation:exchange_rate_list' %}" class="text-primary hover:underline">Exchange rates</a></li>
-        <li><a href="{% url 'foundation:tax_type_list' %}" class="text-primary hover:underline">Tax types</a></li>
-        <li><a href="{% url 'foundation:tax_rate_list' %}" class="text-primary hover:underline">Tax rates</a></li>
-        <li><a href="{% url 'foundation:payment_term_list' %}" class="text-primary hover:underline">Payment terms</a></li>
-      </ul>
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+      <div class="border-b border-border/80 bg-card px-4 py-4">
+        <h2 class="text-xl font-bold text-foreground">Foundation setup</h2>
+        <p class="text-sm text-muted-foreground mt-0.5">
+          Shared master data for ERP, POS, and inventory — warehouses, products, parties, and financial defaults.
+        </p>
+      </div>
+      <div class="grid gap-4 p-4 md:grid-cols-2">
+        <div class="rounded-lg border border-border bg-muted/20 p-4">
+          <h3 class="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
+            <i data-lucide="package" class="h-4 w-4 text-primary shrink-0"></i>
+            Inventory &amp; master data
+          </h3>
+          <p class="text-xs text-muted-foreground mb-4">Warehousing, catalog, trading partners, and payment rails.</p>
+          <ul class="space-y-1.5 text-sm">
+            <li><a href="{% url 'foundation:warehouse_list' %}" class="text-primary hover:underline">Warehouses</a></li>
+            <li><a href="{% url 'foundation:category_list' %}" class="text-primary hover:underline">Categories</a></li>
+            <li><a href="{% url 'foundation:product_list' %}" class="text-primary hover:underline">Products</a></li>
+            <li><a href="{% url 'foundation:uom_list' %}" class="text-primary hover:underline">Units of measure</a></li>
+            <li><a href="{% url 'foundation:uom_conversion_list' %}" class="text-primary hover:underline">UOM conversions</a></li>
+            <li><a href="{% url 'foundation:customer_list' %}" class="text-primary hover:underline">Customers</a></li>
+            <li><a href="{% url 'foundation:supplier_list' %}" class="text-primary hover:underline">Suppliers</a></li>
+            <li><a href="{% url 'foundation:sales_person_list' %}" class="text-primary hover:underline">Sales persons</a></li>
+            <li><a href="{% url 'foundation:payment_method_list' %}" class="text-primary hover:underline">Payment methods</a></li>
+          </ul>
+        </div>
+        <div class="rounded-lg border border-border bg-muted/20 p-4">
+          <h3 class="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
+            <i data-lucide="landmark" class="h-4 w-4 text-primary shrink-0"></i>
+            Financial
+          </h3>
+          <p class="text-xs text-muted-foreground mb-4">Currencies, taxes, and terms used on documents.</p>
+          <ul class="space-y-1.5 text-sm">
+            <li><a href="{% url 'foundation:currency_list' %}" class="text-primary hover:underline">Currencies</a></li>
+            <li><a href="{% url 'foundation:exchange_rate_list' %}" class="text-primary hover:underline">Exchange rates</a></li>
+            <li><a href="{% url 'foundation:tax_type_list' %}" class="text-primary hover:underline">Tax types</a></li>
+            <li><a href="{% url 'foundation:tax_rate_list' %}" class="text-primary hover:underline">Tax rates</a></li>
+            <li><a href="{% url 'foundation:payment_term_list' %}" class="text-primary hover:underline">Payment terms</a></li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 </div>

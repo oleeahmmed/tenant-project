@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   {# Short title — browser may repeat this in print header if headers are ON #}
-  <title>{{ doc.adjustment_number }}</title>
+  <title>{{ doc.doc_no }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@9..40,500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -519,14 +519,14 @@
 <body>
   <div class="toolbar no-print">
     <div class="toolbar-title">
-      <strong>{{ doc.adjustment_number }}</strong>
-      <span> · Stock adjustment</span>
+      <strong>{{ doc.doc_no }}</strong>
+      {% if doc_kind == "quotation" %}<span> · Sales quotation</span>{% elif doc_kind == "order" %}<span> · Sales order</span>{% elif doc_kind == "delivery" %}<span> · Delivery note</span>{% else %}<span> · Sales return</span>{% endif %}
     </div>
     <span class="hint"><strong>No date/URL in print:</strong> Chrome/Edge → Print → <em>More settings</em> → turn <strong>off</strong> “Headers and footers”. Save as PDF: Destination → Save as PDF.</span>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <a class="back" href="{% url 'inventory:stock_adjustment_detail' doc.pk %}">← Back</a>
-      <button type="button" class="print" id="btn-print-sa" title="Send to printer">Print</button>
-      <button type="button" class="pdf" id="btn-pdf-sa" title="In the dialog choose Destination → Save as PDF">PDF</button>
+      <a class="back" href="{% if doc_kind == 'quotation' %}{% url 'sales:quotation_detail' doc.pk %}{% elif doc_kind == 'order' %}{% url 'sales:order_detail' doc.pk %}{% elif doc_kind == 'delivery' %}{% url 'sales:delivery_detail' doc.pk %}{% else %}{% url 'sales:return_detail' doc.pk %}{% endif %}">← Back</a>
+      <button type="button" class="print" id="btn-print-doc" title="Send to printer">Print</button>
+      <button type="button" class="pdf" id="btn-pdf-doc" title="In the dialog choose Destination → Save as PDF">PDF</button>
     </div>
   </div>
 
@@ -561,96 +561,239 @@
     </div>
 
     <div class="print-doc-body">
+    {% if doc_kind == "quotation" %}
     <div class="doc-ribbon">
       <table class="mini-doc" aria-label="Document details">
-        <tr>
-          <td class="lbl">Date:</td>
-          <td class="val">{{ doc.adjustment_date|date:"d-m-Y" }}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Adjustment #:</td>
-          <td class="val">{{ doc.adjustment_number }}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Warehouse:</td>
-          <td class="val">{{ doc.warehouse_code|default:"—" }}{% if doc.warehouse_name %} — {{ doc.warehouse_name }}{% endif %}</td>
-        </tr>
+        <tr><td class="lbl">Date:</td><td class="val">{{ doc.quote_date|date:"d-m-Y" }}</td></tr>
+        <tr><td class="lbl">Document #:</td><td class="val">{{ doc.doc_no }}</td></tr>
+        <tr><td class="lbl">Customer:</td><td class="val">{{ doc.customer }}</td></tr>
       </table>
-      <div class="doc-ribbon__title">Stock adjustment</div>
-      <table class="mini-doc" aria-label="Terms and status">
-        <tr>
-          <td class="lbl">Type:</td>
-          <td class="val">{{ doc.get_adjustment_type_display }}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Status:</td>
-          <td class="val">{{ doc.get_status_display }}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Requested by:</td>
-          <td class="val">{{ doc.requested_by|default:"—" }}</td>
-        </tr>
+      <div class="doc-ribbon__title">Sales quotation</div>
+      <table class="mini-doc" aria-label="Status">
+        <tr><td class="lbl">Status:</td><td class="val">{{ doc.get_status_display }}</td></tr>
+        <tr><td class="lbl">Valid until:</td><td class="val">{% if doc.valid_until %}{{ doc.valid_until|date:"d-m-Y" }}{% else %}—{% endif %}</td></tr>
+        <tr><td class="lbl">&nbsp;</td><td class="val">&nbsp;</td></tr>
       </table>
     </div>
-
-    <div class="section-title">Contents</div>
+    <div class="section-title">Lines</div>
     <table class="items-table">
       <thead>
         <tr>
           <th style="width:4%;">#</th>
-          <th style="width:11%;">SKU</th>
-          <th style="width:26%;">Product</th>
-          <th style="width:11%;">System qty</th>
-          <th style="width:11%;">Counted qty</th>
-          <th style="width:9%;">Diff</th>
-          <th style="width:11%;">Unit cost</th>
+          <th style="width:28%;">Product</th>
+          <th style="width:10%;">Qty</th>
+          <th style="width:12%;">Unit price</th>
           <th style="width:12%;">Line total</th>
+          <th style="width:18%;">Warehouse</th>
         </tr>
       </thead>
       <tbody>
-        {% for line in doc.items.all %}
+        {% for line in doc.lines.all %}
         <tr>
           <td>{{ forloop.counter }}</td>
-          <td class="text-left">{{ line.product_sku }}</td>
-          <td class="text-left">{% if line.product_name %}{{ line.product_name }}{% else %}—{% endif %}</td>
-          <td class="text-right">{{ line.system_quantity|floatformat:8 }}</td>
-          <td class="text-right">{{ line.counted_quantity|floatformat:8 }}</td>
-          <td class="text-right">{{ line.quantity_difference|floatformat:8 }}</td>
-          <td class="text-right">{{ line.unit_cost|floatformat:8 }}</td>
-          <td class="text-right">{{ line.line_total|floatformat:8 }}</td>
+          <td class="text-left">{{ line.product }}{% if line.description %} — {{ line.description }}{% endif %}</td>
+          <td class="text-right">{{ line.quantity|floatformat:4 }}</td>
+          <td class="text-right">{{ line.unit_price|floatformat:4 }}</td>
+          <td class="text-right">{{ line.line_total|floatformat:4 }}</td>
+          <td class="text-left">{{ line.warehouse|default:"—" }}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="8" style="text-align:center;padding:16px;color:hsl(var(--muted-foreground));">No lines.</td></tr>
+        <tr><td colspan="6" style="text-align:center;padding:16px;color:hsl(var(--muted-foreground));">No lines.</td></tr>
         {% endfor %}
       </tbody>
     </table>
-
     <div class="bottom-section">
-      <div class="notes-section">
-        <h4>Notes / special instructions</h4>
-        {% if doc.reason %}<p><strong>Reason:</strong> {{ doc.reason }}</p>{% endif %}
-        {% if doc.notes %}<p><strong>Notes:</strong> {{ doc.notes }}</p>{% endif %}
-        {% if not doc.reason and not doc.notes %}<p style="color:hsl(var(--muted-foreground));">—</p>{% endif %}
-      </div>
+      <div class="notes-section"><h4>Notes</h4>{% if doc.notes %}<p>{{ doc.notes }}</p>{% else %}<p style="color:hsl(var(--muted-foreground));">—</p>{% endif %}</div>
       <div class="totals-section">
         <table class="totals-table">
-          <tr><td class="label">Total increase</td><td class="value">{{ doc.total_increase|floatformat:8 }}</td></tr>
-          <tr><td class="label">Total decrease</td><td class="value">{{ doc.total_decrease|floatformat:8 }}</td></tr>
-          <tr><td class="label">Total value delta</td><td class="value">{{ doc.total_value|floatformat:8 }}</td></tr>
-          <tr class="grand"><td class="label">Grand total</td><td class="value">{{ doc.total_amount|floatformat:8 }}</td></tr>
+          <tr><td class="label">Subtotal</td><td class="value">{{ doc.subtotal|floatformat:4 }}</td></tr>
+          <tr><td class="label">Tax</td><td class="value">{{ doc.tax_amount|floatformat:4 }}</td></tr>
+          <tr class="grand"><td class="label">Total</td><td class="value">{{ doc.total_amount|floatformat:4 }}</td></tr>
         </table>
       </div>
     </div>
-
     <div class="invoice-thankyou">
       <p class="invoice-thankyou__title">Thank you for your business</p>
-      <p class="invoice-thankyou__sub">We value your partnership. For any queries regarding this stock adjustment, please contact us using the details above.</p>
+      <p class="invoice-thankyou__sub">For queries regarding this quotation, please contact us using the details above.</p>
     </div>
-
     <div class="meta-footer">
       <span>Generated {{ print_generated_at|date:"Y-m-d H:i" }}</span>
-      <span>{{ company.name }} · Stock adjustment</span>
+      <span>{{ company.name }} · Sales quotation</span>
     </div>
+    {% elif doc_kind == "order" %}
+    <div class="doc-ribbon">
+      <table class="mini-doc" aria-label="Document details">
+        <tr><td class="lbl">Date:</td><td class="val">{{ doc.order_date|date:"d-m-Y" }}</td></tr>
+        <tr><td class="lbl">Document #:</td><td class="val">{{ doc.doc_no }}</td></tr>
+        <tr><td class="lbl">Customer:</td><td class="val">{{ doc.customer }}</td></tr>
+      </table>
+      <div class="doc-ribbon__title">Sales order</div>
+      <table class="mini-doc" aria-label="Status">
+        <tr><td class="lbl">Status:</td><td class="val">{{ doc.get_status_display }}</td></tr>
+        <tr><td class="lbl">Expected:</td><td class="val">{% if doc.expected_delivery %}{{ doc.expected_delivery|date:"d-m-Y" }}{% else %}—{% endif %}</td></tr>
+        <tr><td class="lbl">Quotation:</td><td class="val">{% if doc.quotation %}{{ doc.quotation.doc_no }}{% else %}—{% endif %}</td></tr>
+      </table>
+    </div>
+    <div class="section-title">Lines</div>
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width:4%;">#</th>
+          <th style="width:28%;">Product</th>
+          <th style="width:10%;">Qty</th>
+          <th style="width:12%;">Unit price</th>
+          <th style="width:12%;">Line total</th>
+          <th style="width:18%;">Warehouse</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in doc.lines.all %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td class="text-left">{{ line.product }}{% if line.description %} — {{ line.description }}{% endif %}</td>
+          <td class="text-right">{{ line.quantity|floatformat:4 }}</td>
+          <td class="text-right">{{ line.unit_price|floatformat:4 }}</td>
+          <td class="text-right">{{ line.line_total|floatformat:4 }}</td>
+          <td class="text-left">{{ line.warehouse|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;padding:16px;color:hsl(var(--muted-foreground));">No lines.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="bottom-section">
+      <div class="notes-section"><h4>Notes</h4>{% if doc.notes %}<p>{{ doc.notes }}</p>{% else %}<p style="color:hsl(var(--muted-foreground));">—</p>{% endif %}</div>
+      <div class="totals-section">
+        <table class="totals-table">
+          <tr><td class="label">Subtotal</td><td class="value">{{ doc.subtotal|floatformat:4 }}</td></tr>
+          <tr><td class="label">Tax</td><td class="value">{{ doc.tax_amount|floatformat:4 }}</td></tr>
+          <tr class="grand"><td class="label">Total</td><td class="value">{{ doc.total_amount|floatformat:4 }}</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="invoice-thankyou">
+      <p class="invoice-thankyou__title">Thank you for your business</p>
+      <p class="invoice-thankyou__sub">For queries regarding this sales order, please contact us using the details above.</p>
+    </div>
+    <div class="meta-footer">
+      <span>Generated {{ print_generated_at|date:"Y-m-d H:i" }}</span>
+      <span>{{ company.name }} · Sales order</span>
+    </div>
+    {% elif doc_kind == "delivery" %}
+    <div class="doc-ribbon">
+      <table class="mini-doc" aria-label="Document details">
+        <tr><td class="lbl">Date:</td><td class="val">{{ doc.delivery_date|date:"d-m-Y" }}</td></tr>
+        <tr><td class="lbl">Document #:</td><td class="val">{{ doc.doc_no }}</td></tr>
+        <tr><td class="lbl">Customer:</td><td class="val">{{ doc.customer }}</td></tr>
+      </table>
+      <div class="doc-ribbon__title">Delivery note</div>
+      <table class="mini-doc" aria-label="Status">
+        <tr><td class="lbl">Status:</td><td class="val">{{ doc.get_status_display }}</td></tr>
+        <tr><td class="lbl">Order #:</td><td class="val">{{ doc.order.doc_no }}</td></tr>
+        <tr><td class="lbl">&nbsp;</td><td class="val">&nbsp;</td></tr>
+      </table>
+    </div>
+    <div class="section-title">Lines</div>
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width:4%;">#</th>
+          <th style="width:30%;">Product</th>
+          <th style="width:12%;">Qty delivered</th>
+          <th style="width:12%;">Unit price</th>
+          <th style="width:14%;">Line total</th>
+          <th style="width:18%;">Warehouse</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in doc.lines.all %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td class="text-left">{{ line.product }}</td>
+          <td class="text-right">{{ line.quantity_delivered|floatformat:4 }}</td>
+          <td class="text-right">{{ line.unit_price|floatformat:4 }}</td>
+          <td class="text-right">{{ line.line_total|floatformat:4 }}</td>
+          <td class="text-left">{{ line.warehouse|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;padding:16px;color:hsl(var(--muted-foreground));">No lines.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="bottom-section">
+      <div class="notes-section"><h4>Notes</h4>{% if doc.notes %}<p>{{ doc.notes }}</p>{% else %}<p style="color:hsl(var(--muted-foreground));">—</p>{% endif %}</div>
+      <div class="totals-section">
+        <table class="totals-table">
+          <tr class="grand"><td class="label">Total</td><td class="value">{{ doc.total_amount|floatformat:4 }}</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="invoice-thankyou">
+      <p class="invoice-thankyou__title">Thank you for your business</p>
+      <p class="invoice-thankyou__sub">For queries regarding this delivery note, please contact us using the details above.</p>
+    </div>
+    <div class="meta-footer">
+      <span>Generated {{ print_generated_at|date:"Y-m-d H:i" }}</span>
+      <span>{{ company.name }} · Delivery note</span>
+    </div>
+    {% else %}
+    <div class="doc-ribbon">
+      <table class="mini-doc" aria-label="Document details">
+        <tr><td class="lbl">Date:</td><td class="val">{{ doc.return_date|date:"d-m-Y" }}</td></tr>
+        <tr><td class="lbl">Document #:</td><td class="val">{{ doc.doc_no }}</td></tr>
+        <tr><td class="lbl">Customer:</td><td class="val">{{ doc.customer }}</td></tr>
+      </table>
+      <div class="doc-ribbon__title">Sales return</div>
+      <table class="mini-doc" aria-label="Status">
+        <tr><td class="lbl">Status:</td><td class="val">{{ doc.get_status_display }}</td></tr>
+        <tr><td class="lbl">Delivery ref:</td><td class="val">{% if doc.delivery %}{{ doc.delivery.doc_no }}{% else %}—{% endif %}</td></tr>
+        <tr><td class="lbl">Reason:</td><td class="val">{{ doc.reason|default:"—" }}</td></tr>
+      </table>
+    </div>
+    <div class="section-title">Lines</div>
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width:4%;">#</th>
+          <th style="width:32%;">Product</th>
+          <th style="width:12%;">Qty</th>
+          <th style="width:14%;">Unit price</th>
+          <th style="width:14%;">Line total</th>
+          <th style="width:18%;">Warehouse</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in doc.lines.all %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td class="text-left">{{ line.product }}</td>
+          <td class="text-right">{{ line.quantity|floatformat:4 }}</td>
+          <td class="text-right">{{ line.unit_price|floatformat:4 }}</td>
+          <td class="text-right">{{ line.line_total|floatformat:4 }}</td>
+          <td class="text-left">{{ line.warehouse|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;padding:16px;color:hsl(var(--muted-foreground));">No lines.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="bottom-section">
+      <div class="notes-section"><h4>Notes</h4>{% if doc.notes %}<p>{{ doc.notes }}</p>{% else %}<p style="color:hsl(var(--muted-foreground));">—</p>{% endif %}</div>
+      <div class="totals-section">
+        <table class="totals-table">
+          <tr class="grand"><td class="label">Total</td><td class="value">{{ doc.total_amount|floatformat:4 }}</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="invoice-thankyou">
+      <p class="invoice-thankyou__title">Thank you for your business</p>
+      <p class="invoice-thankyou__sub">For queries regarding this sales return, please contact us using the details above.</p>
+    </div>
+    <div class="meta-footer">
+      <span>Generated {{ print_generated_at|date:"Y-m-d H:i" }}</span>
+      <span>{{ company.name }} · Sales return</span>
+    </div>
+    {% endif %}
     </div>
     </div>
   </div>
@@ -660,7 +803,7 @@
       window.addEventListener("beforeprint", function () {
         tabTitle = document.title;
         /* Shrink browser print header text; URL/footer still need “Headers and footers” off in the dialog */
-        document.title = "{{ doc.adjustment_number|escapejs }}";
+        document.title = "{{ doc.doc_no|escapejs }}";
       });
       window.addEventListener("afterprint", function () {
         document.title = tabTitle;
@@ -669,8 +812,8 @@
         var el = document.getElementById(id);
         if (el) el.addEventListener("click", function () { window.print(); });
       }
-      wirePrint("btn-print-sa");
-      wirePrint("btn-pdf-sa");
+      wirePrint("btn-print-doc");
+      wirePrint("btn-pdf-doc");
     })();
   </script>
 </body>

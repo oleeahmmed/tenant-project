@@ -7,105 +7,395 @@
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css" rel="stylesheet"/>
 <link href="{% static 'foundation/css/tom_select_inv.css' %}" rel="stylesheet"/>
 {% endblock %}
+
 {% block content %}
-<div class="w-full px-1 md:px-2 space-y-5">
-  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
-    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
-      <h2 class="text-lg font-semibold text-foreground">{{ page_title }}</h2>
-      <div class="flex items-center gap-2">
-        <a href="{% url 'sales:sales_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  {% if messages %}
+  <ul class="rounded-lg border border-border bg-card p-3 text-sm">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+      <div>
+        <h2 class="text-xl font-bold text-foreground">{{ page_title }}</h2>
+        <p class="text-sm text-muted-foreground mt-0.5">{{ list_subtitle }}</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <a href="{% url 'sales:sales_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
           <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
         </a>
-        <a href="{% url create_url %}" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Add</a>
+        <a href="{% url create_url %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+          <i data-lucide="plus" class="h-4 w-4"></i> Add
+        </a>
       </div>
     </div>
-    <form method="get" class="grid grid-cols-1 gap-2 border-b border-border bg-muted/20 px-5 py-3 md:grid-cols-6">
-      <input type="text" name="q" value="{{ selected.q }}" placeholder="Search doc/notes" class="rounded-lg border border-border bg-background px-3 py-2 text-sm md:col-span-2">
-      <select name="status" class="rounded-lg border border-border bg-background px-3 py-2 text-sm">
-        <option value="">All status</option>
-        {% for v,l in status_choices %}<option value="{{ v }}" {% if selected.status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
-      </select>
-      <select name="customer" class="rounded-lg border border-border bg-background px-3 py-2 text-sm inv-filter-autocomplete" data-autocomplete-url="/api/foundation/autocomplete/customers/" data-value-key="id">
-        <option value="">All customers</option>
-        {% if filtered_customer %}<option value="{{ filtered_customer.id }}" selected>{{ filtered_customer.customer_code }} — {{ filtered_customer.name }}</option>{% endif %}
-      </select>
-      <select name="sort" class="rounded-lg border border-border bg-background px-3 py-2 text-sm">
-        <option value="{{ sort_newest }}" {% if selected.sort == sort_newest %}selected{% endif %}>Newest first</option>
-        <option value="{{ sort_oldest }}" {% if selected.sort == sort_oldest %}selected{% endif %}>Oldest first</option>
-      </select>
-      <div class="flex gap-2">
-        <button class="inline-flex items-center justify-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Filter</button>
-        <a href="{{ request.path }}" class="inline-flex items-center justify-center rounded-lg border border-border px-3 py-2 text-sm hover:bg-accent">Reset</a>
+
+    <form method="get" class="inv-list-filter px-4 py-4">
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <input type="text" name="q" value="{{ selected.q }}" placeholder="Search document #, notes, customer..."
+               class="inv-list-control" />
+        <select name="status" class="inv-list-control">
+          <option value="">All status</option>
+          {% for code, label in status_choices %}
+            <option value="{{ code }}" {% if selected.status == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <select name="customer"
+                class="inv-list-control inv-filter-autocomplete"
+                data-autocomplete-url="/api/foundation/autocomplete/customers/"
+                data-value-key="id">
+          <option value="">All customers</option>
+          {% if filtered_customer %}
+          <option value="{{ filtered_customer.id }}" selected>{{ filtered_customer.customer_code }} — {{ filtered_customer.name }}</option>
+          {% endif %}
+        </select>
+        <input type="date" name="date_from" value="{{ selected.date_from }}" class="inv-list-control" />
+        <input type="date" name="date_to" value="{{ selected.date_to }}" class="inv-list-control" />
+        <select name="sort" class="inv-list-control">
+          {% for val, label in sort_options %}
+          <option value="{{ val }}" {% if selected.sort == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <select name="page_size" class="inv-list-control">
+          <option value="10" {% if selected.page_size == "10" %}selected{% endif %}>10 / page</option>
+          <option value="15" {% if selected.page_size == "15" %}selected{% endif %}>15 / page</option>
+          <option value="25" {% if selected.page_size == "25" %}selected{% endif %}>25 / page</option>
+          <option value="50" {% if selected.page_size == "50" %}selected{% endif %}>50 / page</option>
+        </select>
       </div>
-      <select name="page_size" class="rounded-lg border border-border bg-background px-3 py-2 text-sm">
-        <option value="10" {% if selected.page_size == '10' %}selected{% endif %}>10 rows</option>
-        <option value="20" {% if selected.page_size == '20' %}selected{% endif %}>20 rows</option>
-        <option value="50" {% if selected.page_size == '50' %}selected{% endif %}>50 rows</option>
-      </select>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+          <i data-lucide="search" class="h-4 w-4"></i> Apply filters
+        </button>
+        <a href="{% url list_url_name %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent">
+          <i data-lucide="rotate-ccw" class="h-4 w-4"></i> Reset
+        </a>
+      </div>
     </form>
-    <div class="p-5">
-      <div class="ui-table-wrap overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-border bg-muted/40">
-              <th class="px-3 py-2 text-left">Document</th>
-              <th class="px-3 py-2 text-left">Status</th>
-              <th class="px-3 py-2 text-right">Action</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-border">
-            {% for obj in object_list %}
-            <tr>
-              <td class="px-3 py-2">{{ obj }}</td>
-              <td class="px-3 py-2">{{ obj.status }}</td>
-              <td class="px-3 py-2 text-right space-x-1">
-                {% if page_title == 'Sales quotations' %}
-                  <a href="{% url 'sales:quotation_detail' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">View</a>
-                  {% if obj.status == 'draft' %}
-                    <a href="{% url 'sales:quotation_edit' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">Edit</a>
-                    <form method="post" action="{% url 'sales:quotation_approve' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 hover:bg-accent">Approve</button></form>
-                    <form method="post" action="{% url 'sales:quotation_delete' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button></form>
-                  {% endif %}
-                {% elif page_title == 'Sales orders' %}
-                  <a href="{% url 'sales:order_detail' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">View</a>
-                  {% if obj.status == 'draft' %}
-                    <a href="{% url 'sales:order_edit' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">Edit</a>
-                    <form method="post" action="{% url 'sales:order_approve' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 hover:bg-accent">Approve</button></form>
-                    <form method="post" action="{% url 'sales:order_delete' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button></form>
-                  {% endif %}
-                {% elif page_title == 'Sales returns' %}
-                  <a href="{% url 'sales:return_detail' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">View</a>
-                  {% if obj.status == 'draft' %}
-                    <a href="{% url 'sales:return_edit' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">Edit</a>
-                    <form method="post" action="{% url 'sales:return_post' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 hover:bg-accent">Post</button></form>
-                    <form method="post" action="{% url 'sales:return_delete' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button></form>
-                  {% endif %}
+
+    <div class="ui-table-wrap overflow-x-auto border-t border-border/50 bg-card">
+      <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-border bg-muted/40">
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Document #</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer</th>
+          {% if doc_kind == "delivery" %}
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Order</th>
+          {% elif doc_kind == "return" %}
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Delivery</th>
+          {% endif %}
+          <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-border">
+        {% for d in documents %}
+        <tr class="hover:bg-accent/40 transition-colors">
+          <td class="px-4 py-3 font-medium">{{ d.doc_no }}</td>
+          <td class="px-4 py-3 text-muted-foreground">{% if doc_kind == "quotation" %}{{ d.quote_date }}{% elif doc_kind == "order" %}{{ d.order_date }}{% elif doc_kind == "delivery" %}{{ d.delivery_date }}{% else %}{{ d.return_date }}{% endif %}</td>
+          <td class="px-4 py-3">{{ d.customer }}</td>
+          {% if doc_kind == "delivery" %}
+          <td class="px-4 py-3 text-muted-foreground">{{ d.order.doc_no }}</td>
+          {% elif doc_kind == "return" %}
+          <td class="px-4 py-3 text-muted-foreground">{% if d.delivery %}{{ d.delivery.doc_no }}{% else %}—{% endif %}</td>
+          {% endif %}
+          <td class="px-4 py-3"><span class="rounded-full bg-muted px-2 py-0.5 text-xs">{{ d.get_status_display }}</span></td>
+          <td class="px-4 py-3 text-right font-medium">{{ d.total_amount|floatformat:2 }}</td>
+          <td class="px-4 py-3 text-right whitespace-nowrap">
+            <div class="relative flex justify-end">
+              <button
+                type="button"
+                class="inv-sa-menu-trigger table-action-btn border border-border/70 bg-background shadow-sm ring-1 ring-black/[0.04] dark:ring-white/10"
+                data-inv-sa-menu="pu-actions-{{ d.pk }}"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                title="Actions"
+                aria-label="Open actions for {{ d.doc_no|escapejs }}"
+              >
+                <i data-lucide="more-vertical" class="h-4 w-4"></i>
+              </button>
+              <div
+                id="pu-actions-{{ d.pk }}"
+                class="inv-sa-menu-panel fixed z-[200] hidden w-[min(100vw-1.5rem,17.5rem)] overflow-hidden rounded-2xl border border-border bg-card/95 p-2 text-left shadow-[0_12px_40px_-8px_rgba(15,23,42,0.22)] ring-1 ring-border/60 backdrop-blur-md dark:bg-card dark:shadow-[0_12px_40px_-8px_rgba(0,0,0,0.55)]"
+                role="menu"
+              >
+                <div class="mb-2 rounded-xl bg-muted/50 px-3 py-2 text-left">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Actions</p>
+                  <p class="truncate text-xs font-semibold text-foreground">{{ d.doc_no }}</p>
+                </div>
+                <div class="flex flex-col gap-0.5">
+                {% if request.user.role == "tenant_admin" or request.user.role == "super_admin" or perm_sales_view %}
+                {% if doc_kind == "quotation" %}
+                <a href="{% url 'sales:quotation_detail' d.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/20">
+                    <i data-lucide="eye" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold leading-tight text-foreground">View</span>
+                    <span class="block text-[11px] leading-snug text-muted-foreground">Open document</span>
+                  </span>
+                </a>
+                <a href="{% url 'sales:quotation_print' d.pk %}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-primary/20">
+                    <i data-lucide="printer" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold leading-tight text-foreground">Print</span>
+                    <span class="block text-[11px] leading-snug text-muted-foreground">Opens print view — Print button</span>
+                  </span>
+                </a>
+                <a href="{% url 'sales:quotation_print' d.pk %}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border/80">
+                    <i data-lucide="file-down" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold leading-tight text-foreground">PDF</span>
+                    <span class="block text-[11px] leading-snug text-muted-foreground">Same view — use PDF button (Save as PDF)</span>
+                  </span>
+                </a>
+                {% elif doc_kind == "order" %}
+                <a href="{% url 'sales:order_detail' d.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/20">
+                    <i data-lucide="eye" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold leading-tight text-foreground">View</span>
+                    <span class="block text-[11px] leading-snug text-muted-foreground">Open document</span>
+                  </span>
+                </a>
+                <a href="{% url 'sales:order_print' d.pk %}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-primary/20">
+                    <i data-lucide="printer" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold leading-tight text-foreground">Print</span>
+                    <span class="block text-[11px] leading-snug text-muted-foreground">Opens print view — Print button</span>
+                  </span>
+                </a>
+                <a href="{% url 'sales:order_print' d.pk %}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border/80">
+                    <i data-lucide="file-down" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold leading-tight text-foreground">PDF</span>
+                    <span class="block text-[11px] leading-snug text-muted-foreground">Same view — use PDF button (Save as PDF)</span>
+                  </span>
+                </a>
+                {% elif doc_kind == "delivery" %}
+                <a href="{% url 'sales:delivery_detail' d.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/20">
+                    <i data-lucide="eye" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold leading-tight text-foreground">View</span>
+                    <span class="block text-[11px] leading-snug text-muted-foreground">Open document</span>
+                  </span>
+                </a>
+                <a href="{% url 'sales:delivery_print' d.pk %}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-primary/20">
+                    <i data-lucide="printer" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold leading-tight text-foreground">Print</span>
+                    <span class="block text-[11px] leading-snug text-muted-foreground">Opens print view — Print button</span>
+                  </span>
+                </a>
+                <a href="{% url 'sales:delivery_print' d.pk %}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border/80">
+                    <i data-lucide="file-down" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold leading-tight text-foreground">PDF</span>
+                    <span class="block text-[11px] leading-snug text-muted-foreground">Same view — use PDF button (Save as PDF)</span>
+                  </span>
+                </a>
                 {% else %}
-                  <a href="{% url 'sales:delivery_detail' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">View</a>
-                  {% if obj.status == 'draft' %}
-                    <a href="{% url 'sales:delivery_edit' obj.pk %}" class="rounded border border-border px-2 py-1 hover:bg-accent">Edit</a>
-                    <form method="post" action="{% url 'sales:delivery_post' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 hover:bg-accent">Post</button></form>
-                    <form method="post" action="{% url 'sales:delivery_delete' obj.pk %}" class="inline">{% csrf_token %}<button class="rounded border border-border px-2 py-1 text-destructive hover:bg-destructive/10">Delete</button></form>
+                <a href="{% url 'sales:return_detail' d.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/20">
+                    <i data-lucide="eye" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold leading-tight text-foreground">View</span>
+                    <span class="block text-[11px] leading-snug text-muted-foreground">Open document</span>
+                  </span>
+                </a>
+                <a href="{% url 'sales:return_print' d.pk %}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-primary/20">
+                    <i data-lucide="printer" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold leading-tight text-foreground">Print</span>
+                    <span class="block text-[11px] leading-snug text-muted-foreground">Opens print view — Print button</span>
+                  </span>
+                </a>
+                <a href="{% url 'sales:return_print' d.pk %}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground ring-1 ring-border/80">
+                    <i data-lucide="file-down" class="h-4 w-4"></i>
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold leading-tight text-foreground">PDF</span>
+                    <span class="block text-[11px] leading-snug text-muted-foreground">Same view — use PDF button (Save as PDF)</span>
+                  </span>
+                </a>
+                {% endif %}
+                {% endif %}
+                {% if request.user.role == "tenant_admin" or request.user.role == "super_admin" or perm_sales_manage %}
+                  {% if d.status == "draft" or request.user.role == "tenant_admin" or request.user.role == "super_admin" %}
+                  {% if doc_kind == "quotation" %}
+                  <a href="{% url 'sales:quotation_edit' d.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500/12 text-amber-700 ring-1 ring-amber-500/25 dark:text-amber-400">
+                      <i data-lucide="pencil" class="h-4 w-4"></i>
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-sm font-semibold leading-tight text-foreground">Edit</span>
+                      <span class="block text-[11px] leading-snug text-muted-foreground">Change lines & header</span>
+                    </span>
+                  </a>
+                  {% elif doc_kind == "order" %}
+                  <a href="{% url 'sales:order_edit' d.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500/12 text-amber-700 ring-1 ring-amber-500/25 dark:text-amber-400">
+                      <i data-lucide="pencil" class="h-4 w-4"></i>
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-sm font-semibold leading-tight text-foreground">Edit</span>
+                      <span class="block text-[11px] leading-snug text-muted-foreground">Change lines & header</span>
+                    </span>
+                  </a>
+                  {% elif doc_kind == "delivery" %}
+                  <a href="{% url 'sales:delivery_edit' d.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500/12 text-amber-700 ring-1 ring-amber-500/25 dark:text-amber-400">
+                      <i data-lucide="pencil" class="h-4 w-4"></i>
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-sm font-semibold leading-tight text-foreground">Edit</span>
+                      <span class="block text-[11px] leading-snug text-muted-foreground">Change lines & header</span>
+                    </span>
+                  </a>
+                  {% else %}
+                  <a href="{% url 'sales:return_edit' d.pk %}" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500/12 text-amber-700 ring-1 ring-amber-500/25 dark:text-amber-400">
+                      <i data-lucide="pencil" class="h-4 w-4"></i>
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-sm font-semibold leading-tight text-foreground">Edit</span>
+                      <span class="block text-[11px] leading-snug text-muted-foreground">Change lines & header</span>
+                    </span>
+                  </a>
+                  {% endif %}
                   {% endif %}
                 {% endif %}
-              </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="3" class="px-3 py-6 text-center text-muted-foreground">No records found.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+                {% if request.user.role == "tenant_admin" or request.user.role == "super_admin" or perm_sales_manage %}
+                  {% if doc_kind == "quotation" and d.status == "draft" %}
+                  <form method="post" action="{% url 'sales:quotation_approve' d.pk %}" class="border-t border-border pt-1">
+                    {% csrf_token %}
+                    <button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-700 ring-1 ring-emerald-500/25 dark:text-emerald-400">
+                        <i data-lucide="check-check" class="h-4 w-4"></i>
+                      </span>
+                      <span class="min-w-0 flex-1">
+                        <span class="block text-sm font-semibold leading-tight text-foreground">Approve</span>
+                        <span class="block text-[11px] leading-snug text-muted-foreground">Mark as approved</span>
+                      </span>
+                    </button>
+                  </form>
+                  {% elif doc_kind == "order" and d.status == "draft" %}
+                  <form method="post" action="{% url 'sales:order_approve' d.pk %}" class="border-t border-border pt-1">
+                    {% csrf_token %}
+                    <button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-700 ring-1 ring-emerald-500/25 dark:text-emerald-400">
+                        <i data-lucide="check-check" class="h-4 w-4"></i>
+                      </span>
+                      <span class="min-w-0 flex-1">
+                        <span class="block text-sm font-semibold leading-tight text-foreground">Approve</span>
+                        <span class="block text-[11px] leading-snug text-muted-foreground">Mark as approved</span>
+                      </span>
+                    </button>
+                  </form>
+                  {% elif doc_kind == "delivery" and d.status == "draft" %}
+                  <form method="post" action="{% url 'sales:delivery_post' d.pk %}" class="border-t border-border pt-1">
+                    {% csrf_token %}
+                    <button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-700 ring-1 ring-emerald-500/25 dark:text-emerald-400">
+                        <i data-lucide="check-check" class="h-4 w-4"></i>
+                      </span>
+                      <span class="min-w-0 flex-1">
+                        <span class="block text-sm font-semibold leading-tight text-foreground">Post</span>
+                        <span class="block text-[11px] leading-snug text-muted-foreground">Post to stock / finance</span>
+                      </span>
+                    </button>
+                  </form>
+                  {% elif doc_kind == "return" and d.status == "draft" %}
+                  <form method="post" action="{% url 'sales:return_post' d.pk %}" class="border-t border-border pt-1">
+                    {% csrf_token %}
+                    <button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-700 ring-1 ring-emerald-500/25 dark:text-emerald-400">
+                        <i data-lucide="check-check" class="h-4 w-4"></i>
+                      </span>
+                      <span class="min-w-0 flex-1">
+                        <span class="block text-sm font-semibold leading-tight text-foreground">Post</span>
+                        <span class="block text-[11px] leading-snug text-muted-foreground">Finalize return</span>
+                      </span>
+                    </button>
+                  </form>
+                  {% endif %}
+                {% endif %}
+                {% if request.user.role == "tenant_admin" or request.user.role == "super_admin" or perm_sales_delete %}
+                  {% if d.status == "draft" or request.user.role == "tenant_admin" or request.user.role == "super_admin" %}
+                  {% if doc_kind == "quotation" %}
+                  <form method="post" action="{% url 'sales:quotation_delete' d.pk %}" class="mt-0.5 border-t border-border pt-1" onsubmit="return confirm('Delete {{ d.doc_no|escapejs }}? This cannot be undone.');">
+                  {% elif doc_kind == "order" %}
+                  <form method="post" action="{% url 'sales:order_delete' d.pk %}" class="mt-0.5 border-t border-border pt-1" onsubmit="return confirm('Delete {{ d.doc_no|escapejs }}? This cannot be undone.');">
+                  {% elif doc_kind == "delivery" %}
+                  <form method="post" action="{% url 'sales:delivery_delete' d.pk %}" class="mt-0.5 border-t border-border pt-1" onsubmit="return confirm('Delete {{ d.doc_no|escapejs }}? This cannot be undone.');">
+                  {% else %}
+                  <form method="post" action="{% url 'sales:return_delete' d.pk %}" class="mt-0.5 border-t border-border pt-1" onsubmit="return confirm('Delete {{ d.doc_no|escapejs }}? This cannot be undone.');">
+                  {% endif %}
+                    {% csrf_token %}
+                    <button type="submit" role="menuitem" class="group flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-destructive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40">
+                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/20">
+                        <i data-lucide="trash-2" class="h-4 w-4"></i>
+                      </span>
+                      <span class="min-w-0 flex-1">
+                        <span class="block text-sm font-semibold leading-tight text-destructive">Delete</span>
+                        <span class="block text-[11px] leading-snug text-muted-foreground">Remove permanently</span>
+                      </span>
+                    </button>
+                  </form>
+                  {% endif %}
+                {% endif %}
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="{% if doc_kind == 'quotation' %}6{% elif doc_kind == 'order' %}6{% else %}7{% endif %}" class="px-4 py-8 text-center text-muted-foreground">No records yet.</td></tr>
+        {% endfor %}
+      </tbody>
+      </table>
     </div>
+
     {% if is_paginated %}
-    <div class="flex flex-wrap items-center justify-between gap-2 border-t border-border px-5 py-3 text-sm">
-      <p class="text-muted-foreground">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</p>
-      <div class="flex gap-1">
-        {% if page_obj.has_previous %}<a class="rounded border border-border px-2 py-1 hover:bg-accent" href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}page={{ page_obj.previous_page_number }}">Prev</a>{% endif %}
-        {% if page_obj.has_next %}<a class="rounded border border-border px-2 py-1 hover:bg-accent" href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border/50 bg-card px-4 py-3 text-sm">
+      <p class="text-muted-foreground">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} ({{ page_obj.paginator.count }} results)
+      </p>
+      <div class="flex items-center gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}page={{ page_obj.previous_page_number }}"
+             class="rounded-md border border-border px-3 py-1.5 hover:bg-accent">Previous</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}page={{ page_obj.next_page_number }}"
+             class="rounded-md border border-border px-3 py-1.5 hover:bg-accent">Next</a>
+        {% endif %}
       </div>
     </div>
     {% endif %}
+    </div>
   </div>
 </div>
 {% endblock %}
@@ -113,5 +403,54 @@
 {{ block.super }}
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script src="{% static 'inventory/js/filter_autocomplete.js' %}"></script>
+<script>
+(function () {
+  function closeAll() {
+    document.querySelectorAll('.inv-sa-menu-panel').forEach(function (p) {
+      p.classList.add('hidden');
+      var id = p.id;
+      var trig = document.querySelector('[data-inv-sa-menu="' + id + '"]');
+      if (trig) { trig.setAttribute('aria-expanded', 'false'); }
+    });
+  }
+  function placePanel(trigger, panel) {
+    var rect = trigger.getBoundingClientRect();
+    var w = panel.offsetWidth || 200;
+    var h = panel.offsetHeight || 160;
+    var left = rect.right - w;
+    if (left < 8) left = 8;
+    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    var top = rect.bottom + 6;
+    if (top + h > window.innerHeight - 8) top = Math.max(8, rect.top - h - 6);
+    panel.style.left = left + 'px';
+    panel.style.top = top + 'px';
+  }
+  document.querySelectorAll('.inv-sa-menu-trigger').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var pid = btn.getAttribute('data-inv-sa-menu');
+      var panel = pid ? document.getElementById(pid) : null;
+      if (!panel) return;
+      var opening = panel.classList.contains('hidden');
+      closeAll();
+      if (opening) {
+        panel.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            placePanel(btn, panel);
+            if (window.lucide) window.lucide.createIcons();
+          });
+        });
+      }
+    });
+  });
+  document.addEventListener('click', closeAll);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAll();
+  });
+  window.addEventListener('scroll', closeAll, true);
+  window.addEventListener('resize', closeAll);
+})();
+</script>
 {% endblock %}
-

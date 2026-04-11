@@ -17,7 +17,8 @@
       <div class="inline-flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/30 p-1 shadow-sm ring-1 ring-black/[0.03]" role="group" aria-label="Document actions">
         <a href="{% url 'inventory:inventory_transfer_list' %}" class="table-action-btn" title="Back to list"><i data-lucide="arrow-left" class="h-4 w-4"></i></a>
         {% if perm_it_view %}
-        <a href="{% url 'inventory:inventory_transfer_print' doc.pk %}" target="_blank" rel="noopener noreferrer" class="table-action-btn" title="Print or Save as PDF (browser print dialog)"><i data-lucide="printer" class="h-4 w-4"></i></a>
+        <a href="{% url 'inventory:inventory_transfer_print' doc.pk %}" target="_blank" rel="noopener noreferrer" class="table-action-btn" title="Print (opens print view)"><i data-lucide="printer" class="h-4 w-4"></i></a>
+        <a href="{% url 'inventory:inventory_transfer_print' doc.pk %}" target="_blank" rel="noopener noreferrer" class="table-action-btn" title="PDF (same view — use PDF button, Save as PDF)"><i data-lucide="file-down" class="h-4 w-4"></i></a>
         {% endif %}
         {% if perm_it_change %}
           {% if doc.status == 'draft' or request.user.role == 'tenant_admin' or request.user.role == 'super_admin' %}

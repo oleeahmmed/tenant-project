@@ -3,23 +3,28 @@
 {% block page_title %}Foundation{% endblock %}
 
 {% block content %}
-<div class="max-w-lg space-y-5">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <h2 class="text-xl font-bold text-foreground">Delete record</h2>
-    <a href="{% url list_url_name %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
-      <i data-lucide="arrow-left" class="h-4 w-4"></i>
-      Back to list
-    </a>
-  </div>
-
-  <div class="rounded-lg border border-border bg-card p-6 space-y-4">
-    <p class="text-sm text-foreground">Are you sure you want to delete this?</p>
-    <p class="text-sm font-medium text-foreground">{{ object }}</p>
-    <form method="post" class="flex flex-wrap gap-2">
-      {% csrf_token %}
-      <button type="submit" class="inline-flex items-center rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Delete</button>
-      <a href="{% url list_url_name %}" class="inline-flex items-center rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Cancel</a>
-    </form>
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card max-w-lg">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">Delete record</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">This action cannot be undone</p>
+        </div>
+        <a href="{% url list_url_name %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+        </a>
+      </div>
+      <div class="space-y-4 px-4 py-5">
+        <p class="text-sm text-foreground">Are you sure you want to delete this?</p>
+        <p class="text-sm font-medium text-foreground">{{ object }}</p>
+        <form method="post" class="flex flex-wrap gap-2 border-t border-border/50 pt-4">
+          {% csrf_token %}
+          <button type="submit" class="inline-flex items-center rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Delete</button>
+          <a href="{% url list_url_name %}" class="inline-flex items-center rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Cancel</a>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

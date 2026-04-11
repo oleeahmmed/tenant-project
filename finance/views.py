@@ -29,7 +29,13 @@ from .forms import (
     JournalEntryForm,
     JournalLineFormSet,
 )
-from .mixins import FinanceAdminMixin, FinanceDashboardAccessMixin, FinancePageContextMixin, FinancePermissionRequiredMixin
+from .mixins import (
+    FinanceAdminMixin,
+    FinanceDashboardAccessMixin,
+    FinanceMasterListMixin,
+    FinancePageContextMixin,
+    FinancePermissionRequiredMixin,
+)
 from .models import (
     APInvoice,
     APPayment,
@@ -83,19 +89,78 @@ class FinanceGuideView(FinanceAdminMixin, FinancePageContextMixin, TemplateView)
     page_title = "Finance guide (Bangla)"
 
 
-class AccountListView(FinanceAdminMixin, FinancePageContextMixin, ListView):
-    model = Account
+class FinanceEntityListView(
+    FinanceAdminMixin,
+    FinancePageContextMixin,
+    FinanceMasterListMixin,
+    ListView,
+):
+    """Foundation-style master list: filters, search, pagination, row ⋮ menu, print."""
+
     template_name = "finance/entity_list.html"
     context_object_name = "object_list"
-    page_title = "Chart of accounts"
-
-    def get_queryset(self):
-        return Account.objects.filter(tenant=self.request.hrm_tenant).select_related("parent").order_by("code")
+    entity_subtitle = "Search, filter, and manage records"
+    column_specs = []
+    search_fields = []
+    sort_allowlist = []
+    default_sort = "name"
+    sort_choices = []
+    has_is_active = True
+    detail_url_name = None
+    create_url_name = ""
+    list_url_name = ""
+    edit_url_name = ""
+    delete_url_name = ""
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx.update({"entity_title": "Chart of accounts", "create_url_name": "finance:account_create", "edit_url_name": "finance:account_edit", "delete_url_name": "finance:account_delete", "list_url_name": "finance:account_list"})
+        ctx["entity_title"] = getattr(self, "entity_title", self.page_title)
+        ctx["entity_subtitle"] = getattr(self, "entity_subtitle", "Search, filter, and manage records")
+        ctx["create_url_name"] = self.create_url_name
+        ctx["list_url_name"] = self.list_url_name
+        ctx["edit_url_name"] = self.edit_url_name
+        ctx["delete_url_name"] = self.delete_url_name
+        ctx["column_specs"] = self.column_specs
+        ctx["has_is_active"] = getattr(self, "has_is_active", True)
+        ctx["new_button_label"] = getattr(self, "new_button_label", "Add")
+        if getattr(self, "detail_url_name", None):
+            ctx["detail_url_name"] = self.detail_url_name
         return ctx
+
+
+class AccountListView(FinanceEntityListView):
+    model = Account
+    page_title = "Chart of accounts"
+    entity_title = "Chart of accounts"
+    entity_subtitle = "Accounts, types, and posting flags"
+    create_url_name = "finance:account_create"
+    list_url_name = "finance:account_list"
+    edit_url_name = "finance:account_edit"
+    delete_url_name = "finance:account_delete"
+    new_button_label = "Add account"
+    search_fields = ["code", "name"]
+    sort_allowlist = ["code", "-code", "name", "-name", "account_type", "-account_type"]
+    default_sort = "code"
+    sort_choices = [
+        ("code", "Code A–Z"),
+        ("-code", "Code Z–A"),
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+        ("account_type", "Type A–Z"),
+        ("-account_type", "Type Z–A"),
+    ]
+    column_specs = [
+        {"field": "code", "label": "Code", "mono": True},
+        {"field": "name", "label": "Name"},
+        {"field": "account_type", "label": "Type"},
+        {"field": "natural_side", "label": "Side"},
+        {"field": "is_postable", "label": "Postable", "bool": True},
+        {"field": "is_active", "label": "Active", "bool": True},
+    ]
+
+    def get_queryset(self):
+        qs = Account.objects.filter(tenant=self.request.hrm_tenant).select_related("parent")
+        return self.apply_master_filters(qs)
 
 
 class AccountCreateView(FinanceAdminMixin, FinancePageContextMixin, CreateView):
@@ -167,19 +232,36 @@ class AccountDeleteView(FinanceAdminMixin, FinancePageContextMixin, DeleteView):
         return ctx
 
 
-class FiscalYearListView(FinanceAdminMixin, FinancePageContextMixin, ListView):
+class FiscalYearListView(FinanceEntityListView):
     model = FiscalYear
-    template_name = "finance/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Fiscal years"
+    entity_title = "Fiscal years"
+    entity_subtitle = "Fiscal year boundaries and close status"
+    create_url_name = "finance:fiscal_year_create"
+    list_url_name = "finance:fiscal_year_list"
+    edit_url_name = "finance:fiscal_year_edit"
+    delete_url_name = "finance:fiscal_year_delete"
+    new_button_label = "Add fiscal year"
+    has_is_active = False
+    search_fields = ["name"]
+    sort_allowlist = ["name", "-name", "start_date", "-start_date", "end_date", "-end_date"]
+    default_sort = "-start_date"
+    sort_choices = [
+        ("-start_date", "Start date (newest)"),
+        ("start_date", "Start date (oldest)"),
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+    ]
+    column_specs = [
+        {"field": "name", "label": "Name"},
+        {"field": "start_date", "label": "Start"},
+        {"field": "end_date", "label": "End"},
+        {"field": "is_closed", "label": "Closed", "bool": True},
+    ]
 
     def get_queryset(self):
-        return FiscalYear.objects.filter(tenant=self.request.hrm_tenant).order_by("-start_date")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update({"entity_title": "Fiscal years", "create_url_name": "finance:fiscal_year_create", "edit_url_name": "finance:fiscal_year_edit", "delete_url_name": "finance:fiscal_year_delete", "list_url_name": "finance:fiscal_year_list"})
-        return ctx
+        qs = FiscalYear.objects.filter(tenant=self.request.hrm_tenant)
+        return self.apply_master_filters(qs)
 
 
 class FiscalYearCreateView(FinanceAdminMixin, FinancePageContextMixin, CreateView):
@@ -237,19 +319,40 @@ class FiscalYearDeleteView(FinanceAdminMixin, FinancePageContextMixin, DeleteVie
         return ctx
 
 
-class FiscalPeriodListView(FinanceAdminMixin, FinancePageContextMixin, ListView):
+class FiscalPeriodListView(FinanceEntityListView):
     model = FiscalPeriod
-    template_name = "finance/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Fiscal periods"
+    entity_title = "Fiscal periods"
+    entity_subtitle = "Accounting periods within fiscal years"
+    create_url_name = "finance:fiscal_period_create"
+    list_url_name = "finance:fiscal_period_list"
+    edit_url_name = "finance:fiscal_period_edit"
+    delete_url_name = "finance:fiscal_period_delete"
+    new_button_label = "Add fiscal period"
+    has_is_active = False
+    search_fields = ["name", "fiscal_year__name"]
+    sort_allowlist = ["start_date", "-start_date", "period_no", "-period_no", "name", "-name"]
+    default_sort = "-start_date"
+    sort_choices = [
+        ("-start_date", "Start date (newest)"),
+        ("start_date", "Start date (oldest)"),
+        ("period_no", "Period no. (asc)"),
+        ("-period_no", "Period no. (desc)"),
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+    ]
+    column_specs = [
+        {"field": "fiscal_year__name", "label": "Fiscal year"},
+        {"field": "period_no", "label": "No."},
+        {"field": "name", "label": "Period"},
+        {"field": "start_date", "label": "Start"},
+        {"field": "end_date", "label": "End"},
+        {"field": "is_closed", "label": "Closed", "bool": True},
+    ]
 
     def get_queryset(self):
-        return FiscalPeriod.objects.filter(tenant=self.request.hrm_tenant).select_related("fiscal_year").order_by("-start_date")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update({"entity_title": "Fiscal periods", "create_url_name": "finance:fiscal_period_create", "edit_url_name": "finance:fiscal_period_edit", "delete_url_name": "finance:fiscal_period_delete", "list_url_name": "finance:fiscal_period_list"})
-        return ctx
+        qs = FiscalPeriod.objects.filter(tenant=self.request.hrm_tenant).select_related("fiscal_year")
+        return self.apply_master_filters(qs)
 
 
 class FiscalPeriodCreateView(FinanceAdminMixin, FinancePageContextMixin, CreateView):

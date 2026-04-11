@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   {# Short title — browser may repeat this in print header if headers are ON #}
-  <title>{{ doc.adjustment_number }}</title>
+  <title>{{ doc.doc_no }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@9..40,500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -519,14 +519,14 @@
 <body>
   <div class="toolbar no-print">
     <div class="toolbar-title">
-      <strong>{{ doc.adjustment_number }}</strong>
-      <span> · Stock adjustment</span>
+      <strong>{{ doc.doc_no }}</strong>
+      {% if doc_kind == "pr" %}<span> · Purchase request</span>{% elif doc_kind == "po" %}<span> · Purchase order</span>{% elif doc_kind == "grn" %}<span> · Goods receipt</span>{% else %}<span> · Purchase return</span>{% endif %}
     </div>
     <span class="hint"><strong>No date/URL in print:</strong> Chrome/Edge → Print → <em>More settings</em> → turn <strong>off</strong> “Headers and footers”. Save as PDF: Destination → Save as PDF.</span>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <a class="back" href="{% url 'inventory:stock_adjustment_detail' doc.pk %}">← Back</a>
-      <button type="button" class="print" id="btn-print-sa" title="Send to printer">Print</button>
-      <button type="button" class="pdf" id="btn-pdf-sa" title="In the dialog choose Destination → Save as PDF">PDF</button>
+      <a class="back" href="{% if doc_kind == 'pr' %}{% url 'purchase:purchase_request_detail' doc.pk %}{% elif doc_kind == 'po' %}{% url 'purchase:purchase_order_detail' doc.pk %}{% elif doc_kind == 'grn' %}{% url 'purchase:goods_receipt_detail' doc.pk %}{% else %}{% url 'purchase:purchase_return_detail' doc.pk %}{% endif %}">← Back</a>
+      <button type="button" class="print" id="btn-print-doc" title="Send to printer">Print</button>
+      <button type="button" class="pdf" id="btn-pdf-doc" title="In the dialog choose Destination → Save as PDF">PDF</button>
     </div>
   </div>
 
@@ -561,96 +561,231 @@
     </div>
 
     <div class="print-doc-body">
+    {% if doc_kind == "pr" %}
     <div class="doc-ribbon">
       <table class="mini-doc" aria-label="Document details">
-        <tr>
-          <td class="lbl">Date:</td>
-          <td class="val">{{ doc.adjustment_date|date:"d-m-Y" }}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Adjustment #:</td>
-          <td class="val">{{ doc.adjustment_number }}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Warehouse:</td>
-          <td class="val">{{ doc.warehouse_code|default:"—" }}{% if doc.warehouse_name %} — {{ doc.warehouse_name }}{% endif %}</td>
-        </tr>
+        <tr><td class="lbl">Date:</td><td class="val">{{ doc.request_date|date:"d-m-Y" }}</td></tr>
+        <tr><td class="lbl">Document #:</td><td class="val">{{ doc.doc_no }}</td></tr>
+        <tr><td class="lbl">Requester:</td><td class="val">{{ doc.requester_name|default:"—" }}</td></tr>
       </table>
-      <div class="doc-ribbon__title">Stock adjustment</div>
-      <table class="mini-doc" aria-label="Terms and status">
-        <tr>
-          <td class="lbl">Type:</td>
-          <td class="val">{{ doc.get_adjustment_type_display }}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Status:</td>
-          <td class="val">{{ doc.get_status_display }}</td>
-        </tr>
-        <tr>
-          <td class="lbl">Requested by:</td>
-          <td class="val">{{ doc.requested_by|default:"—" }}</td>
-        </tr>
+      <div class="doc-ribbon__title">Purchase request</div>
+      <table class="mini-doc" aria-label="Status">
+        <tr><td class="lbl">Status:</td><td class="val">{{ doc.get_status_display }}</td></tr>
+        <tr><td class="lbl">Needed by:</td><td class="val">{% if doc.needed_by %}{{ doc.needed_by|date:"d-m-Y" }}{% else %}—{% endif %}</td></tr>
+        <tr><td class="lbl">&nbsp;</td><td class="val">&nbsp;</td></tr>
       </table>
     </div>
-
-    <div class="section-title">Contents</div>
+    <div class="section-title">Lines</div>
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width:6%;">#</th>
+          <th style="width:34%;">Product</th>
+          <th style="width:40%;">Description</th>
+          <th style="width:20%;">Qty</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in doc.lines.all %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td class="text-left">{{ line.product }}</td>
+          <td class="text-left">{{ line.description|default:"—" }}</td>
+          <td class="text-right">{{ line.quantity|floatformat:4 }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="text-align:center;padding:16px;color:hsl(var(--muted-foreground));">No lines.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="bottom-section">
+      <div class="notes-section" style="width:100%;">
+        <h4>Notes</h4>
+        {% if doc.notes %}<p>{{ doc.notes }}</p>{% else %}<p style="color:hsl(var(--muted-foreground));">—</p>{% endif %}
+      </div>
+    </div>
+    <div class="invoice-thankyou">
+      <p class="invoice-thankyou__title">Thank you for your business</p>
+      <p class="invoice-thankyou__sub">For queries regarding this purchase request, please contact us using the details above.</p>
+    </div>
+    <div class="meta-footer">
+      <span>Generated {{ print_generated_at|date:"Y-m-d H:i" }}</span>
+      <span>{{ company.name }} · Purchase request</span>
+    </div>
+    {% elif doc_kind == "po" %}
+    <div class="doc-ribbon">
+      <table class="mini-doc" aria-label="Document details">
+        <tr><td class="lbl">Date:</td><td class="val">{{ doc.order_date|date:"d-m-Y" }}</td></tr>
+        <tr><td class="lbl">Document #:</td><td class="val">{{ doc.doc_no }}</td></tr>
+        <tr><td class="lbl">Supplier:</td><td class="val">{{ doc.supplier }}</td></tr>
+      </table>
+      <div class="doc-ribbon__title">Purchase order</div>
+      <table class="mini-doc" aria-label="Status">
+        <tr><td class="lbl">Status:</td><td class="val">{{ doc.get_status_display }}</td></tr>
+        <tr><td class="lbl">Expected:</td><td class="val">{% if doc.expected_date %}{{ doc.expected_date|date:"d-m-Y" }}{% else %}—{% endif %}</td></tr>
+        <tr><td class="lbl">PR ref:</td><td class="val">{% if doc.purchase_request %}{{ doc.purchase_request.doc_no }}{% else %}—{% endif %}</td></tr>
+      </table>
+    </div>
+    <div class="section-title">Lines</div>
     <table class="items-table">
       <thead>
         <tr>
           <th style="width:4%;">#</th>
-          <th style="width:11%;">SKU</th>
-          <th style="width:26%;">Product</th>
-          <th style="width:11%;">System qty</th>
-          <th style="width:11%;">Counted qty</th>
-          <th style="width:9%;">Diff</th>
-          <th style="width:11%;">Unit cost</th>
+          <th style="width:28%;">Product</th>
+          <th style="width:10%;">Qty</th>
+          <th style="width:12%;">Unit cost</th>
           <th style="width:12%;">Line total</th>
+          <th style="width:18%;">Warehouse</th>
         </tr>
       </thead>
       <tbody>
-        {% for line in doc.items.all %}
+        {% for line in doc.lines.all %}
         <tr>
           <td>{{ forloop.counter }}</td>
-          <td class="text-left">{{ line.product_sku }}</td>
-          <td class="text-left">{% if line.product_name %}{{ line.product_name }}{% else %}—{% endif %}</td>
-          <td class="text-right">{{ line.system_quantity|floatformat:8 }}</td>
-          <td class="text-right">{{ line.counted_quantity|floatformat:8 }}</td>
-          <td class="text-right">{{ line.quantity_difference|floatformat:8 }}</td>
-          <td class="text-right">{{ line.unit_cost|floatformat:8 }}</td>
-          <td class="text-right">{{ line.line_total|floatformat:8 }}</td>
+          <td class="text-left">{{ line.product }}{% if line.description %} — {{ line.description }}{% endif %}</td>
+          <td class="text-right">{{ line.quantity|floatformat:4 }}</td>
+          <td class="text-right">{{ line.unit_cost|floatformat:4 }}</td>
+          <td class="text-right">{{ line.line_total|floatformat:4 }}</td>
+          <td class="text-left">{{ line.warehouse|default:"—" }}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="8" style="text-align:center;padding:16px;color:hsl(var(--muted-foreground));">No lines.</td></tr>
+        <tr><td colspan="6" style="text-align:center;padding:16px;color:hsl(var(--muted-foreground));">No lines.</td></tr>
         {% endfor %}
       </tbody>
     </table>
-
     <div class="bottom-section">
-      <div class="notes-section">
-        <h4>Notes / special instructions</h4>
-        {% if doc.reason %}<p><strong>Reason:</strong> {{ doc.reason }}</p>{% endif %}
-        {% if doc.notes %}<p><strong>Notes:</strong> {{ doc.notes }}</p>{% endif %}
-        {% if not doc.reason and not doc.notes %}<p style="color:hsl(var(--muted-foreground));">—</p>{% endif %}
-      </div>
+      <div class="notes-section"><h4>Notes</h4>{% if doc.notes %}<p>{{ doc.notes }}</p>{% else %}<p style="color:hsl(var(--muted-foreground));">—</p>{% endif %}</div>
       <div class="totals-section">
         <table class="totals-table">
-          <tr><td class="label">Total increase</td><td class="value">{{ doc.total_increase|floatformat:8 }}</td></tr>
-          <tr><td class="label">Total decrease</td><td class="value">{{ doc.total_decrease|floatformat:8 }}</td></tr>
-          <tr><td class="label">Total value delta</td><td class="value">{{ doc.total_value|floatformat:8 }}</td></tr>
-          <tr class="grand"><td class="label">Grand total</td><td class="value">{{ doc.total_amount|floatformat:8 }}</td></tr>
+          <tr><td class="label">Subtotal</td><td class="value">{{ doc.subtotal|floatformat:4 }}</td></tr>
+          <tr><td class="label">Tax</td><td class="value">{{ doc.tax_amount|floatformat:4 }}</td></tr>
+          <tr class="grand"><td class="label">Total</td><td class="value">{{ doc.total_amount|floatformat:4 }}</td></tr>
         </table>
       </div>
     </div>
-
     <div class="invoice-thankyou">
       <p class="invoice-thankyou__title">Thank you for your business</p>
-      <p class="invoice-thankyou__sub">We value your partnership. For any queries regarding this stock adjustment, please contact us using the details above.</p>
+      <p class="invoice-thankyou__sub">For queries regarding this purchase order, please contact us using the details above.</p>
     </div>
-
     <div class="meta-footer">
       <span>Generated {{ print_generated_at|date:"Y-m-d H:i" }}</span>
-      <span>{{ company.name }} · Stock adjustment</span>
+      <span>{{ company.name }} · Purchase order</span>
     </div>
+    {% elif doc_kind == "grn" %}
+    <div class="doc-ribbon">
+      <table class="mini-doc" aria-label="Document details">
+        <tr><td class="lbl">Date:</td><td class="val">{{ doc.receipt_date|date:"d-m-Y" }}</td></tr>
+        <tr><td class="lbl">Document #:</td><td class="val">{{ doc.doc_no }}</td></tr>
+        <tr><td class="lbl">Supplier:</td><td class="val">{{ doc.supplier }}</td></tr>
+      </table>
+      <div class="doc-ribbon__title">Goods receipt</div>
+      <table class="mini-doc" aria-label="Status">
+        <tr><td class="lbl">Status:</td><td class="val">{{ doc.get_status_display }}</td></tr>
+        <tr><td class="lbl">PO #:</td><td class="val">{{ doc.purchase_order.doc_no }}</td></tr>
+        <tr><td class="lbl">&nbsp;</td><td class="val">&nbsp;</td></tr>
+      </table>
+    </div>
+    <div class="section-title">Lines</div>
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width:4%;">#</th>
+          <th style="width:30%;">Product</th>
+          <th style="width:12%;">Qty received</th>
+          <th style="width:12%;">Unit cost</th>
+          <th style="width:14%;">Line total</th>
+          <th style="width:18%;">Warehouse</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in doc.lines.all %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td class="text-left">{{ line.product }}</td>
+          <td class="text-right">{{ line.quantity_received|floatformat:4 }}</td>
+          <td class="text-right">{{ line.unit_cost|floatformat:4 }}</td>
+          <td class="text-right">{{ line.line_total|floatformat:4 }}</td>
+          <td class="text-left">{{ line.warehouse|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;padding:16px;color:hsl(var(--muted-foreground));">No lines.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="bottom-section">
+      <div class="notes-section"><h4>Notes</h4>{% if doc.notes %}<p>{{ doc.notes }}</p>{% else %}<p style="color:hsl(var(--muted-foreground));">—</p>{% endif %}</div>
+      <div class="totals-section">
+        <table class="totals-table">
+          <tr class="grand"><td class="label">Total</td><td class="value">{{ doc.total_amount|floatformat:4 }}</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="invoice-thankyou">
+      <p class="invoice-thankyou__title">Thank you for your business</p>
+      <p class="invoice-thankyou__sub">For queries regarding this goods receipt, please contact us using the details above.</p>
+    </div>
+    <div class="meta-footer">
+      <span>Generated {{ print_generated_at|date:"Y-m-d H:i" }}</span>
+      <span>{{ company.name }} · Goods receipt</span>
+    </div>
+    {% else %}
+    <div class="doc-ribbon">
+      <table class="mini-doc" aria-label="Document details">
+        <tr><td class="lbl">Date:</td><td class="val">{{ doc.return_date|date:"d-m-Y" }}</td></tr>
+        <tr><td class="lbl">Document #:</td><td class="val">{{ doc.doc_no }}</td></tr>
+        <tr><td class="lbl">Supplier:</td><td class="val">{{ doc.supplier }}</td></tr>
+      </table>
+      <div class="doc-ribbon__title">Purchase return</div>
+      <table class="mini-doc" aria-label="Status">
+        <tr><td class="lbl">Status:</td><td class="val">{{ doc.get_status_display }}</td></tr>
+        <tr><td class="lbl">GRN ref:</td><td class="val">{% if doc.goods_receipt %}{{ doc.goods_receipt.doc_no }}{% else %}—{% endif %}</td></tr>
+        <tr><td class="lbl">Reason:</td><td class="val">{{ doc.reason|default:"—" }}</td></tr>
+      </table>
+    </div>
+    <div class="section-title">Lines</div>
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width:4%;">#</th>
+          <th style="width:32%;">Product</th>
+          <th style="width:12%;">Qty</th>
+          <th style="width:14%;">Unit cost</th>
+          <th style="width:14%;">Line total</th>
+          <th style="width:18%;">Warehouse</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in doc.lines.all %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td class="text-left">{{ line.product }}</td>
+          <td class="text-right">{{ line.quantity|floatformat:4 }}</td>
+          <td class="text-right">{{ line.unit_cost|floatformat:4 }}</td>
+          <td class="text-right">{{ line.line_total|floatformat:4 }}</td>
+          <td class="text-left">{{ line.warehouse|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="text-align:center;padding:16px;color:hsl(var(--muted-foreground));">No lines.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="bottom-section">
+      <div class="notes-section"><h4>Notes</h4>{% if doc.notes %}<p>{{ doc.notes }}</p>{% else %}<p style="color:hsl(var(--muted-foreground));">—</p>{% endif %}</div>
+      <div class="totals-section">
+        <table class="totals-table">
+          <tr class="grand"><td class="label">Total</td><td class="value">{{ doc.total_amount|floatformat:4 }}</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="invoice-thankyou">
+      <p class="invoice-thankyou__title">Thank you for your business</p>
+      <p class="invoice-thankyou__sub">For queries regarding this purchase return, please contact us using the details above.</p>
+    </div>
+    <div class="meta-footer">
+      <span>Generated {{ print_generated_at|date:"Y-m-d H:i" }}</span>
+      <span>{{ company.name }} · Purchase return</span>
+    </div>
+    {% endif %}
     </div>
     </div>
   </div>
@@ -660,7 +795,7 @@
       window.addEventListener("beforeprint", function () {
         tabTitle = document.title;
         /* Shrink browser print header text; URL/footer still need “Headers and footers” off in the dialog */
-        document.title = "{{ doc.adjustment_number|escapejs }}";
+        document.title = "{{ doc.doc_no|escapejs }}";
       });
       window.addEventListener("afterprint", function () {
         document.title = tabTitle;
@@ -669,8 +804,8 @@
         var el = document.getElementById(id);
         if (el) el.addEventListener("click", function () { window.print(); });
       }
-      wirePrint("btn-print-sa");
-      wirePrint("btn-pdf-sa");
+      wirePrint("btn-print-doc");
+      wirePrint("btn-pdf-doc");
     })();
   </script>
 </body>

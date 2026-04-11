@@ -3,6 +3,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 
@@ -21,6 +22,28 @@ from .forms import (
 from .mixins import SalesAdminMixin, SalesDashboardAccessMixin, SalesPageContextMixin
 from .models import DeliveryNote, SalesOrder, SalesQuotation, SalesReturn
 from .services.integrations import sync_delivery_to_finance_ar_invoice
+
+
+def _sales_company_context(request):
+    tenant = getattr(request, "hrm_tenant", None)
+    logo_url = ""
+    if tenant is not None and getattr(tenant, "logo", None):
+        logo_url = tenant.logo.url
+    return {
+        "name": getattr(tenant, "name", "") or "Company",
+        "address": "Address not configured",
+        "phone": "Phone not configured",
+        "email": "Email not configured",
+        "logo_url": logo_url,
+    }
+
+
+def _sales_list_perm_context(user):
+    return {
+        "perm_sales_view": user.has_tenant_permission("sales.view"),
+        "perm_sales_manage": user.has_tenant_permission("sales.manage"),
+        "perm_sales_delete": user.has_tenant_permission("sales.delete"),
+    }
 
 
 def _render_doc_form(request, *, form, formset, page_title, action_url, list_url):
@@ -53,36 +76,72 @@ class SalesDashboardView(SalesDashboardAccessMixin, SalesPageContextMixin, Templ
 
 
 class _BaseList(SalesAdminMixin, SalesPageContextMixin, ListView):
+    """List layout matches inventory stock adjustment list (inv-list-shell, filters, row menu)."""
+
     template_name = "sales/document_list.html"
-    context_object_name = "object_list"
+    context_object_name = "documents"
     page_title = ""
     create_url = ""
-    paginate_by = 20
+    list_url_name = ""
+    doc_kind = ""
     date_field = ""
+    list_subtitle = ""
+    paginate_by = 15
 
     def get_queryset(self):
         qs = self.model.objects.filter(tenant=self.request.hrm_tenant)
+        if self.doc_kind == "delivery":
+            qs = qs.select_related("customer", "order")
+        else:
+            qs = qs.select_related("customer")
+        if self.doc_kind == "return":
+            qs = qs.select_related("delivery")
+
         q = (self.request.GET.get("q") or "").strip()
         status = (self.request.GET.get("status") or "").strip()
         customer_id = (self.request.GET.get("customer") or "").strip()
-        ordering = (self.request.GET.get("sort") or (f"-{self.date_field}" if self.date_field else "-id")).strip()
+        date_from = (self.request.GET.get("date_from") or "").strip()
+        date_to = (self.request.GET.get("date_to") or "").strip()
+        ordering = (self.request.GET.get("sort") or f"-{self.date_field}").strip()
 
         if q:
-            filters = Q(doc_no__icontains=q) | Q(notes__icontains=q)
+            filters = Q(doc_no__icontains=q) | Q(notes__icontains=q) | Q(customer__name__icontains=q) | Q(
+                customer__customer_code__icontains=q
+            )
             if hasattr(self.model, "reference"):
                 filters = filters | Q(reference__icontains=q)
+            if self.doc_kind == "delivery":
+                filters = filters | Q(order__doc_no__icontains=q)
+            if self.doc_kind == "return":
+                filters = filters | Q(delivery__doc_no__icontains=q)
             qs = qs.filter(filters)
         if status:
             qs = qs.filter(status=status)
         if customer_id.isdigit():
             qs = qs.filter(customer_id=int(customer_id))
 
-        allowed = {"-id", "id"}
-        if self.date_field:
-            allowed.update({self.date_field, f"-{self.date_field}"})
-        if ordering not in allowed:
-            ordering = f"-{self.date_field}" if self.date_field else "-id"
-        return qs.select_related("customer").order_by(ordering, "-id")
+        df = self.date_field
+        if date_from:
+            qs = qs.filter(**{f"{df}__gte": date_from})
+        if date_to:
+            qs = qs.filter(**{f"{df}__lte": date_to})
+
+        allowed = self._allowed_ordering()
+        qs = qs.order_by(allowed.get(ordering, f"-{df}"), "-id")
+        return qs
+
+    def _allowed_ordering(self):
+        df = self.date_field
+        return {
+            df: df,
+            f"-{df}": f"-{df}",
+            "doc_no": "doc_no",
+            "-doc_no": "-doc_no",
+            "status": "status",
+            "-status": "-status",
+            "customer__name": "customer__name",
+            "-customer__name": "-customer__name",
+        }
 
     def get_paginate_by(self, queryset):
         raw = (self.request.GET.get("page_size") or "").strip()
@@ -90,7 +149,7 @@ class _BaseList(SalesAdminMixin, SalesPageContextMixin, ListView):
             size = int(raw)
         except ValueError:
             size = self.paginate_by
-        return 100 if size > 100 else (10 if size < 10 else size)
+        return 100 if size > 100 else (5 if size < 5 else size)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -102,52 +161,134 @@ class _BaseList(SalesAdminMixin, SalesPageContextMixin, ListView):
             filtered_customer = Customer.objects.filter(
                 tenant=self.request.hrm_tenant, pk=int(customer_id)
             ).only("id", "customer_code", "name").first()
+        df = self.date_field
+        sort_options = [
+            (f"-{df}", "Newest first"),
+            (df, "Oldest first"),
+            ("doc_no", "Document # A–Z"),
+            ("-doc_no", "Document # Z–A"),
+            ("status", "Status A–Z"),
+            ("-status", "Status Z–A"),
+            ("customer__name", "Customer A–Z"),
+            ("-customer__name", "Customer Z–A"),
+        ]
         ctx.update(
             {
                 "create_url": self.create_url,
+                "list_url_name": self.list_url_name,
+                "doc_kind": self.doc_kind,
+                "date_field": df,
+                "list_subtitle": self.list_subtitle,
                 "qs_no_page": params.urlencode(),
+                "status_choices": getattr(self.model, "Status", None).choices if hasattr(self.model, "Status") else [],
+                "filtered_customer": filtered_customer,
+                "sort_options": sort_options,
                 "selected": {
                     "q": self.request.GET.get("q", ""),
                     "status": self.request.GET.get("status", ""),
                     "customer": customer_id,
-                    "sort": self.request.GET.get("sort", f"-{self.date_field}" if self.date_field else "-id"),
+                    "date_from": self.request.GET.get("date_from", ""),
+                    "date_to": self.request.GET.get("date_to", ""),
+                    "sort": self.request.GET.get("sort", f"-{df}"),
                     "page_size": self.request.GET.get("page_size", str(self.paginate_by)),
                 },
-                "sort_newest": f"-{self.date_field}" if self.date_field else "-id",
-                "sort_oldest": self.date_field if self.date_field else "id",
-                "status_choices": getattr(self.model, "Status", None).choices if hasattr(self.model, "Status") else [],
-                "filtered_customer": filtered_customer,
             }
         )
+        ctx.update(_sales_list_perm_context(self.request.user))
         return ctx
 
 
 class SalesQuotationListView(_BaseList):
     model = SalesQuotation
+    doc_kind = "quotation"
+    date_field = "quote_date"
     page_title = "Sales quotations"
     create_url = "sales:quotation_create"
-    date_field = "quote_date"
+    list_url_name = "sales:quotation_list"
+    list_subtitle = "Quotations — approve to convert to sales orders"
 
 
 class SalesOrderListView(_BaseList):
     model = SalesOrder
+    doc_kind = "order"
+    date_field = "order_date"
     page_title = "Sales orders"
     create_url = "sales:order_create"
-    date_field = "order_date"
+    list_url_name = "sales:order_list"
+    list_subtitle = "Customer orders — deliver via delivery notes"
 
 
 class DeliveryNoteListView(_BaseList):
     model = DeliveryNote
+    doc_kind = "delivery"
+    date_field = "delivery_date"
     page_title = "Delivery notes"
     create_url = "sales:delivery_create"
-    date_field = "delivery_date"
+    list_url_name = "sales:delivery_list"
+    list_subtitle = "Shipments against orders — post to update stock / AR"
 
 
 class SalesReturnListView(_BaseList):
     model = SalesReturn
+    doc_kind = "return"
+    date_field = "return_date"
     page_title = "Sales returns"
     create_url = "sales:return_create"
-    date_field = "return_date"
+    list_url_name = "sales:return_list"
+    list_subtitle = "Customer returns — post when finalized"
+
+
+class _SalesDocumentPrintMixin(SalesPageContextMixin):
+    template_name = "sales/prints/document_print.html"
+    context_object_name = "doc"
+    doc_kind = ""
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["company"] = _sales_company_context(self.request)
+        ctx["print_generated_at"] = timezone.now()
+        ctx["doc_kind"] = self.doc_kind
+        return ctx
+
+
+class SalesQuotationPrintView(SalesAdminMixin, _SalesDocumentPrintMixin, DetailView):
+    model = SalesQuotation
+    doc_kind = "quotation"
+
+    def get_queryset(self):
+        return SalesQuotation.objects.filter(tenant=self.request.hrm_tenant).select_related("customer").prefetch_related(
+            "lines__product", "lines__warehouse"
+        )
+
+
+class SalesOrderPrintView(SalesAdminMixin, _SalesDocumentPrintMixin, DetailView):
+    model = SalesOrder
+    doc_kind = "order"
+
+    def get_queryset(self):
+        return SalesOrder.objects.filter(tenant=self.request.hrm_tenant).select_related("customer", "quotation").prefetch_related(
+            "lines__product", "lines__warehouse"
+        )
+
+
+class DeliveryNotePrintView(SalesAdminMixin, _SalesDocumentPrintMixin, DetailView):
+    model = DeliveryNote
+    doc_kind = "delivery"
+
+    def get_queryset(self):
+        return DeliveryNote.objects.filter(tenant=self.request.hrm_tenant).select_related("customer", "order").prefetch_related(
+            "lines__product", "lines__warehouse"
+        )
+
+
+class SalesReturnPrintView(SalesAdminMixin, _SalesDocumentPrintMixin, DetailView):
+    model = SalesReturn
+    doc_kind = "return"
+
+    def get_queryset(self):
+        return SalesReturn.objects.filter(tenant=self.request.hrm_tenant).select_related("customer", "delivery").prefetch_related(
+            "lines__product", "lines__warehouse"
+        )
 
 
 class _BaseDetail(SalesAdminMixin, SalesPageContextMixin, DetailView):

@@ -22,6 +22,7 @@ from .forms import (
 from .mixins import (
     FoundationAdminMixin,
     FoundationDashboardAccessMixin,
+    FoundationMasterListMixin,
     FoundationPageContextMixin,
 )
 from .models import (
@@ -40,6 +41,45 @@ from .models import (
     UomConversion,
     Warehouse,
 )
+
+
+class FoundationEntityListView(
+    FoundationAdminMixin,
+    FoundationPageContextMixin,
+    FoundationMasterListMixin,
+    ListView,
+):
+    """Inventory-style list: filters, search, pagination, row ⋮ menu, print."""
+
+    template_name = "foundation/entity_list.html"
+    context_object_name = "object_list"
+    entity_subtitle = "Search, filter, and manage master data"
+    column_specs = []
+    search_fields = []
+    sort_allowlist = []
+    default_sort = "name"
+    sort_choices = []
+    has_is_active = True
+    detail_url_name = None
+    create_url_name = ""
+    list_url_name = ""
+    edit_url_name = ""
+    delete_url_name = ""
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["entity_title"] = getattr(self, "entity_title", self.page_title)
+        ctx["entity_subtitle"] = getattr(self, "entity_subtitle", "Search, filter, and manage master data")
+        ctx["create_url_name"] = self.create_url_name
+        ctx["list_url_name"] = self.list_url_name
+        ctx["edit_url_name"] = self.edit_url_name
+        ctx["delete_url_name"] = self.delete_url_name
+        ctx["column_specs"] = self.column_specs
+        ctx["has_is_active"] = getattr(self, "has_is_active", True)
+        ctx["new_button_label"] = getattr(self, "new_button_label", "Add")
+        if getattr(self, "detail_url_name", None):
+            ctx["detail_url_name"] = self.detail_url_name
+        return ctx
 
 
 class FoundationDashboardView(
@@ -64,14 +104,35 @@ class FoundationDashboardView(
 # ── Warehouses ───────────────────────────────────────────────────────────────────
 
 
-class WarehouseListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class WarehouseListView(FoundationEntityListView):
     model = Warehouse
-    template_name = "foundation/warehouse_list.html"
-    context_object_name = "warehouses"
     page_title = "Warehouses"
+    entity_title = "Warehouses"
+    entity_subtitle = "Storage and fulfillment locations for inventory"
+    create_url_name = "foundation:warehouse_create"
+    list_url_name = "foundation:warehouse_list"
+    edit_url_name = "foundation:warehouse_edit"
+    delete_url_name = "foundation:warehouse_delete"
+    new_button_label = "Add warehouse"
+    search_fields = ["code", "name", "city", "country"]
+    sort_allowlist = ["name", "-name", "code", "-code", "city", "-city"]
+    default_sort = "name"
+    sort_choices = [
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+        ("code", "Code A–Z"),
+        ("-code", "Code Z–A"),
+    ]
+    column_specs = [
+        {"field": "code", "label": "Code", "mono": True},
+        {"field": "name", "label": "Name"},
+        {"field": "city", "label": "City"},
+        {"field": "is_active", "label": "Active", "bool": True},
+    ]
 
     def get_queryset(self):
-        return Warehouse.objects.filter(tenant=self.request.hrm_tenant).order_by("name")
+        qs = Warehouse.objects.filter(tenant=self.request.hrm_tenant)
+        return self.apply_master_filters(qs)
 
 
 class WarehouseCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):
@@ -136,27 +197,34 @@ class WarehouseDeleteView(FoundationAdminMixin, FoundationPageContextMixin, Dele
 # ── Categories ───────────────────────────────────────────────────────────────────
 
 
-class CategoryListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class CategoryListView(FoundationEntityListView):
     model = Category
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Categories"
+    entity_title = "Categories"
+    create_url_name = "foundation:category_create"
+    list_url_name = "foundation:category_list"
+    edit_url_name = "foundation:category_edit"
+    delete_url_name = "foundation:category_delete"
+    new_button_label = "Add category"
+    search_fields = ["name", "code", "description"]
+    sort_allowlist = ["name", "-name", "code", "-code"]
+    default_sort = "name"
+    sort_choices = [
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+        ("code", "Code A–Z"),
+        ("-code", "Code Z–A"),
+    ]
+    column_specs = [
+        {"field": "code", "label": "Code", "mono": True},
+        {"field": "name", "label": "Name"},
+        {"field": "parent", "label": "Parent"},
+        {"field": "is_active", "label": "Active", "bool": True},
+    ]
 
     def get_queryset(self):
-        return Category.objects.filter(tenant=self.request.hrm_tenant).order_by("name")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "Categories",
-                "create_url_name": "foundation:category_create",
-                "edit_url_name": "foundation:category_edit",
-                "delete_url_name": "foundation:category_delete",
-                "list_url_name": "foundation:category_list",
-            }
-        )
-        return ctx
+        qs = Category.objects.filter(tenant=self.request.hrm_tenant).select_related("parent")
+        return self.apply_master_filters(qs)
 
 
 class CategoryCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):
@@ -238,28 +306,38 @@ class CategoryDeleteView(FoundationAdminMixin, FoundationPageContextMixin, Delet
 # ── Products ─────────────────────────────────────────────────────────────────────
 
 
-class ProductListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class ProductListView(FoundationEntityListView):
     model = Product
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Products"
+    entity_title = "Products"
+    create_url_name = "foundation:product_create"
+    detail_url_name = "foundation:product_detail"
+    list_url_name = "foundation:product_list"
+    edit_url_name = "foundation:product_edit"
+    delete_url_name = "foundation:product_delete"
+    new_button_label = "Add product"
+    search_fields = ["sku", "name", "description", "category__name"]
+    sort_allowlist = ["name", "-name", "sku", "-sku", "list_price", "-list_price"]
+    default_sort = "name"
+    sort_choices = [
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+        ("sku", "SKU A–Z"),
+        ("-sku", "SKU Z–A"),
+        ("list_price", "List price ↑"),
+        ("-list_price", "List price ↓"),
+    ]
+    column_specs = [
+        {"field": "sku", "label": "SKU", "mono": True},
+        {"field": "name", "label": "Name"},
+        {"field": "category", "label": "Category"},
+        {"field": "list_price", "label": "List price", "money": True},
+        {"field": "is_active", "label": "Active", "bool": True},
+    ]
 
     def get_queryset(self):
-        return Product.objects.filter(tenant=self.request.hrm_tenant).order_by("name")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "Products",
-                "create_url_name": "foundation:product_create",
-                "detail_url_name": "foundation:product_detail",
-                "edit_url_name": "foundation:product_edit",
-                "delete_url_name": "foundation:product_delete",
-                "list_url_name": "foundation:product_list",
-            }
-        )
-        return ctx
+        qs = Product.objects.filter(tenant=self.request.hrm_tenant).select_related("category", "default_uom")
+        return self.apply_master_filters(qs)
 
 
 class ProductDetailView(FoundationAdminMixin, FoundationPageContextMixin, DetailView):
@@ -375,27 +453,34 @@ class ProductDeleteView(FoundationAdminMixin, FoundationPageContextMixin, Delete
 # ── Units of measure ─────────────────────────────────────────────────────────────
 
 
-class UomListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class UomListView(FoundationEntityListView):
     model = UnitOfMeasure
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Units of measure"
+    entity_title = "Units of measure"
+    create_url_name = "foundation:uom_create"
+    list_url_name = "foundation:uom_list"
+    edit_url_name = "foundation:uom_edit"
+    delete_url_name = "foundation:uom_delete"
+    new_button_label = "Add UOM"
+    search_fields = ["code", "name"]
+    sort_allowlist = ["code", "-code", "name", "-name"]
+    default_sort = "code"
+    sort_choices = [
+        ("code", "Code A–Z"),
+        ("-code", "Code Z–A"),
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+    ]
+    column_specs = [
+        {"field": "code", "label": "Code", "mono": True},
+        {"field": "name", "label": "Name"},
+        {"field": "decimal_places", "label": "Decimals"},
+        {"field": "is_active", "label": "Active", "bool": True},
+    ]
 
     def get_queryset(self):
-        return UnitOfMeasure.objects.filter(tenant=self.request.hrm_tenant).order_by("code")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "Units of measure",
-                "create_url_name": "foundation:uom_create",
-                "edit_url_name": "foundation:uom_edit",
-                "delete_url_name": "foundation:uom_delete",
-                "list_url_name": "foundation:uom_list",
-            }
-        )
-        return ctx
+        qs = UnitOfMeasure.objects.filter(tenant=self.request.hrm_tenant)
+        return self.apply_master_filters(qs)
 
 
 class UomCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):
@@ -467,29 +552,42 @@ class UomDeleteView(FoundationAdminMixin, FoundationPageContextMixin, DeleteView
 # ── UOM conversions ──────────────────────────────────────────────────────────────
 
 
-class UomConversionListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class UomConversionListView(FoundationEntityListView):
     model = UomConversion
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "UOM conversions"
+    entity_title = "UOM conversions"
+    create_url_name = "foundation:uom_conversion_create"
+    list_url_name = "foundation:uom_conversion_list"
+    edit_url_name = "foundation:uom_conversion_edit"
+    delete_url_name = "foundation:uom_conversion_delete"
+    new_button_label = "Add conversion"
+    has_is_active = False
+    search_fields = ["from_uom__code", "from_uom__name", "to_uom__code", "to_uom__name"]
+    sort_allowlist = [
+        "from_uom__code",
+        "-from_uom__code",
+        "to_uom__code",
+        "-to_uom__code",
+        "factor",
+        "-factor",
+    ]
+    default_sort = "from_uom__code"
+    sort_choices = [
+        ("from_uom__code", "From UOM A–Z"),
+        ("-from_uom__code", "From UOM Z–A"),
+        ("to_uom__code", "To UOM A–Z"),
+        ("factor", "Factor ↑"),
+        ("-factor", "Factor ↓"),
+    ]
+    column_specs = [
+        {"field": "from_uom", "label": "From"},
+        {"field": "to_uom", "label": "To"},
+        {"field": "factor", "label": "Factor", "money": True},
+    ]
 
     def get_queryset(self):
-        return UomConversion.objects.filter(tenant=self.request.hrm_tenant).order_by(
-            "from_uom__code", "to_uom__code"
-        )
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "UOM conversions",
-                "create_url_name": "foundation:uom_conversion_create",
-                "edit_url_name": "foundation:uom_conversion_edit",
-                "delete_url_name": "foundation:uom_conversion_delete",
-                "list_url_name": "foundation:uom_conversion_list",
-            }
-        )
-        return ctx
+        qs = UomConversion.objects.filter(tenant=self.request.hrm_tenant).select_related("from_uom", "to_uom")
+        return self.apply_master_filters(qs)
 
 
 class UomConversionCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):
@@ -571,27 +669,34 @@ class UomConversionDeleteView(FoundationAdminMixin, FoundationPageContextMixin, 
 # ── Customers ──────────────────────────────────────────────────────────────────────
 
 
-class CustomerListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class CustomerListView(FoundationEntityListView):
     model = Customer
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Customers"
+    entity_title = "Customers"
+    create_url_name = "foundation:customer_create"
+    list_url_name = "foundation:customer_list"
+    edit_url_name = "foundation:customer_edit"
+    delete_url_name = "foundation:customer_delete"
+    new_button_label = "Add customer"
+    search_fields = ["customer_code", "name", "email", "phone", "city"]
+    sort_allowlist = ["name", "-name", "customer_code", "-customer_code", "city", "-city"]
+    default_sort = "name"
+    sort_choices = [
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+        ("customer_code", "Code A–Z"),
+        ("-customer_code", "Code Z–A"),
+    ]
+    column_specs = [
+        {"field": "customer_code", "label": "Code", "mono": True},
+        {"field": "name", "label": "Name"},
+        {"field": "city", "label": "City"},
+        {"field": "is_active", "label": "Active", "bool": True},
+    ]
 
     def get_queryset(self):
-        return Customer.objects.filter(tenant=self.request.hrm_tenant).order_by("name")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "Customers",
-                "create_url_name": "foundation:customer_create",
-                "edit_url_name": "foundation:customer_edit",
-                "delete_url_name": "foundation:customer_delete",
-                "list_url_name": "foundation:customer_list",
-            }
-        )
-        return ctx
+        qs = Customer.objects.filter(tenant=self.request.hrm_tenant)
+        return self.apply_master_filters(qs)
 
 
 class CustomerCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):
@@ -663,27 +768,34 @@ class CustomerDeleteView(FoundationAdminMixin, FoundationPageContextMixin, Delet
 # ── Suppliers ────────────────────────────────────────────────────────────────────
 
 
-class SupplierListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class SupplierListView(FoundationEntityListView):
     model = Supplier
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Suppliers"
+    entity_title = "Suppliers"
+    create_url_name = "foundation:supplier_create"
+    list_url_name = "foundation:supplier_list"
+    edit_url_name = "foundation:supplier_edit"
+    delete_url_name = "foundation:supplier_delete"
+    new_button_label = "Add supplier"
+    search_fields = ["supplier_code", "name", "email", "phone", "city"]
+    sort_allowlist = ["name", "-name", "supplier_code", "-supplier_code", "city", "-city"]
+    default_sort = "name"
+    sort_choices = [
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+        ("supplier_code", "Code A–Z"),
+        ("-supplier_code", "Code Z–A"),
+    ]
+    column_specs = [
+        {"field": "supplier_code", "label": "Code", "mono": True},
+        {"field": "name", "label": "Name"},
+        {"field": "city", "label": "City"},
+        {"field": "is_active", "label": "Active", "bool": True},
+    ]
 
     def get_queryset(self):
-        return Supplier.objects.filter(tenant=self.request.hrm_tenant).order_by("name")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "Suppliers",
-                "create_url_name": "foundation:supplier_create",
-                "edit_url_name": "foundation:supplier_edit",
-                "delete_url_name": "foundation:supplier_delete",
-                "list_url_name": "foundation:supplier_list",
-            }
-        )
-        return ctx
+        qs = Supplier.objects.filter(tenant=self.request.hrm_tenant)
+        return self.apply_master_filters(qs)
 
 
 class SupplierCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):
@@ -755,27 +867,34 @@ class SupplierDeleteView(FoundationAdminMixin, FoundationPageContextMixin, Delet
 # ── Sales persons ────────────────────────────────────────────────────────────────
 
 
-class SalesPersonListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class SalesPersonListView(FoundationEntityListView):
     model = SalesPerson
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Sales persons"
+    entity_title = "Sales persons"
+    create_url_name = "foundation:sales_person_create"
+    list_url_name = "foundation:sales_person_list"
+    edit_url_name = "foundation:sales_person_edit"
+    delete_url_name = "foundation:sales_person_delete"
+    new_button_label = "Add sales person"
+    search_fields = ["code", "name", "email", "phone"]
+    sort_allowlist = ["name", "-name", "code", "-code"]
+    default_sort = "name"
+    sort_choices = [
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+        ("code", "Code A–Z"),
+        ("-code", "Code Z–A"),
+    ]
+    column_specs = [
+        {"field": "code", "label": "Code", "mono": True},
+        {"field": "name", "label": "Name"},
+        {"field": "email", "label": "Email"},
+        {"field": "is_active", "label": "Active", "bool": True},
+    ]
 
     def get_queryset(self):
-        return SalesPerson.objects.filter(tenant=self.request.hrm_tenant).order_by("name")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "Sales persons",
-                "create_url_name": "foundation:sales_person_create",
-                "edit_url_name": "foundation:sales_person_edit",
-                "delete_url_name": "foundation:sales_person_delete",
-                "list_url_name": "foundation:sales_person_list",
-            }
-        )
-        return ctx
+        qs = SalesPerson.objects.filter(tenant=self.request.hrm_tenant)
+        return self.apply_master_filters(qs)
 
 
 class SalesPersonCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):
@@ -847,27 +966,33 @@ class SalesPersonDeleteView(FoundationAdminMixin, FoundationPageContextMixin, De
 # ── Payment methods ────────────────────────────────────────────────────────────
 
 
-class PaymentMethodListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class PaymentMethodListView(FoundationEntityListView):
     model = PaymentMethod
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Payment methods"
+    entity_title = "Payment methods"
+    create_url_name = "foundation:payment_method_create"
+    list_url_name = "foundation:payment_method_list"
+    edit_url_name = "foundation:payment_method_edit"
+    delete_url_name = "foundation:payment_method_delete"
+    new_button_label = "Add method"
+    search_fields = ["code", "name"]
+    sort_allowlist = ["name", "-name", "code", "-code"]
+    default_sort = "name"
+    sort_choices = [
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+        ("code", "Code A–Z"),
+        ("-code", "Code Z–A"),
+    ]
+    column_specs = [
+        {"field": "code", "label": "Code", "mono": True},
+        {"field": "name", "label": "Name"},
+        {"field": "is_active", "label": "Active", "bool": True},
+    ]
 
     def get_queryset(self):
-        return PaymentMethod.objects.filter(tenant=self.request.hrm_tenant).order_by("name")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "Payment methods",
-                "create_url_name": "foundation:payment_method_create",
-                "edit_url_name": "foundation:payment_method_edit",
-                "delete_url_name": "foundation:payment_method_delete",
-                "list_url_name": "foundation:payment_method_list",
-            }
-        )
-        return ctx
+        qs = PaymentMethod.objects.filter(tenant=self.request.hrm_tenant)
+        return self.apply_master_filters(qs)
 
 
 class PaymentMethodCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):
@@ -939,27 +1064,34 @@ class PaymentMethodDeleteView(FoundationAdminMixin, FoundationPageContextMixin, 
 # ── Currencies ───────────────────────────────────────────────────────────────────
 
 
-class CurrencyListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class CurrencyListView(FoundationEntityListView):
     model = Currency
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Currencies"
+    entity_title = "Currencies"
+    create_url_name = "foundation:currency_create"
+    list_url_name = "foundation:currency_list"
+    edit_url_name = "foundation:currency_edit"
+    delete_url_name = "foundation:currency_delete"
+    new_button_label = "Add currency"
+    search_fields = ["code", "name", "symbol"]
+    sort_allowlist = ["code", "-code", "name", "-name"]
+    default_sort = "code"
+    sort_choices = [
+        ("code", "Code A–Z"),
+        ("-code", "Code Z–A"),
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+    ]
+    column_specs = [
+        {"field": "code", "label": "Code", "mono": True},
+        {"field": "name", "label": "Name"},
+        {"field": "symbol", "label": "Symbol"},
+        {"field": "is_active", "label": "Active", "bool": True},
+    ]
 
     def get_queryset(self):
-        return Currency.objects.filter(tenant=self.request.hrm_tenant).order_by("code")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "Currencies",
-                "create_url_name": "foundation:currency_create",
-                "edit_url_name": "foundation:currency_edit",
-                "delete_url_name": "foundation:currency_delete",
-                "list_url_name": "foundation:currency_list",
-            }
-        )
-        return ctx
+        qs = Currency.objects.filter(tenant=self.request.hrm_tenant)
+        return self.apply_master_filters(qs)
 
 
 class CurrencyCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):
@@ -1031,29 +1163,45 @@ class CurrencyDeleteView(FoundationAdminMixin, FoundationPageContextMixin, Delet
 # ── Exchange rates ─────────────────────────────────────────────────────────────────
 
 
-class ExchangeRateListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class ExchangeRateListView(FoundationEntityListView):
     model = ExchangeRate
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Exchange rates"
+    entity_title = "Exchange rates"
+    create_url_name = "foundation:exchange_rate_create"
+    list_url_name = "foundation:exchange_rate_list"
+    edit_url_name = "foundation:exchange_rate_edit"
+    delete_url_name = "foundation:exchange_rate_delete"
+    new_button_label = "Add rate"
+    has_is_active = False
+    search_fields = ["from_currency__code", "to_currency__code", "from_currency__name", "to_currency__name"]
+    sort_allowlist = [
+        "-effective_date",
+        "effective_date",
+        "from_currency__code",
+        "-from_currency__code",
+        "rate",
+        "-rate",
+    ]
+    default_sort = "-effective_date"
+    sort_choices = [
+        ("-effective_date", "Newest effective date"),
+        ("effective_date", "Oldest effective date"),
+        ("from_currency__code", "From currency A–Z"),
+        ("rate", "Rate ↑"),
+        ("-rate", "Rate ↓"),
+    ]
+    column_specs = [
+        {"field": "from_currency", "label": "From"},
+        {"field": "to_currency", "label": "To"},
+        {"field": "rate", "label": "Rate", "money": True},
+        {"field": "effective_date", "label": "Effective"},
+    ]
 
     def get_queryset(self):
-        return ExchangeRate.objects.filter(tenant=self.request.hrm_tenant).order_by(
-            "-effective_date", "from_currency__code"
+        qs = ExchangeRate.objects.filter(tenant=self.request.hrm_tenant).select_related(
+            "from_currency", "to_currency"
         )
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "Exchange rates",
-                "create_url_name": "foundation:exchange_rate_create",
-                "edit_url_name": "foundation:exchange_rate_edit",
-                "delete_url_name": "foundation:exchange_rate_delete",
-                "list_url_name": "foundation:exchange_rate_list",
-            }
-        )
-        return ctx
+        return self.apply_master_filters(qs)
 
 
 class ExchangeRateCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):
@@ -1135,27 +1283,33 @@ class ExchangeRateDeleteView(FoundationAdminMixin, FoundationPageContextMixin, D
 # ── Tax types ────────────────────────────────────────────────────────────────────
 
 
-class TaxTypeListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class TaxTypeListView(FoundationEntityListView):
     model = TaxType
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Tax types"
+    entity_title = "Tax types"
+    create_url_name = "foundation:tax_type_create"
+    list_url_name = "foundation:tax_type_list"
+    edit_url_name = "foundation:tax_type_edit"
+    delete_url_name = "foundation:tax_type_delete"
+    new_button_label = "Add tax type"
+    search_fields = ["code", "name", "description"]
+    sort_allowlist = ["name", "-name", "code", "-code"]
+    default_sort = "name"
+    sort_choices = [
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+        ("code", "Code A–Z"),
+        ("-code", "Code Z–A"),
+    ]
+    column_specs = [
+        {"field": "code", "label": "Code", "mono": True},
+        {"field": "name", "label": "Name"},
+        {"field": "is_active", "label": "Active", "bool": True},
+    ]
 
     def get_queryset(self):
-        return TaxType.objects.filter(tenant=self.request.hrm_tenant).order_by("name")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "Tax types",
-                "create_url_name": "foundation:tax_type_create",
-                "edit_url_name": "foundation:tax_type_edit",
-                "delete_url_name": "foundation:tax_type_delete",
-                "list_url_name": "foundation:tax_type_list",
-            }
-        )
-        return ctx
+        qs = TaxType.objects.filter(tenant=self.request.hrm_tenant)
+        return self.apply_master_filters(qs)
 
 
 class TaxTypeCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):
@@ -1227,29 +1381,35 @@ class TaxTypeDeleteView(FoundationAdminMixin, FoundationPageContextMixin, Delete
 # ── Tax rates ────────────────────────────────────────────────────────────────────
 
 
-class TaxRateListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class TaxRateListView(FoundationEntityListView):
     model = TaxRate
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Tax rates"
+    entity_title = "Tax rates"
+    create_url_name = "foundation:tax_rate_create"
+    list_url_name = "foundation:tax_rate_list"
+    edit_url_name = "foundation:tax_rate_edit"
+    delete_url_name = "foundation:tax_rate_delete"
+    new_button_label = "Add tax rate"
+    has_is_active = False
+    search_fields = ["tax_type__code", "tax_type__name"]
+    sort_allowlist = ["-effective_from", "effective_from", "tax_type__code", "rate_percent", "-rate_percent"]
+    default_sort = "-effective_from"
+    sort_choices = [
+        ("-effective_from", "Newest effective from"),
+        ("effective_from", "Oldest effective from"),
+        ("tax_type__code", "Tax type A–Z"),
+        ("rate_percent", "Rate % ↑"),
+        ("-rate_percent", "Rate % ↓"),
+    ]
+    column_specs = [
+        {"field": "tax_type", "label": "Tax type"},
+        {"field": "rate_percent", "label": "Rate %"},
+        {"field": "effective_from", "label": "Effective from"},
+    ]
 
     def get_queryset(self):
-        return TaxRate.objects.filter(tenant=self.request.hrm_tenant).order_by(
-            "-effective_from", "tax_type__code"
-        )
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "Tax rates",
-                "create_url_name": "foundation:tax_rate_create",
-                "edit_url_name": "foundation:tax_rate_edit",
-                "delete_url_name": "foundation:tax_rate_delete",
-                "list_url_name": "foundation:tax_rate_list",
-            }
-        )
-        return ctx
+        qs = TaxRate.objects.filter(tenant=self.request.hrm_tenant).select_related("tax_type")
+        return self.apply_master_filters(qs)
 
 
 class TaxRateCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):
@@ -1331,27 +1491,34 @@ class TaxRateDeleteView(FoundationAdminMixin, FoundationPageContextMixin, Delete
 # ── Payment terms ────────────────────────────────────────────────────────────────
 
 
-class PaymentTermListView(FoundationAdminMixin, FoundationPageContextMixin, ListView):
+class PaymentTermListView(FoundationEntityListView):
     model = PaymentTerm
-    template_name = "foundation/entity_list.html"
-    context_object_name = "object_list"
     page_title = "Payment terms"
+    entity_title = "Payment terms"
+    create_url_name = "foundation:payment_term_create"
+    list_url_name = "foundation:payment_term_list"
+    edit_url_name = "foundation:payment_term_edit"
+    delete_url_name = "foundation:payment_term_delete"
+    new_button_label = "Add term"
+    search_fields = ["code", "name", "description"]
+    sort_allowlist = ["code", "-code", "name", "-name"]
+    default_sort = "code"
+    sort_choices = [
+        ("code", "Code A–Z"),
+        ("-code", "Code Z–A"),
+        ("name", "Name A–Z"),
+        ("-name", "Name Z–A"),
+    ]
+    column_specs = [
+        {"field": "code", "label": "Code", "mono": True},
+        {"field": "name", "label": "Name"},
+        {"field": "days_until_due", "label": "Days due"},
+        {"field": "is_active", "label": "Active", "bool": True},
+    ]
 
     def get_queryset(self):
-        return PaymentTerm.objects.filter(tenant=self.request.hrm_tenant).order_by("code")
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "entity_title": "Payment terms",
-                "create_url_name": "foundation:payment_term_create",
-                "edit_url_name": "foundation:payment_term_edit",
-                "delete_url_name": "foundation:payment_term_delete",
-                "list_url_name": "foundation:payment_term_list",
-            }
-        )
-        return ctx
+        qs = PaymentTerm.objects.filter(tenant=self.request.hrm_tenant)
+        return self.apply_master_filters(qs)
 
 
 class PaymentTermCreateView(FoundationAdminMixin, FoundationPageContextMixin, CreateView):

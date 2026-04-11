@@ -3,76 +3,78 @@
 {% block page_title %}Foundation · {% if is_edit %}Edit warehouse{% else %}Add warehouse{% endif %}{% endblock %}
 
 {% block content %}
-<div class="space-y-5">
-  <div class="flex items-center gap-3">
-    <a href="{% url 'foundation:warehouse_list' %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent" aria-label="Back">
-      <i data-lucide="arrow-left" class="h-4 w-4"></i>
-    </a>
-    <div>
-      <h2 class="text-xl font-bold text-foreground">{% if is_edit %}Edit warehouse{% else %}New warehouse{% endif %}</h2>
-      <p class="text-sm text-muted-foreground mt-0.5">Codes must be unique within this workspace</p>
-    </div>
-  </div>
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card max-w-3xl">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">{% if is_edit %}Edit warehouse{% else %}New warehouse{% endif %}</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">Codes must be unique within this workspace</p>
+        </div>
+        <a href="{% url 'foundation:warehouse_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+        </a>
+      </div>
 
-  <div class="simple-card max-w-3xl rounded-xl border border-border p-6 shadow-card">
-    <form method="post" class="space-y-4">
-      {% csrf_token %}
-      {% if form.non_field_errors %}
-      <div class="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ form.non_field_errors }}</div>
-      {% endif %}
-      <div class="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-foreground">Code</label>
-          {{ form.code }}
-          {{ form.code.errors }}
+      <form method="post" class="space-y-4 px-4 py-5">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-foreground">Code</label>
+            {{ form.code }}
+            {{ form.code.errors }}
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-foreground">Name</label>
+            {{ form.name }}
+            {{ form.name.errors }}
+          </div>
         </div>
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-foreground">Name</label>
-          {{ form.name }}
-          {{ form.name.errors }}
+          <label class="mb-1.5 block text-sm font-medium text-foreground">Description</label>
+          {{ form.description }}
+          {{ form.description.errors }}
         </div>
-      </div>
-      <div>
-        <label class="mb-1.5 block text-sm font-medium text-foreground">Description</label>
-        {{ form.description }}
-        {{ form.description.errors }}
-      </div>
-      <div class="grid gap-4 sm:grid-cols-2">
-        <div class="sm:col-span-2">
-          <label class="mb-1.5 block text-sm font-medium text-foreground">Address line 1</label>
-          {{ form.address_line1 }}
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="sm:col-span-2">
+            <label class="mb-1.5 block text-sm font-medium text-foreground">Address line 1</label>
+            {{ form.address_line1 }}
+          </div>
+          <div class="sm:col-span-2">
+            <label class="mb-1.5 block text-sm font-medium text-foreground">Address line 2</label>
+            {{ form.address_line2 }}
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-foreground">City</label>
+            {{ form.city }}
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-foreground">State / region</label>
+            {{ form.state }}
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-foreground">Postal code</label>
+            {{ form.postal_code }}
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-foreground">Country</label>
+            {{ form.country }}
+          </div>
         </div>
-        <div class="sm:col-span-2">
-          <label class="mb-1.5 block text-sm font-medium text-foreground">Address line 2</label>
-          {{ form.address_line2 }}
+        <div class="flex items-center gap-2">
+          {{ form.is_active }}
+          <label for="{{ form.is_active.id_for_label }}" class="text-sm font-medium text-foreground">Active</label>
         </div>
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-foreground">City</label>
-          {{ form.city }}
+        {{ form.is_active.errors }}
+        <div class="flex flex-wrap gap-2 border-t border-border/50 pt-4">
+          <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+          <a href="{% url 'foundation:warehouse_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
         </div>
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-foreground">State / region</label>
-          {{ form.state }}
-        </div>
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-foreground">Postal code</label>
-          {{ form.postal_code }}
-        </div>
-        <div>
-          <label class="mb-1.5 block text-sm font-medium text-foreground">Country</label>
-          {{ form.country }}
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        {{ form.is_active }}
-        <label for="{{ form.is_active.id_for_label }}" class="text-sm font-medium text-foreground">Active</label>
-      </div>
-      {{ form.is_active.errors }}
-      <div class="flex flex-wrap gap-2 pt-2">
-        <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
-        <a href="{% url 'foundation:warehouse_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </div>
 {% endblock %}

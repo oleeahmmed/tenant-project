@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views import View
@@ -62,51 +63,160 @@ class ProductionDashboardView(ProductionDashboardAccessMixin, ProductionPageCont
 
 
 class _BaseList(ProductionAdminMixin, ProductionPageContextMixin, ListView):
+    """List layout matches purchase/inventory (inv-list-shell, filters, row ⋮ menu, pagination)."""
+
     template_name = "production/document_list.html"
-    context_object_name = "object_list"
+    context_object_name = "documents"
     page_title = ""
     create_url = ""
+    list_url_name = ""
+    doc_kind = ""
+    date_field = ""
+    list_subtitle = ""
+    paginate_by = 15
+
+    def get_queryset(self):
+        qs = self.model.objects.filter(tenant=self.request.hrm_tenant)
+        if self.doc_kind == "bom":
+            qs = qs.select_related("product")
+        elif self.doc_kind == "order":
+            qs = qs.select_related("product", "warehouse", "bom")
+        elif self.doc_kind == "issue":
+            qs = qs.select_related("production_order", "warehouse")
+        elif self.doc_kind == "receipt":
+            qs = qs.select_related("production_order", "warehouse")
+
+        q = (self.request.GET.get("q") or "").strip()
+        status = (self.request.GET.get("status") or "").strip()
+        date_from = (self.request.GET.get("date_from") or "").strip()
+        date_to = (self.request.GET.get("date_to") or "").strip()
+        ordering = (self.request.GET.get("sort") or f"-{self.date_field}").strip()
+
+        if q:
+            flt = Q(doc_no__icontains=q) | Q(notes__icontains=q)
+            if self.doc_kind == "bom":
+                flt |= Q(product__name__icontains=q) | Q(product__code__icontains=q) | Q(version__icontains=q)
+            elif self.doc_kind == "order":
+                flt |= Q(product__name__icontains=q) | Q(product__code__icontains=q)
+                flt |= Q(bom__doc_no__icontains=q)
+            elif self.doc_kind in ("issue", "receipt"):
+                flt |= Q(production_order__doc_no__icontains=q)
+            qs = qs.filter(flt)
+        if status:
+            qs = qs.filter(status=status)
+
+        df = self.date_field
+        if date_from:
+            qs = qs.filter(**{f"{df}__gte": date_from})
+        if date_to:
+            qs = qs.filter(**{f"{df}__lte": date_to})
+
+        allowed = self._allowed_ordering()
+        qs = qs.order_by(allowed.get(ordering, f"-{df}"), "-id")
+        return qs
+
+    def _allowed_ordering(self):
+        df = self.date_field
+        out = {
+            df: df,
+            f"-{df}": f"-{df}",
+            "doc_no": "doc_no",
+            "-doc_no": "-doc_no",
+            "status": "status",
+            "-status": "-status",
+        }
+        if self.doc_kind in ("bom", "order"):
+            out["product__name"] = "product__name"
+            out["-product__name"] = "-product__name"
+        return out
+
+    def get_paginate_by(self, queryset):
+        raw = (self.request.GET.get("page_size") or "").strip()
+        try:
+            size = int(raw)
+        except ValueError:
+            size = self.paginate_by
+        return 100 if size > 100 else (5 if size < 5 else size)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["create_url"] = self.create_url
+        params = self.request.GET.copy()
+        params.pop("page", None)
+        df = self.date_field
+        sort_options = [
+            (f"-{df}", "Newest first"),
+            (df, "Oldest first"),
+            ("doc_no", "Document # A–Z"),
+            ("-doc_no", "Document # Z–A"),
+            ("status", "Status A–Z"),
+            ("-status", "Status Z–A"),
+        ]
+        if self.doc_kind in ("bom", "order"):
+            sort_options += [
+                ("product__name", "Product A–Z"),
+                ("-product__name", "Product Z–A"),
+            ]
+        ctx.update(
+            {
+                "create_url": self.create_url,
+                "list_url_name": self.list_url_name,
+                "doc_kind": self.doc_kind,
+                "date_field": df,
+                "list_subtitle": self.list_subtitle,
+                "qs_no_page": params.urlencode(),
+                "status_choices": self.model.Status.choices,
+                "sort_options": sort_options,
+                "selected": {
+                    "q": self.request.GET.get("q", ""),
+                    "status": self.request.GET.get("status", ""),
+                    "date_from": self.request.GET.get("date_from", ""),
+                    "date_to": self.request.GET.get("date_to", ""),
+                    "sort": self.request.GET.get("sort", f"-{df}"),
+                    "page_size": self.request.GET.get("page_size", str(self.paginate_by)),
+                },
+            }
+        )
         return ctx
 
 
 class BillOfMaterialListView(_BaseList):
     model = BillOfMaterial
+    doc_kind = "bom"
+    date_field = "bom_date"
     page_title = "Bill of materials"
     create_url = "production:bom_create"
-
-    def get_queryset(self):
-        return BillOfMaterial.objects.filter(tenant=self.request.hrm_tenant).select_related("product").order_by("-bom_date", "-id")
+    list_url_name = "production:bom_list"
+    list_subtitle = "Product BOMs — activate before use on production orders"
 
 
 class ProductionOrderListView(_BaseList):
     model = ProductionOrder
+    doc_kind = "order"
+    date_field = "order_date"
     page_title = "Production orders"
     create_url = "production:order_create"
-
-    def get_queryset(self):
-        return ProductionOrder.objects.filter(tenant=self.request.hrm_tenant).select_related("product", "warehouse", "bom").order_by("-order_date", "-id")
+    list_url_name = "production:order_list"
+    list_subtitle = "Manufacturing orders — release and track production"
 
 
 class IssueForProductionListView(_BaseList):
     model = IssueForProduction
+    doc_kind = "issue"
+    date_field = "issue_date"
     page_title = "Issue for production"
     create_url = "production:issue_create"
-
-    def get_queryset(self):
-        return IssueForProduction.objects.filter(tenant=self.request.hrm_tenant).select_related("production_order", "warehouse").order_by("-issue_date", "-id")
+    list_url_name = "production:issue_list"
+    list_subtitle = "Material issues against production orders"
 
 
 class ReceiptFromProductionListView(_BaseList):
     model = ReceiptFromProduction
+    doc_kind = "receipt"
+    date_field = "receipt_date"
     page_title = "Receipt from production"
     create_url = "production:receipt_create"
-
-    def get_queryset(self):
-        return ReceiptFromProduction.objects.filter(tenant=self.request.hrm_tenant).select_related("production_order", "warehouse").order_by("-receipt_date", "-id")
+    list_url_name = "production:receipt_list"
+    list_subtitle = "Finished goods receipts — post when finalized"
 
 
 class _BaseDetail(ProductionAdminMixin, ProductionPageContextMixin, DetailView):

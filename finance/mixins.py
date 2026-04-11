@@ -1,4 +1,7 @@
+from urllib.parse import urlencode
+
 from django.contrib import messages
+from django.db.models import Q
 from django.shortcuts import redirect
 
 from foundation.mixins import FoundationAdminMixin, FoundationDashboardAccessMixin
@@ -64,4 +67,89 @@ class FinancePermissionRequiredMixin:
             messages.error(request, "You do not have permission for this action.")
             return redirect("dashboard")
         return super().dispatch(request, *args, **kwargs)
+
+
+class FinanceMasterListMixin:
+    """Search, optional active flag, sort whitelist, pagination, print template for finance master lists."""
+
+    search_fields = []
+    sort_allowlist = []
+    default_sort = "name"
+    has_is_active = True
+
+    def get_paginate_by(self, queryset):
+        if self.request.GET.get("print") == "1":
+            return None
+        try:
+            n = int(self.request.GET.get("page_size", "20"))
+        except (TypeError, ValueError):
+            n = 20
+        return max(5, min(n, 100))
+
+    def _apply_search(self, qs):
+        q = (self.request.GET.get("q") or "").strip()
+        if not q or not self.search_fields:
+            return qs
+        combined = Q()
+        for f in self.search_fields:
+            combined |= Q(**{f"{f}__icontains": q})
+        return qs.filter(combined)
+
+    def _apply_active_filter(self, qs):
+        if not getattr(self, "has_is_active", True):
+            return qs
+        v = (self.request.GET.get("active") or "").strip().lower()
+        if v == "yes":
+            return qs.filter(is_active=True)
+        if v == "no":
+            return qs.filter(is_active=False)
+        return qs
+
+    def _apply_sort(self, qs):
+        sort = (self.request.GET.get("sort") or "").strip() or self.default_sort
+        allow = getattr(self, "sort_allowlist", None) or []
+        if allow and sort in allow:
+            return qs.order_by(sort)
+        return qs.order_by(self.default_sort)
+
+    def _apply_print_pk(self, qs):
+        if self.request.GET.get("print") == "1" and self.request.GET.get("pk"):
+            try:
+                pk = int(self.request.GET["pk"])
+            except (TypeError, ValueError):
+                return qs
+            return qs.filter(pk=pk)
+        return qs
+
+    def apply_master_filters(self, qs):
+        qs = self._apply_search(qs)
+        qs = self._apply_active_filter(qs)
+        qs = self._apply_sort(qs)
+        qs = self._apply_print_pk(qs)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        params = self.request.GET.copy()
+        params.pop("page", None)
+        ctx["qs_no_page"] = urlencode(params)
+        try:
+            pg = int(self.request.GET.get("page_size", "20"))
+        except (TypeError, ValueError):
+            pg = 20
+        pg = max(5, min(pg, 100))
+        ctx["selected"] = {
+            "q": self.request.GET.get("q", ""),
+            "sort": self.request.GET.get("sort", getattr(self, "default_sort", "name")),
+            "page_size": str(pg),
+            "active": self.request.GET.get("active", ""),
+        }
+        ctx["sort_choices"] = getattr(self, "sort_choices", [])
+        ctx["is_print"] = self.request.GET.get("print") == "1"
+        return ctx
+
+    def get_template_names(self):
+        if self.request.GET.get("print") == "1":
+            return ["finance/print_master_list.html"]
+        return super().get_template_names()
 

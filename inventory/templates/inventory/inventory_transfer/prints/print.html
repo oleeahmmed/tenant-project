@@ -107,6 +107,14 @@
     .toolbar .print:hover {
       opacity: 0.92;
     }
+    .toolbar .pdf {
+      background: hsl(var(--card));
+      color: hsl(var(--foreground));
+      border: 1px solid hsl(var(--border));
+    }
+    .toolbar .pdf:hover {
+      background: hsl(var(--accent));
+    }
     .toolbar .hint {
       font-size: 8pt;
       color: hsl(var(--muted-foreground));
@@ -517,7 +525,8 @@
     <span class="hint"><strong>No date/URL in print:</strong> Chrome/Edge → Print → <em>More settings</em> → turn <strong>off</strong> “Headers and footers”. Save as PDF: Destination → Save as PDF.</span>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <a class="back" href="{% url 'inventory:inventory_transfer_detail' doc.pk %}">← Back</a>
-      <button type="button" class="print" id="btn-print-it">PRINT / Save as PDF</button>
+      <button type="button" class="print" id="btn-print-it" title="Send to printer">Print</button>
+      <button type="button" class="pdf" id="btn-pdf-it" title="In the dialog choose Destination → Save as PDF">PDF</button>
     </div>
   </div>
 
@@ -648,10 +657,12 @@
       window.addEventListener("afterprint", function () {
         document.title = tabTitle;
       });
-      var btn = document.getElementById("btn-print-it");
-      if (btn) btn.addEventListener("click", function () {
-        window.print();
-      });
+      function wirePrint(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener("click", function () { window.print(); });
+      }
+      wirePrint("btn-print-it");
+      wirePrint("btn-pdf-it");
     })();
   </script>
 </body>

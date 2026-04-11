@@ -3,23 +3,29 @@
 {% block page_title %}Foundation · Delete warehouse{% endblock %}
 
 {% block content %}
-<div class="space-y-5 max-w-lg">
-  <div class="flex items-center gap-3">
-    <a href="{% url 'foundation:warehouse_list' %}" class="rounded-md p-1.5 text-muted-foreground hover:bg-accent">
-      <i data-lucide="arrow-left" class="h-4 w-4"></i>
-    </a>
-    <h2 class="text-xl font-bold text-foreground">Delete warehouse</h2>
-  </div>
-
-  <div class="simple-card rounded-xl border border-destructive/25 bg-destructive/5 p-6 shadow-card">
-    <p class="text-sm text-foreground">
-      Delete <strong>{{ warehouse.code }}</strong> — <strong>{{ warehouse.name }}</strong>? This cannot be undone.
-    </p>
-    <form method="post" class="mt-6 flex flex-wrap gap-2">
-      {% csrf_token %}
-      <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Delete</button>
-      <a href="{% url 'foundation:warehouse_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
-    </form>
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card max-w-lg">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">Delete warehouse</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">This action cannot be undone</p>
+        </div>
+        <a href="{% url 'foundation:warehouse_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+        </a>
+      </div>
+      <div class="space-y-4 px-4 py-5">
+        <p class="text-sm text-foreground">
+          Delete <strong>{{ warehouse.code }}</strong> — <strong>{{ warehouse.name }}</strong>?
+        </p>
+        <form method="post" class="flex flex-wrap gap-2 border-t border-border/50 pt-4">
+          {% csrf_token %}
+          <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Delete</button>
+          <a href="{% url 'foundation:warehouse_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

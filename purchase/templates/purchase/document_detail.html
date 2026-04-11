@@ -35,7 +35,7 @@
             {% for line in object.lines.all %}
             <tr>
               <td class="px-3 py-2">{{ line.product }}</td>
-              <td class="px-3 py-2">{{ line.quantity|default:line.quantity_received }}</td>
+              <td class="px-3 py-2">{% if list_url == 'purchase:goods_receipt_list' %}{{ line.quantity_received }}{% else %}{{ line.quantity }}{% endif %}</td>
               <td class="px-3 py-2">{{ line.unit_cost|default:"-" }}</td>
               <td class="px-3 py-2">{{ line.line_total|default:"-" }}</td>
             </tr>
