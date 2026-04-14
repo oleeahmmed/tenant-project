@@ -2,18 +2,30 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from auth_tenants.models import User
+from foundation.models import Customer
+from hrm.models import Department, Employee
 
-from .models import Issue, IssueComment, IssueStatus, IssueType, JiraProject, ProjectTeam, TenantLabel
+from .models import (
+    Issue,
+    IssueComment,
+    IssueStatus,
+    IssueType,
+    JiraProject,
+    ProjectDepartmentAssignment,
+    ProjectTeam,
+    TenantLabel,
+)
 from .services.assignees import assignable_users_for_project
 
 
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = JiraProject
-        fields = ["key", "name", "description", "lead", "is_active"]
+        fields = ["key", "name", "customer", "description", "lead", "is_active"]
         widgets = {
             "key": forms.TextInput(attrs={"class": "inv-list-control", "placeholder": "e.g. ACME"}),
             "name": forms.TextInput(attrs={"class": "inv-list-control"}),
+            "customer": forms.Select(attrs={"class": "inv-list-control"}),
             "description": forms.Textarea(attrs={"class": "inv-list-control min-h-[100px]", "rows": 4}),
             "lead": forms.Select(attrs={"class": "inv-list-control"}),
             "is_active": forms.CheckboxInput(attrs={"class": "rounded border-border"}),
@@ -21,6 +33,8 @@ class ProjectForm(forms.ModelForm):
 
     def __init__(self, *args, tenant, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["customer"].queryset = Customer.objects.filter(tenant=tenant, is_active=True).order_by("name")
+        self.fields["customer"].required = False
         self.fields["lead"].queryset = User.objects.filter(tenant=tenant).order_by("name")
         self.fields["lead"].required = False
 
@@ -106,6 +120,40 @@ class ProjectTeamForm(forms.ModelForm):
         self.fields["members"].queryset = User.objects.filter(tenant=project.tenant, is_active=True).order_by("name")
         self.fields["members"].required = False
         self.fields["order"].required = False
+
+
+class ProjectDepartmentAssignmentForm(forms.ModelForm):
+    class Meta:
+        model = ProjectDepartmentAssignment
+        fields = ["department", "employees", "order"]
+        widgets = {
+            "department": forms.Select(attrs={"class": "inv-list-control"}),
+            "employees": forms.SelectMultiple(attrs={"class": "inv-list-control min-h-[120px]", "size": 8}),
+            "order": forms.NumberInput(attrs={"class": "inv-list-control", "step": "1"}),
+        }
+
+    def __init__(self, *args, project, **kwargs):
+        self.project = project
+        super().__init__(*args, **kwargs)
+        self.fields["department"].queryset = Department.objects.filter(tenant=project.tenant).order_by("name")
+        self.fields["employees"].queryset = Employee.objects.filter(
+            tenant=project.tenant,
+            status=Employee.Status.ACTIVE,
+        ).select_related("department", "user").order_by("full_name")
+        self.fields["employees"].required = False
+        self.fields["order"].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        department = cleaned.get("department")
+        employees = cleaned.get("employees")
+        if department and employees:
+            invalid = [e.full_name for e in employees if e.department_id != department.id]
+            if invalid:
+                raise ValidationError(
+                    {"employees": "Selected employees must belong to the selected department."}
+                )
+        return cleaned
 
 
 class IssueCommentForm(forms.ModelForm):

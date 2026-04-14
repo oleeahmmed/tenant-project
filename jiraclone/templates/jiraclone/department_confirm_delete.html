@@ -1,0 +1,26 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Delete department mapping{% endblock %}
+{% block page_title %}Jira clone · Delete department mapping{% endblock %}
+{% block content %}
+<div class="inv-list-shell sm:p-1.5">
+  <div class="mx-auto max-w-lg">
+    <div class="inv-list-card overflow-hidden">
+      <div class="border-b border-border bg-muted/20 px-5 py-4">
+        <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Delete</p>
+        <h2 class="text-lg font-semibold text-foreground mt-0.5">Remove department mapping</h2>
+      </div>
+      <form method="post" class="space-y-4 border-t border-border/50 p-5">
+        {% csrf_token %}
+        <p class="text-sm text-muted-foreground">
+          Remove <span class="font-medium text-foreground">{{ assignment.department.name }}</span> from project
+          <span class="font-mono text-foreground">{{ project.key }}</span>?
+        </p>
+        <div class="flex gap-2 pt-2">
+          <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Delete</button>
+          <a href="{% url 'jiraclone:project_departments' project_key=project.key %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

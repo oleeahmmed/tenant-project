@@ -15,9 +15,9 @@ MODULE_TO_APP_LABELS = {
     "pos": ["pos"],
     "hrm": ["hrm"],
     "recruitment": ["recruitment"],
-    "payroll": ["payroll"],
     "auth_tenants": ["auth_tenants"],
     "support": ["support"],
+    "screenhot": ["screenhot"],
 }
 
 CRUD_ACTIONS = ("view", "add", "change", "delete")
@@ -49,7 +49,11 @@ def sync_default_model_permissions(module_codes):
 
         app_labels = MODULE_TO_APP_LABELS.get(module, [])
         for app_label in app_labels:
-            cfg = apps.get_app_config(app_label)
+            try:
+                cfg = apps.get_app_config(app_label)
+            except LookupError:
+                # Keep permission sync resilient when app labels are removed.
+                continue
             for model in cfg.get_models():
                 model_name = model._meta.model_name
                 verbose = model._meta.verbose_name.title()

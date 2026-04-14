@@ -1,6 +1,15 @@
 from django.contrib import admin
 
-from .models import Issue, IssueComment, IssueStatus, IssueType, JiraProject, ProjectTeam, TenantLabel
+from .models import (
+    Issue,
+    IssueComment,
+    IssueStatus,
+    IssueType,
+    JiraProject,
+    ProjectDepartmentAssignment,
+    ProjectTeam,
+    TenantLabel,
+)
 
 
 @admin.register(ProjectTeam)
@@ -8,6 +17,13 @@ class ProjectTeamAdmin(admin.ModelAdmin):
     list_display = ("name", "project", "order")
     list_filter = ("project",)
     filter_horizontal = ("members",)
+
+
+@admin.register(ProjectDepartmentAssignment)
+class ProjectDepartmentAssignmentAdmin(admin.ModelAdmin):
+    list_display = ("project", "department", "order")
+    list_filter = ("project", "department")
+    filter_horizontal = ("employees",)
 
 
 @admin.register(JiraProject)

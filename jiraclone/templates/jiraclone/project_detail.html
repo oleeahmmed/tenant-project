@@ -11,6 +11,7 @@
           <p class="font-mono text-xs text-muted-foreground mt-1">{{ project.key }}</p>
           <h2 class="text-xl font-bold text-foreground mt-0.5">{{ project.name }}</h2>
           {% if project.description %}<p class="text-sm text-muted-foreground mt-1 max-w-2xl leading-relaxed">{{ project.description }}</p>{% endif %}
+          <p class="text-xs text-muted-foreground mt-2">Customer: {% if project.customer %}{{ project.customer.name }}{% else %}Not selected{% endif %}</p>
         </div>
         <div class="inline-flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/30 p-1 shadow-sm ring-1 ring-black/[0.03]">
           <a href="{% url 'jiraclone:project_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Projects</a>
@@ -19,6 +20,9 @@
           </a>
           <a href="{% url 'jiraclone:project_teams' project_key=project.key %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
             <i data-lucide="users" class="h-4 w-4"></i> Teams
+          </a>
+          <a href="{% url 'jiraclone:project_departments' project_key=project.key %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+            <i data-lucide="building-2" class="h-4 w-4"></i> Departments
           </a>
           <a href="{% url 'jiraclone:project_edit' project_key=project.key %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Project settings</a>
           <a href="{% url 'jiraclone:issue_create' project_key=project.key %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
@@ -81,6 +85,26 @@
             {% endfor %}
           </tbody>
         </table>
+      </div>
+      <div class="border-t border-border/50 bg-card px-4 py-4">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Onboarding departments</h3>
+        <p class="text-sm text-muted-foreground mb-3">
+          Progress: {{ onboarding_progress.percent }}% ({{ onboarding_progress.department_with_employees }}/{{ onboarding_progress.department_total }} departments ready, {{ onboarding_progress.employee_total }} employees assigned)
+        </p>
+        {% if department_assignments %}
+          <div class="grid gap-2 md:grid-cols-2">
+            {% for assignment in department_assignments %}
+            <div class="rounded-lg border border-border bg-muted/10 px-3 py-2">
+              <p class="text-sm font-medium text-foreground">{{ assignment.department.name }}</p>
+              <p class="text-xs text-muted-foreground">
+                {% for e in assignment.employees.all %}{{ e.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}No employees{% endfor %}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-sm text-muted-foreground">No department mapping yet. Add from Departments tab.</p>
+        {% endif %}
       </div>
     </div>
   </div>

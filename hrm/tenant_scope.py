@@ -48,17 +48,20 @@ def get_hrm_tenant(request):
         return None
 
     if role == "super_admin":
-        if getattr(u, "tenant_id", None):
-            return u.tenant
         sid = request.session.get(SESSION_KEY_ACTIVE_TENANT)
         if sid:
             try:
                 return Tenant.objects.get(pk=sid, is_active=True)
             except Tenant.DoesNotExist:
                 pass
+        if getattr(u, "tenant_id", None):
+            t = Tenant.objects.filter(pk=u.tenant_id, is_active=True).first()
+            if t is not None:
+                return t
         qs = Tenant.objects.filter(is_active=True)
-        if qs.count() == 1:
-            return qs.first()
+        first_active = qs.order_by("id").first()
+        if first_active is not None:
+            return first_active
         emp = _employee_for_user(u)
         if emp is not None:
             return emp.tenant

@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "chat",
     "pos",
     "support",
+    "screenhot",
 ]
 
 MIDDLEWARE = [

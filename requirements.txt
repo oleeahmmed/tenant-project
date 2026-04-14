@@ -11,3 +11,4 @@ sqlparse==0.5.5
 tzdata==2026.1
 pyzk>=0.9
 Pillow>=10.0.0
+imageio-ffmpeg>=0.6.0

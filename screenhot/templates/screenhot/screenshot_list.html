@@ -1,0 +1,207 @@
+{% extends "auth_tenants/base.html" %}
+{% load static %}
+
+{% block title %}Screenhot · Screenshots{% endblock %}
+{% block page_title %}Screenhot · Screenshots{% endblock %}
+
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">Screenshots</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">Upload and view screenshot records from Screenhot API.</p>
+        </div>
+      </div>
+      <form id="screenshotUploadForm" class="inv-list-filter border-b border-border/70 px-4 py-4">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <input type="file" id="screenshotImage" class="inv-list-control" accept="image/*" required>
+          <select id="uploadScreenshotEmployee" class="inv-list-control">
+            <option value="">My account</option>
+          </select>
+          <input type="text" id="relativePath" class="inv-list-control" placeholder="relative_path (optional)">
+          <select id="activityStatus" class="inv-list-control">
+            <option value="active">Active</option>
+            <option value="idle">Idle</option>
+            <option value="away">Away</option>
+          </select>
+          <input type="datetime-local" id="capturedAt" class="inv-list-control">
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+            <i data-lucide="upload" class="h-4 w-4"></i> Upload screenshot
+          </button>
+          <button type="button" id="refreshScreenshots" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent">
+            <i data-lucide="rotate-ccw" class="h-4 w-4"></i> Refresh
+          </button>
+        </div>
+        <p id="screenshotFormMsg" class="mt-3 text-sm text-muted-foreground"></p>
+      </form>
+      <div class="inv-list-filter border-b border-border/70 px-4 py-4">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <select id="filterScreenshotEmployee" class="inv-list-control">
+            <option value="">All employees</option>
+          </select>
+          <input type="date" id="filterScreenshotFrom" class="inv-list-control">
+          <input type="date" id="filterScreenshotTo" class="inv-list-control">
+          <button type="button" id="applyScreenshotFilter" class="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent">
+            <i data-lucide="search" class="h-4 w-4"></i> Apply filter
+          </button>
+        </div>
+      </div>
+      <div class="ui-table-wrap overflow-x-auto border-t border-border/50 bg-card">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-border bg-muted/40">
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preview</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Captured</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Employee</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Relative Path</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="screenshotsTbody" class="divide-y divide-border">
+            <tr><td colspan="6" class="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+{{ block.super }}
+<script>
+(function () {
+  const apiBase = '/api/screenhot';
+  const tbody = document.getElementById('screenshotsTbody');
+  const msg = document.getElementById('screenshotFormMsg');
+  const form = document.getElementById('screenshotUploadForm');
+  const uploadEmployee = document.getElementById('uploadScreenshotEmployee');
+  const filterEmployee = document.getElementById('filterScreenshotEmployee');
+  const filterFrom = document.getElementById('filterScreenshotFrom');
+  const filterTo = document.getElementById('filterScreenshotTo');
+
+  function getCsrf() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (token) return token.value;
+    const m = document.cookie.split(';').map(v => v.trim()).find(v => v.startsWith('csrftoken='));
+    return m ? decodeURIComponent(m.split('=')[1]) : '';
+  }
+
+  function asLocalDate(value) {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return value;
+    return d.toLocaleString();
+  }
+
+  async function loadEmployees() {
+    const res = await fetch(`${apiBase}/employees/`, { credentials: 'same-origin' });
+    if (!res.ok) return;
+    const users = await res.json();
+    const options = users.map(u => `<option value="${u.id}">${u.name} (${u.email})</option>`).join('');
+    filterEmployee.innerHTML = '<option value="">All employees</option>' + options;
+    uploadEmployee.innerHTML = '<option value="">My account</option>' + options;
+  }
+
+  async function loadRows() {
+    tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>';
+    try {
+      const params = new URLSearchParams({ limit: '200' });
+      if (filterEmployee.value) params.set('employee_id', filterEmployee.value);
+      if (filterFrom.value) params.set('date_from', filterFrom.value);
+      if (filterTo.value) params.set('date_to', filterTo.value);
+      const res = await fetch(`${apiBase}/screenshots/?${params.toString()}`, { credentials: 'same-origin' });
+      if (!res.ok) throw new Error('Failed to load screenshots');
+      const rows = await res.json();
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-muted-foreground">No screenshots yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(r => `
+        <tr class="hover:bg-accent/40 transition-colors">
+          <td class="px-4 py-3">
+            ${r.image_url ? `<a href="${r.image_url}" target="_blank" rel="noopener"><img src="${r.image_url}" class="h-10 w-16 rounded border border-border object-cover"></a>` : '-'}
+          </td>
+          <td class="px-4 py-3 text-muted-foreground">${asLocalDate(r.captured_at)}</td>
+          <td class="px-4 py-3 text-muted-foreground">${r.employee ? `${r.employee.name}` : '-'}</td>
+          <td class="px-4 py-3"><span class="rounded-full bg-muted px-2 py-0.5 text-xs">${r.activity_status || '-'}</span></td>
+          <td class="px-4 py-3 text-muted-foreground">${r.relative_path || '-'}</td>
+          <td class="px-4 py-3 text-right">
+            <button data-delete-id="${r.id}" class="inline-flex items-center gap-2 rounded-lg border border-destructive/40 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10">
+              <i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Delete
+            </button>
+          </td>
+        </tr>
+      `).join('');
+      if (window.lucide) window.lucide.createIcons();
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-destructive">${err.message}</td></tr>`;
+    }
+  }
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    msg.textContent = 'Uploading...';
+    msg.className = 'mt-3 text-sm text-muted-foreground';
+
+    const fd = new FormData();
+    const file = document.getElementById('screenshotImage').files[0];
+    if (!file) {
+      msg.textContent = 'Please choose an image file.';
+      msg.className = 'mt-3 text-sm text-destructive';
+      return;
+    }
+    fd.append('image', file);
+    const relativePath = document.getElementById('relativePath').value.trim();
+    if (relativePath) fd.append('relative_path', relativePath);
+    if (uploadEmployee.value) fd.append('user_id', uploadEmployee.value);
+    fd.append('activity_status', document.getElementById('activityStatus').value);
+    const capturedAt = document.getElementById('capturedAt').value;
+    if (capturedAt) fd.append('captured_at', new Date(capturedAt).toISOString());
+
+    try {
+      const res = await fetch(`${apiBase}/screenshots/upload/`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'X-CSRFToken': getCsrf() },
+        body: fd
+      });
+      if (!res.ok) throw new Error('Upload failed');
+      form.reset();
+      msg.textContent = 'Screenshot uploaded successfully.';
+      msg.className = 'mt-3 text-sm text-emerald-600';
+      await loadRows();
+    } catch (err) {
+      msg.textContent = err.message || 'Upload failed';
+      msg.className = 'mt-3 text-sm text-destructive';
+    }
+  });
+
+  tbody.addEventListener('click', async function (e) {
+    const btn = e.target.closest('[data-delete-id]');
+    if (!btn) return;
+    if (!confirm('Delete this screenshot?')) return;
+    try {
+      const res = await fetch(`${apiBase}/screenshots/${btn.dataset.deleteId}/`, {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        headers: { 'X-CSRFToken': getCsrf() }
+      });
+      if (!res.ok) throw new Error('Delete failed');
+      await loadRows();
+    } catch (err) {
+      alert(err.message || 'Delete failed');
+    }
+  });
+
+  document.getElementById('refreshScreenshots').addEventListener('click', loadRows);
+  document.getElementById('applyScreenshotFilter').addEventListener('click', loadRows);
+  Promise.resolve(loadEmployees()).finally(loadRows);
+})();
+</script>
+{% endblock %}

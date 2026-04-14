@@ -1,0 +1,257 @@
+{% extends "auth_tenants/base.html" %}
+
+{% block title %}Screenhot · Video Jobs{% endblock %}
+{% block page_title %}Screenhot · Video Jobs{% endblock %}
+
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">Video jobs</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">Generate videos from tenant screenshots and track job status.</p>
+        </div>
+      </div>
+      <form id="videoGenerateForm" class="inv-list-filter border-b border-border/70 px-4 py-4">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <select id="targetUser" class="inv-list-control" required>
+            <option value="">Select employee</option>
+          </select>
+          <input type="date" id="dateFrom" class="inv-list-control" required>
+          <input type="date" id="dateTo" class="inv-list-control" required>
+          <input type="time" id="timeFrom" class="inv-list-control">
+          <input type="time" id="timeTo" class="inv-list-control">
+        </div>
+        <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <input type="number" id="fps" class="inv-list-control" value="2" min="1" max="60">
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+            <i data-lucide="film" class="h-4 w-4"></i> Generate video
+          </button>
+          <button type="button" id="refreshJobs" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent">
+            <i data-lucide="rotate-ccw" class="h-4 w-4"></i> Refresh
+          </button>
+        </div>
+        <p id="videoMsg" class="mt-3 text-sm text-muted-foreground"></p>
+      </form>
+      <div class="border-b border-border/70 bg-card px-4 py-4">
+        <h3 class="text-sm font-semibold text-foreground">Video player</h3>
+        <p class="text-xs text-muted-foreground mt-1">Select a completed job and play it here.</p>
+        <video id="videoPreviewPlayer" controls class="mt-3 h-64 w-full rounded-xl border border-border bg-black"></video>
+      </div>
+      <div class="inv-list-filter border-b border-border/70 px-4 py-4">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <select id="filterVideoEmployee" class="inv-list-control">
+            <option value="">All employees</option>
+          </select>
+          <input type="date" id="filterVideoFrom" class="inv-list-control">
+          <input type="date" id="filterVideoTo" class="inv-list-control">
+          <button type="button" id="applyVideoFilter" class="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent">
+            <i data-lucide="search" class="h-4 w-4"></i> Apply filter
+          </button>
+        </div>
+      </div>
+      <div class="ui-table-wrap overflow-x-auto border-t border-border/50 bg-card">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-border bg-muted/40">
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Job ID</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Target User</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Range</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Output</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="videoJobsTbody" class="divide-y divide-border">
+            <tr><td colspan="6" class="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+{{ block.super }}
+<script>
+(function () {
+  const apiBase = '/api/screenhot';
+  const tbody = document.getElementById('videoJobsTbody');
+  const msg = document.getElementById('videoMsg');
+  const form = document.getElementById('videoGenerateForm');
+  const targetUserSelect = document.getElementById('targetUser');
+  const filterVideoEmployee = document.getElementById('filterVideoEmployee');
+  const filterVideoFrom = document.getElementById('filterVideoFrom');
+  const filterVideoTo = document.getElementById('filterVideoTo');
+  const player = document.getElementById('videoPreviewPlayer');
+  let pollTimer = null;
+
+  function getCsrf() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (token) return token.value;
+    const m = document.cookie.split(';').map(v => v.trim()).find(v => v.startsWith('csrftoken='));
+    return m ? decodeURIComponent(m.split('=')[1]) : '';
+  }
+
+  function fmt(value) {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return value;
+    return d.toLocaleString();
+  }
+
+  async function loadEmployees() {
+    const res = await fetch(`${apiBase}/employees/`, { credentials: 'same-origin' });
+    if (!res.ok) return [];
+    const users = await res.json();
+    const options = users.map(u => `<option value="${u.id}">${u.name} (${u.email})</option>`).join('');
+    targetUserSelect.innerHTML = '<option value="">Select employee</option>' + options;
+    filterVideoEmployee.innerHTML = '<option value="">All employees</option>' + options;
+    const me = '{{ request.user.id }}';
+    if (me) targetUserSelect.value = me;
+    return users;
+  }
+
+  async function loadJobs() {
+    tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>';
+    try {
+      const params = new URLSearchParams({ limit: '200' });
+      if (filterVideoEmployee.value) params.set('employee_id', filterVideoEmployee.value);
+      if (filterVideoFrom.value) params.set('date_from', filterVideoFrom.value);
+      if (filterVideoTo.value) params.set('date_to', filterVideoTo.value);
+      const res = await fetch(`${apiBase}/video/jobs/?${params.toString()}`, { credentials: 'same-origin' });
+      if (!res.ok) throw new Error('Failed to load video jobs');
+      const rows = await res.json();
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-muted-foreground">No video jobs yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(r => `
+        <tr class="hover:bg-accent/40 transition-colors">
+          <td class="px-4 py-3 font-medium">#${r.id}</td>
+          <td class="px-4 py-3 text-muted-foreground">${r.target_employee ? r.target_employee.name : r.target_user}</td>
+          <td class="px-4 py-3 text-muted-foreground">${r.date_from} → ${r.date_to}</td>
+          <td class="px-4 py-3"><span class="rounded-full bg-muted px-2 py-0.5 text-xs">${r.status}</span></td>
+          <td class="px-4 py-3">
+            ${r.output_url ? `<a class="text-primary underline" href="${r.output_url}" target="_blank" rel="noopener">Download</a>` : '<span class="text-muted-foreground">-</span>'}
+            ${r.error_message ? `<div class="mt-1 text-xs text-destructive">${r.error_message}</div>` : ''}
+          </td>
+          <td class="px-4 py-3 text-right">
+            <button data-play-url="${r.output_url || ''}" data-play-label="Job #${r.id}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent" ${r.output_url ? '' : 'disabled'}>
+              <i data-lucide="play-circle" class="h-3.5 w-3.5"></i> Play
+            </button>
+            <button data-status-id="${r.id}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent">
+              <i data-lucide="refresh-cw" class="h-3.5 w-3.5"></i> Status
+            </button>
+            <button data-delete-id="${r.id}" class="inline-flex items-center gap-2 rounded-lg border border-destructive/40 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10">
+              <i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Delete
+            </button>
+          </td>
+        </tr>
+      `).join('');
+      if (window.lucide) window.lucide.createIcons();
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-destructive">${err.message}</td></tr>`;
+    }
+  }
+
+  async function generateJob(e) {
+    e.preventDefault();
+    msg.textContent = 'Creating job...';
+    msg.className = 'mt-3 text-sm text-muted-foreground';
+    const payload = {
+      target_user: Number(document.getElementById('targetUser').value),
+      date_from: document.getElementById('dateFrom').value,
+      date_to: document.getElementById('dateTo').value,
+      fps: Number(document.getElementById('fps').value || 2)
+    };
+    const tf = document.getElementById('timeFrom').value;
+    const tt = document.getElementById('timeTo').value;
+    if (tf) payload.time_from = tf;
+    if (tt) payload.time_to = tt;
+    try {
+      const res = await fetch(`${apiBase}/video/generate/`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrf()
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || 'Failed to create job');
+      msg.textContent = `Video job #${data.job_id} queued (${data.status}).`;
+      msg.className = 'mt-3 text-sm text-emerald-600';
+      await loadJobs();
+      startPolling();
+    } catch (err) {
+      msg.textContent = err.message || 'Failed';
+      msg.className = 'mt-3 text-sm text-destructive';
+    }
+  }
+
+  function startPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(loadJobs, 15000);
+  }
+
+  tbody.addEventListener('click', async function (e) {
+    const playBtn = e.target.closest('[data-play-url]');
+    if (playBtn) {
+      const playUrl = playBtn.dataset.playUrl;
+      if (!playUrl) return;
+      player.src = playUrl;
+      player.play().catch(() => {});
+      msg.textContent = `${playBtn.dataset.playLabel || 'Job'} এখন player-এ চালু।`;
+      msg.className = 'mt-3 text-sm text-muted-foreground';
+      return;
+    }
+
+    const statusBtn = e.target.closest('[data-status-id]');
+    if (statusBtn) {
+      const id = statusBtn.dataset.statusId;
+      try {
+        const res = await fetch(`${apiBase}/video/status/${id}/`, { credentials: 'same-origin' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error('Failed to fetch status');
+        msg.textContent = `Job #${id}: ${data.status}${data.error_message ? ` (${data.error_message})` : ''}`;
+        msg.className = data.status === 'failed' ? 'mt-3 text-sm text-destructive' : 'mt-3 text-sm text-muted-foreground';
+      } catch (err) {
+        msg.textContent = err.message || 'Failed';
+        msg.className = 'mt-3 text-sm text-destructive';
+      }
+      return;
+    }
+    const deleteBtn = e.target.closest('[data-delete-id]');
+    if (deleteBtn) {
+      if (!confirm('Delete this video job?')) return;
+      try {
+        const res = await fetch(`${apiBase}/video/jobs/${deleteBtn.dataset.deleteId}/`, {
+          method: 'DELETE',
+          credentials: 'same-origin',
+          headers: { 'X-CSRFToken': getCsrf() }
+        });
+        if (!res.ok) throw new Error('Delete failed');
+        await loadJobs();
+      } catch (err) {
+        msg.textContent = err.message || 'Delete failed';
+        msg.className = 'mt-3 text-sm text-destructive';
+      }
+    }
+  });
+
+  document.getElementById('refreshJobs').addEventListener('click', loadJobs);
+  document.getElementById('applyVideoFilter').addEventListener('click', loadJobs);
+  form.addEventListener('submit', generateJob);
+  Promise.resolve(loadEmployees()).finally(function () {
+    loadJobs();
+    startPolling();
+  });
+})();
+</script>
+{% endblock %}

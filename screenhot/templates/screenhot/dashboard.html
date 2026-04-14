@@ -1,0 +1,43 @@
+{% extends "auth_tenants/base.html" %}
+
+{% block title %}Screenhot{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="grid gap-4 md:grid-cols-3">
+    <div class="rounded-xl border border-border bg-card p-4">
+      <p class="text-xs uppercase tracking-wide text-muted-foreground">Screenshots</p>
+      <p class="mt-2 text-2xl font-semibold">{{ stats.screenshots }}</p>
+    </div>
+    <div class="rounded-xl border border-border bg-card p-4">
+      <p class="text-xs uppercase tracking-wide text-muted-foreground">Open attendance</p>
+      <p class="mt-2 text-2xl font-semibold">{{ stats.attendance_open }}</p>
+    </div>
+    <div class="rounded-xl border border-border bg-card p-4">
+      <p class="text-xs uppercase tracking-wide text-muted-foreground">Video jobs</p>
+      <p class="mt-2 text-2xl font-semibold">{{ stats.video_jobs }}</p>
+    </div>
+  </div>
+  <p class="text-sm text-muted-foreground">
+    Use API endpoints under <code>/api/screenhot/</code> for screenshot, attendance, and video generation flows.
+  </p>
+  <div class="grid gap-3 md:grid-cols-4">
+    <a href="{% url 'screenhot:live_monitor_page' %}" class="rounded-xl border border-border bg-card p-4 hover:bg-accent/40">
+      <p class="font-semibold">Live monitor</p>
+      <p class="mt-1 text-xs text-muted-foreground">Realtime employee screenshot status board.</p>
+    </a>
+    <a href="{% url 'screenhot:screenshot_list_page' %}" class="rounded-xl border border-border bg-card p-4 hover:bg-accent/40">
+      <p class="font-semibold">Screenshot CRUD</p>
+      <p class="mt-1 text-xs text-muted-foreground">Upload, list, delete screenshot records.</p>
+    </a>
+    <a href="{% url 'screenhot:attendance_list_page' %}" class="rounded-xl border border-border bg-card p-4 hover:bg-accent/40">
+      <p class="font-semibold">Attendance CRUD</p>
+      <p class="mt-1 text-xs text-muted-foreground">Check-in/out, activity updates, list, delete records.</p>
+    </a>
+    <a href="{% url 'screenhot:video_job_list_page' %}" class="rounded-xl border border-border bg-card p-4 hover:bg-accent/40">
+      <p class="font-semibold">Video Jobs CRUD</p>
+      <p class="mt-1 text-xs text-muted-foreground">Create jobs, poll status, download, delete.</p>
+    </a>
+  </div>
+</div>
+{% endblock %}

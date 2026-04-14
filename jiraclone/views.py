@@ -9,11 +9,32 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
+from foundation.models import Customer
 from hrm.tenant_scope import get_hrm_tenant
 
-from .forms import IssueCommentForm, IssueForm, ProjectForm, ProjectTeamForm
+from .forms import (
+    IssueCommentForm,
+    IssueForm,
+    ProjectDepartmentAssignmentForm,
+    ProjectForm,
+    ProjectTeamForm,
+)
 from .mixins import JiraCloneAdminMixin, JiraCloneDashboardAccessMixin, JiraClonePageContextMixin
-from .models import Issue, JiraProject, ProjectTeam
+from .models import Issue, JiraProject, ProjectDepartmentAssignment, ProjectTeam
+
+
+def build_project_onboarding_progress(project):
+    assignments = list(project.department_assignments.prefetch_related("employees").all())
+    department_total = len(assignments)
+    department_with_employees = sum(1 for row in assignments if row.employees.exists())
+    employee_total = sum(row.employees.count() for row in assignments)
+    percent = int((department_with_employees / department_total) * 100) if department_total else 0
+    return {
+        "department_total": department_total,
+        "department_with_employees": department_with_employees,
+        "employee_total": employee_total,
+        "percent": percent,
+    }
 
 
 def ensure_request_tenant(request):
@@ -71,6 +92,55 @@ class ProjectListView(JiraCloneDashboardAccessMixin, JiraClonePageContextMixin, 
         return JiraProject.objects.filter(tenant=self.request.hrm_tenant).order_by("key")
 
 
+class CustomerOnboardListView(JiraCloneDashboardAccessMixin, JiraClonePageContextMixin, TemplateView):
+    template_name = "jiraclone/customer_onboard_list.html"
+    page_title = "Customer onboarding"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        tenant = self.request.hrm_tenant
+        q = (self.request.GET.get("q") or "").strip()
+        show_all = (self.request.GET.get("show_all") or "").strip() == "1"
+        customers = Customer.objects.filter(tenant=tenant, is_active=True)
+        if q:
+            customers = customers.filter(
+                Q(name__icontains=q) | Q(customer_code__icontains=q) | Q(email__icontains=q)
+            )
+        elif not show_all:
+            customers = customers.none()
+        customers = customers.order_by("name")
+        ctx["customers"] = customers
+        ctx["selected"] = {"q": q, "show_all": show_all}
+        return ctx
+
+
+class CustomerOnboardDetailView(JiraCloneDashboardAccessMixin, JiraClonePageContextMixin, DetailView):
+    template_name = "jiraclone/customer_onboard_detail.html"
+    context_object_name = "customer"
+    page_title = "Customer details"
+
+    def get_queryset(self):
+        return Customer.objects.filter(tenant=self.request.hrm_tenant, is_active=True)
+
+    def get_object(self, queryset=None):
+        qs = self.get_queryset() if queryset is None else queryset
+        return get_object_or_404(qs, pk=self.kwargs["customer_id"])
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        customer = self.object
+        projects = list(
+            JiraProject.objects.filter(
+            tenant=self.request.hrm_tenant, customer=customer
+            ).order_by("key")
+        )
+        project_rows = []
+        for project in projects:
+            project_rows.append({"project": project, "progress": build_project_onboarding_progress(project)})
+        ctx["project_rows"] = project_rows
+        return ctx
+
+
 class ProjectCreateView(JiraCloneAdminMixin, JiraClonePageContextMixin, CreateView):
     model = JiraProject
     form_class = ProjectForm
@@ -86,9 +156,31 @@ class ProjectCreateView(JiraCloneAdminMixin, JiraClonePageContextMixin, CreateVi
     def form_valid(self, form):
         self.object = form.save(commit=False)
         self.object.tenant = self.request.hrm_tenant
+        customer_id = (self.request.GET.get("customer_id") or "").strip()
+        if customer_id.isdigit():
+            customer = Customer.objects.filter(
+                tenant=self.request.hrm_tenant,
+                pk=int(customer_id),
+                is_active=True,
+            ).first()
+            if customer and not self.object.customer_id:
+                self.object.customer = customer
         self.object.save()
         messages.success(self.request, f"Project {self.object.key} created.")
         return redirect("jiraclone:project_detail", project_key=self.object.key)
+
+    def get_initial(self):
+        initial = super().get_initial()
+        customer_id = (self.request.GET.get("customer_id") or "").strip()
+        if customer_id.isdigit():
+            customer = Customer.objects.filter(
+                tenant=self.request.hrm_tenant,
+                pk=int(customer_id),
+                is_active=True,
+            ).first()
+            if customer:
+                initial["customer"] = customer.pk
+        return initial
 
 
 class ProjectUpdateView(JiraCloneAdminMixin, JiraClonePageContextMixin, ProjectByKeyMixin, UpdateView):
@@ -145,6 +237,10 @@ class ProjectDetailView(
         if assignee_id.isdigit():
             qs = qs.filter(assignees__id=int(assignee_id)).distinct()
         ctx["issues"] = qs.order_by("-number")
+        ctx["department_assignments"] = project.department_assignments.select_related("department").prefetch_related(
+            "employees"
+        )
+        ctx["onboarding_progress"] = build_project_onboarding_progress(project)
         ctx["statuses_filter"] = project.issue_statuses.order_by("order")
         from auth_tenants.models import User
 
@@ -476,6 +572,112 @@ class ProjectTeamDeleteView(JiraCloneAdminMixin, JiraClonePageContextMixin, Dele
 
     def get_success_url(self):
         return reverse_lazy("jiraclone:project_teams", kwargs={"project_key": self.object.project.key})
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["project"] = self.object.project
+        return ctx
+
+
+class ProjectDepartmentListView(
+    JiraCloneAdminMixin, JiraClonePageContextMixin, ProjectByKeyMixin, DetailView
+):
+    model = JiraProject
+    template_name = "jiraclone/department_list.html"
+    context_object_name = "project"
+    page_title = "Departments"
+
+    def get_queryset(self):
+        return JiraProject.objects.filter(tenant=self.request.hrm_tenant)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["assignments"] = self.object.department_assignments.select_related("department").prefetch_related(
+            "employees"
+        )
+        ctx["onboarding_progress"] = build_project_onboarding_progress(self.object)
+        return ctx
+
+
+class ProjectDepartmentCreateView(JiraCloneAdminMixin, JiraClonePageContextMixin, CreateView):
+    model = ProjectDepartmentAssignment
+    form_class = ProjectDepartmentAssignmentForm
+    template_name = "jiraclone/department_form.html"
+    page_title = "Add department"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.jira_project = get_project_or_404(request, kwargs["project_key"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["project"] = self.jira_project
+        return kwargs
+
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.project = self.jira_project
+        self.object.save()
+        form.save_m2m()
+        messages.success(self.request, "Department assignment saved.")
+        return redirect("jiraclone:project_departments", project_key=self.jira_project.key)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["project"] = self.jira_project
+        return ctx
+
+
+class ProjectDepartmentUpdateView(JiraCloneAdminMixin, JiraClonePageContextMixin, UpdateView):
+    model = ProjectDepartmentAssignment
+    form_class = ProjectDepartmentAssignmentForm
+    template_name = "jiraclone/department_form.html"
+    context_object_name = "assignment"
+    page_title = "Edit department"
+    pk_url_kwarg = "pk"
+
+    def get_queryset(self):
+        return ProjectDepartmentAssignment.objects.filter(project__tenant=self.request.hrm_tenant)
+
+    def get_object(self, queryset=None):
+        qs = self.get_queryset() if queryset is None else queryset
+        key = (self.kwargs.get("project_key") or "").strip().upper()
+        return get_object_or_404(qs, pk=self.kwargs["pk"], project__key=key)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["project"] = self.object.project
+        return kwargs
+
+    def form_valid(self, form):
+        messages.success(self.request, "Department assignment updated.")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("jiraclone:project_departments", kwargs={"project_key": self.object.project.key})
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["project"] = self.object.project
+        return ctx
+
+
+class ProjectDepartmentDeleteView(JiraCloneAdminMixin, JiraClonePageContextMixin, DeleteView):
+    model = ProjectDepartmentAssignment
+    template_name = "jiraclone/department_confirm_delete.html"
+    context_object_name = "assignment"
+    page_title = "Delete department"
+
+    def get_queryset(self):
+        return ProjectDepartmentAssignment.objects.filter(project__tenant=self.request.hrm_tenant)
+
+    def get_object(self, queryset=None):
+        qs = self.get_queryset() if queryset is None else queryset
+        key = (self.kwargs.get("project_key") or "").strip().upper()
+        return get_object_or_404(qs, pk=self.kwargs["pk"], project__key=key)
+
+    def get_success_url(self):
+        return reverse_lazy("jiraclone:project_departments", kwargs={"project_key": self.object.project.key})
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)

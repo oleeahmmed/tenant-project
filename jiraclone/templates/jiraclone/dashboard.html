@@ -15,6 +15,7 @@
           <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
             <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
           </a>
+          <a href="{% url 'jiraclone:customer_onboard_list' %}" class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Customers</a>
           <a href="{% url 'jiraclone:project_list' %}" class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Projects</a>
           <a href="{% url 'jiraclone:project_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
             <i data-lucide="plus" class="h-4 w-4"></i> Create
@@ -34,6 +35,7 @@
           <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quick links</p>
           <ul class="mt-2 space-y-1.5 text-sm">
             <li><a href="{% url 'jiraclone:project_list' %}" class="text-primary hover:underline">Browse projects</a></li>
+            <li><a href="{% url 'jiraclone:customer_onboard_list' %}" class="text-primary hover:underline">Customer onboarding</a></li>
             <li><a href="{% url 'foundation:foundation_dashboard' %}" class="text-muted-foreground hover:text-foreground">Foundation setup</a></li>
           </ul>
         </div>

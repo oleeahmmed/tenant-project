@@ -25,6 +25,13 @@ class JiraProject(TenantScopedModel):
     key = models.CharField(max_length=10, help_text="Short key shown as PROJ-123, e.g. ACME")
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
+    customer = models.ForeignKey(
+        "foundation.Customer",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="jira_projects",
+    )
     lead = models.ForeignKey(
         User,
         null=True,
@@ -46,6 +53,34 @@ class JiraProject(TenantScopedModel):
 
     def __str__(self):
         return f"{self.key} — {self.name}"
+
+
+class ProjectDepartmentAssignment(models.Model):
+    """Department mapping for onboarding execution inside a project."""
+
+    project = models.ForeignKey(
+        JiraProject,
+        on_delete=models.CASCADE,
+        related_name="department_assignments",
+    )
+    department = models.ForeignKey(
+        "hrm.Department",
+        on_delete=models.CASCADE,
+        related_name="jira_project_assignments",
+    )
+    employees = models.ManyToManyField(
+        "hrm.Employee",
+        blank=True,
+        related_name="jira_department_assignments",
+    )
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+        unique_together = [("project", "department")]
+
+    def __str__(self):
+        return f"{self.project.key}: {self.department.name}"
 
 
 class ProjectTeam(models.Model):

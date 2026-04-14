@@ -23,6 +23,7 @@ WORKSPACE_MODULE_CODES = (
     "hrm",
     "chat",
     "support",
+    "screenhot",
 )
 
 
@@ -36,9 +37,8 @@ def user_can_see_module_in_nav(user, tenant, module_code: str) -> bool:
         return False
 
     if getattr(user, "role", None) == "super_admin":
-        if tenant is None:
-            return False
-        return tenant.is_module_enabled(code)
+        # Super admin must always see all workspace menus, independent of tenant module toggles.
+        return True
 
     if tenant is None:
         return False

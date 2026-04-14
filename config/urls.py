@@ -20,11 +20,13 @@ urlpatterns = [
     path('dashboard/chat/', include(('chat.urls', 'chat'), namespace='chat')),
     path('dashboard/pos/', include(('pos.urls', 'pos'), namespace='pos')),
     path('dashboard/support/', include(('support.urls', 'support'), namespace='support')),
+    path('dashboard/screenhot/', include(('screenhot.urls', 'screenhot'), namespace='screenhot')),
     path('api/hrm/', include('hrm.api.urls')),
     path('api/auth/', include('auth_tenants.api.urls')),
     path('api/foundation/', include(('foundation.api.urls', 'foundation_api'), namespace='foundation_api')),
     path('api/inventory/', include(('inventory.api.urls', 'inventory_api'), namespace='inventory_api')),
     path('api/jiraclone/', include(('jiraclone.api_urls', 'jiraclone_api'), namespace='jiraclone_api')),
+    path('api/screenhot/', include(('screenhot.api.urls', 'screenhot_api'), namespace='screenhot_api')),
 ]
 
 # Media: django.conf.urls.static.static only adds routes when DEBUG=True.

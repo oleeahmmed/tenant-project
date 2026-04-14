@@ -71,6 +71,7 @@
   function closeDrawer() {
     if (!drawer) return;
     drawer.classList.add("hidden");
+    drawer.classList.remove("flex");
     drawer.setAttribute("aria-hidden", "true");
     if (drawerBackdrop) drawerBackdrop.classList.add("hidden");
     document.body.classList.remove("overflow-hidden");
@@ -79,6 +80,7 @@
   function openDrawer() {
     if (!drawer) return;
     drawer.classList.remove("hidden");
+    drawer.classList.add("flex");
     drawer.setAttribute("aria-hidden", "false");
     if (drawerBackdrop) drawerBackdrop.classList.remove("hidden");
     document.body.classList.add("overflow-hidden");

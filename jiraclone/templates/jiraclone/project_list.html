@@ -4,15 +4,14 @@
 {% block content %}
 <div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
   <div class="inv-list-shell sm:p-1.5">
-    <div class="inv-list-card overflow-hidden rounded-xl border border-border bg-card shadow-card">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-muted/20 px-5 py-4">
+    <div class="inv-list-card">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
         <div>
-          <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Directory</p>
-          <h2 class="text-xl font-bold text-foreground mt-0.5">Projects</h2>
-          <p class="text-sm text-muted-foreground mt-1">Each project has its own issue types and workflow.</p>
+          <h2 class="text-xl font-bold text-foreground">Projects</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">Each project has its own issue types and workflow.</p>
         </div>
-        <div class="inline-flex flex-wrap items-center gap-1 rounded-xl border border-border bg-muted/30 p-1 shadow-sm ring-1 ring-black/[0.03]">
-          <a href="{% url 'jiraclone:jira_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+        <div class="flex flex-wrap gap-2">
+          <a href="{% url 'jiraclone:jira_dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
             <i data-lucide="arrow-left" class="h-4 w-4"></i> Overview
           </a>
           <a href="{% url 'jiraclone:project_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
@@ -20,12 +19,13 @@
           </a>
         </div>
       </div>
-      <div class="ui-table-wrap overflow-x-auto border-t border-border/50 bg-muted/5">
+      <div class="ui-table-wrap overflow-x-auto border-t border-border/50 bg-card">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-border bg-muted/40">
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Key</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Name</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer</th>
               <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Lead</th>
               <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
             </tr>
@@ -35,6 +35,7 @@
             <tr class="hover:bg-accent/40">
               <td class="px-4 py-3 font-mono font-medium">{{ p.key }}</td>
               <td class="px-4 py-3">{{ p.name }}</td>
+              <td class="px-4 py-3 text-muted-foreground">{% if p.customer %}{{ p.customer.name }}{% else %}—{% endif %}</td>
               <td class="px-4 py-3 text-muted-foreground">{% if p.lead %}{{ p.lead.name }}{% else %}—{% endif %}</td>
               <td class="px-4 py-3 text-right whitespace-nowrap">
                 <a href="{% url 'jiraclone:project_detail' project_key=p.key %}" class="rounded-lg border border-border px-2 py-1 text-xs hover:bg-accent">Issues</a>
@@ -43,7 +44,7 @@
               </td>
             </tr>
             {% empty %}
-            <tr><td colspan="4" class="px-4 py-10 text-center text-muted-foreground">No projects yet. Create one to get started.</td></tr>
+            <tr><td colspan="5" class="px-4 py-10 text-center text-muted-foreground">No projects yet. Create one to get started.</td></tr>
             {% endfor %}
           </tbody>
         </table>

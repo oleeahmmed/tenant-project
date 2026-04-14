@@ -2,15 +2,16 @@
 {% block title %}{{ issue.issue_key }}{% endblock %}
 {% block page_title %}Jira clone · {{ issue.issue_key }}{% endblock %}
 {% block content %}
-<div class="inv-list-shell sm:p-1.5">
-  <div class="mx-auto max-w-4xl space-y-4">
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+  <div class="mx-auto max-w-6xl space-y-4">
     <nav class="text-sm text-muted-foreground px-1 md:px-0">
       <a href="{% url 'jiraclone:project_detail' project_key=issue.project.key %}" class="hover:text-foreground">{{ issue.project.key }}</a>
       <span class="mx-1">/</span>
       <span class="text-foreground font-medium">{{ issue.issue_key }}</span>
     </nav>
 
-    <div class="simple-card overflow-hidden rounded-xl border border-border bg-card shadow-card">
+    <div class="inv-list-card overflow-hidden">
       <div class="border-b border-border bg-muted/20 px-5 py-4 flex flex-wrap items-start justify-between gap-3">
         <div class="min-w-0">
           <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Issue</p>
@@ -31,8 +32,8 @@
         </div>
       </div>
 
-      <div class="grid gap-6 border-t border-border/50 bg-card p-5 md:grid-cols-3">
-        <div class="md:col-span-2 space-y-5">
+      <div class="grid gap-6 border-t border-border/50 bg-card p-5 xl:grid-cols-12">
+        <div class="space-y-5 xl:col-span-8">
           <div>
             <h2 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Description</h2>
             <div class="mt-2 max-w-none text-sm text-muted-foreground whitespace-pre-wrap">{{ issue.description|default:"—" }}</div>
@@ -41,9 +42,9 @@
           {% if subtasks %}
           <div>
             <h2 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Subtasks</h2>
-            <ul class="mt-2 space-y-1 text-sm">
+            <ul class="mt-2 space-y-2 text-sm">
               {% for st in subtasks %}
-              <li class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <li class="flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-lg border border-border/70 bg-muted/10 px-3 py-2">
                 <a href="{% url 'jiraclone:issue_detail' project_key=issue.project.key pk=st.pk %}" class="font-mono text-xs text-primary hover:underline">{{ st.issue_key }}</a>
                 <span>{{ st.summary }}</span>
                 {% if st.assignees.all %}
@@ -76,7 +77,7 @@
           </div>
         </div>
 
-        <div class="space-y-3 text-sm">
+        <div class="space-y-3 text-sm xl:col-span-4 xl:sticky xl:top-4 self-start">
           <div class="rounded-xl border border-border/80 bg-muted/10 p-4 shadow-sm">
             <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Assignees</p>
             {% if issue.assignees.exists %}
@@ -115,6 +116,7 @@
         </div>
       </div>
     </div>
+  </div>
   </div>
 </div>
 {% endblock %}

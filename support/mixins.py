@@ -32,6 +32,19 @@ class SupportDashboardAccessMixin(FoundationDashboardAccessMixin):
             return redirect("dashboard")
         return response
 
+    def test_func(self):
+        if not super().test_func():
+            return False
+        u = self.request.user
+        if u.role == "super_admin":
+            return True
+        t = getattr(self.request, "hrm_tenant", None)
+        if t is None:
+            return False
+        if u.role in ("staff", "tenant_admin") and not u.has_tenant_permission("support.view"):
+            return False
+        return True
+
 
 class SupportPageContextMixin:
     active_page = "support"

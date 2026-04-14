@@ -23,8 +23,8 @@ class Permission(models.Model):
         ("pos", "POS"),
         ("hrm", "HRM"),
         ("recruitment", "Recruitment"),
-        ("payroll", "Payroll"),
         ("support", "Support"),
+        ("screenhot", "Screenhot"),
         ("auth_tenants", "Tenant Auth"),
         ("system", "System"),
     ]
@@ -83,8 +83,8 @@ class TenantModuleSubscription(models.Model):
         JIRACLONE = "jiraclone", "Jira clone"
         CHAT = "chat", "Chat"
         POS = "pos", "POS"
-        PAYROLL = "payroll", "Payroll"
         SUPPORT = "support", "Support"
+        SCREENHOT = "screenhot", "Screenhot"
 
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="module_subscriptions")
     module_code = models.CharField(max_length=50, choices=ModuleCode.choices)

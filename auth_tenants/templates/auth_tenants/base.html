@@ -612,8 +612,10 @@
               <li><a href="{% url 'purchase:purchase_order_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'purchase_order' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Purchase orders</a></li>
               <li><a href="{% url 'purchase:goods_receipt_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'goods_receipt' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Goods receipts</a></li>
               <li><a href="{% url 'purchase:purchase_return_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'purchase_return' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Purchase returns</a></li>
+              {% if wnav.finance %}
               <li><a href="{% url 'finance:ap_invoice_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'finance' and request.resolver_match.url_name == 'ap_invoice_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">AP bills</a></li>
               <li><a href="{% url 'finance:ap_payment_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'finance' and request.resolver_match.url_name == 'ap_payment_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">AP payments</a></li>
+              {% endif %}
             </ul>
           </li>
           {% endif %}
@@ -632,8 +634,10 @@
               <li><a href="{% url 'sales:order_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'sales' and 'order' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Sales orders</a></li>
               <li><a href="{% url 'sales:delivery_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'delivery' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Delivery notes</a></li>
               <li><a href="{% url 'sales:return_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'sales' and 'return' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Sales returns</a></li>
+              {% if wnav.finance %}
               <li><a href="{% url 'finance:ar_invoice_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'finance' and request.resolver_match.url_name == 'ar_invoice_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">AR invoices</a></li>
               <li><a href="{% url 'finance:ar_receipt_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'finance' and request.resolver_match.url_name == 'ar_receipt_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">AR receipts</a></li>
+              {% endif %}
             </ul>
           </li>
           {% endif %}
@@ -686,6 +690,7 @@
             </button>
             <ul id="sub-jiraclone" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'jiraclone' %}hidden{% endif %}">
               <li><a href="{% url 'jiraclone:jira_dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'jira_dashboard' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a></li>
+              <li><a href="{% url 'jiraclone:customer_onboard_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'customer_onboard_list' or request.resolver_match and request.resolver_match.url_name == 'customer_onboard_detail' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Customers</a></li>
               <li><a href="{% url 'jiraclone:project_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'project_list' or request.resolver_match and request.resolver_match.url_name == 'project_create' or request.resolver_match and request.resolver_match.url_name == 'project_edit' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Projects</a></li>
             </ul>
           </li>
@@ -702,6 +707,24 @@
             <ul id="sub-support" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'support' %}hidden{% endif %}">
               <li><a href="{% url 'support:ticket_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'support' and request.resolver_match.url_name == 'ticket_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Tickets</a></li>
               <li><a href="{% url 'support:ticket_create' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'support' and request.resolver_match.url_name == 'ticket_create' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">New ticket</a></li>
+            </ul>
+          </li>
+          {% endif %}
+          {% if wnav.screenhot %}
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if request.resolver_match and request.resolver_match.namespace == 'screenhot' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-screenhot">
+              <i data-lucide="camera" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                Screenhot
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-screenhot" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'screenhot' %}hidden{% endif %}">
+              <li><a href="{% url 'screenhot:dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'screenhot' and request.resolver_match.url_name == 'dashboard' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a></li>
+              <li><a href="{% url 'screenhot:live_monitor_page' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'screenhot' and request.resolver_match.url_name == 'live_monitor_page' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Live monitor</a></li>
+              <li><a href="{% url 'screenhot:screenshot_list_page' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'screenhot' and request.resolver_match.url_name == 'screenshot_list_page' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Screenshots</a></li>
+              <li><a href="{% url 'screenhot:attendance_list_page' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'screenhot' and request.resolver_match.url_name == 'attendance_list_page' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Attendance</a></li>
+              <li><a href="{% url 'screenhot:video_job_list_page' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'screenhot' and request.resolver_match.url_name == 'video_job_list_page' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Video jobs</a></li>
             </ul>
           </li>
           {% endif %}
