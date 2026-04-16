@@ -161,7 +161,7 @@ class DeliveryNote(SalesTimestampedModel):
     def clean(self):
         if self.order_id and self.customer_id and self.order.customer_id != self.customer_id:
             raise ValidationError({"customer": "Customer must match selected sales order."})
-        if self.order_id and self.order.tenant_id != self.tenant_id:
+        if self.tenant_id and self.order_id and self.order.tenant_id != self.tenant_id:
             raise ValidationError({"order": "Sales order must belong to same tenant."})
 
 
@@ -217,7 +217,7 @@ class SalesReturn(SalesTimestampedModel):
         self.total_amount = sum((l.line_total for l in self.lines.all()), Decimal("0"))
 
     def clean(self):
-        if self.delivery_id and self.delivery.tenant_id != self.tenant_id:
+        if self.tenant_id and self.delivery_id and self.delivery.tenant_id != self.tenant_id:
             raise ValidationError({"delivery": "Delivery note must belong to same tenant."})
         if self.delivery_id and self.customer_id and self.delivery.customer_id != self.customer_id:
             raise ValidationError({"customer": "Customer must match selected delivery note."})

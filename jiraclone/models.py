@@ -73,6 +73,12 @@ class ProjectDepartmentAssignment(models.Model):
         blank=True,
         related_name="jira_department_assignments",
     )
+    users = models.ManyToManyField(
+        User,
+        blank=True,
+        related_name="jira_department_assignments",
+        help_text="Tenant users directly assigned under this project department.",
+    )
     order = models.PositiveSmallIntegerField(default=0)
 
     class Meta:

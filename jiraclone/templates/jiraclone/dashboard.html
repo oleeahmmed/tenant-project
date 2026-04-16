@@ -45,7 +45,7 @@
         <h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Your projects</h3>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {% for p in projects %}
-          <a href="{% url 'jiraclone:project_detail' project_key=p.key %}" class="rounded-xl border border-border bg-card px-4 py-3 shadow-sm transition hover:border-primary/30 hover:bg-accent/30">
+          <a href="{% url 'jiraclone:project_board' project_key=p.key %}" class="rounded-xl border border-border bg-card px-4 py-3 shadow-sm transition hover:border-primary/30 hover:bg-accent/30">
             <p class="font-mono text-xs text-muted-foreground">{{ p.key }}</p>
             <p class="font-semibold text-foreground">{{ p.name }}</p>
           </a>

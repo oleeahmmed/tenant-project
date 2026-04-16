@@ -42,7 +42,7 @@ class BillOfMaterial(ProductionTimestampedModel):
         self.total_component_cost = sum((l.line_total for l in self.lines.all()), Decimal("0"))
 
     def clean(self):
-        if self.product_id and self.product.tenant_id != self.tenant_id:
+        if self.tenant_id and self.product_id and self.product.tenant_id != self.tenant_id:
             raise ValidationError({"product": "Product must belong to same tenant."})
 
 
@@ -102,11 +102,11 @@ class ProductionOrder(ProductionTimestampedModel):
     def clean(self):
         if self.planned_quantity <= 0:
             raise ValidationError({"planned_quantity": "Planned quantity must be greater than zero."})
-        if self.product_id and self.product.tenant_id != self.tenant_id:
+        if self.tenant_id and self.product_id and self.product.tenant_id != self.tenant_id:
             raise ValidationError({"product": "Product must belong to same tenant."})
-        if self.warehouse_id and self.warehouse.tenant_id != self.tenant_id:
+        if self.tenant_id and self.warehouse_id and self.warehouse.tenant_id != self.tenant_id:
             raise ValidationError({"warehouse": "Warehouse must belong to same tenant."})
-        if self.bom_id:
+        if self.tenant_id and self.bom_id:
             if self.bom.tenant_id != self.tenant_id:
                 raise ValidationError({"bom": "BOM must belong to same tenant."})
             if self.product_id and self.bom.product_id != self.product_id:
@@ -163,9 +163,9 @@ class IssueForProduction(ProductionTimestampedModel):
         self.total_amount = sum((l.line_total for l in self.lines.all()), Decimal("0"))
 
     def clean(self):
-        if self.production_order_id and self.production_order.tenant_id != self.tenant_id:
+        if self.tenant_id and self.production_order_id and self.production_order.tenant_id != self.tenant_id:
             raise ValidationError({"production_order": "Production order must belong to same tenant."})
-        if self.warehouse_id and self.warehouse.tenant_id != self.tenant_id:
+        if self.tenant_id and self.warehouse_id and self.warehouse.tenant_id != self.tenant_id:
             raise ValidationError({"warehouse": "Warehouse must belong to same tenant."})
 
 
@@ -222,9 +222,9 @@ class ReceiptFromProduction(ProductionTimestampedModel):
             raise ValidationError({"quantity_received": "Receipt quantity must be greater than zero."})
         if self.unit_cost < 0:
             raise ValidationError({"unit_cost": "Unit cost cannot be negative."})
-        if self.production_order_id and self.production_order.tenant_id != self.tenant_id:
+        if self.tenant_id and self.production_order_id and self.production_order.tenant_id != self.tenant_id:
             raise ValidationError({"production_order": "Production order must belong to same tenant."})
-        if self.warehouse_id and self.warehouse.tenant_id != self.tenant_id:
+        if self.tenant_id and self.warehouse_id and self.warehouse.tenant_id != self.tenant_id:
             raise ValidationError({"warehouse": "Warehouse must belong to same tenant."})
         self.total_amount = (self.quantity_received or Decimal("0")) * (self.unit_cost or Decimal("0"))
 

@@ -1,4 +1,4 @@
-"""Who can be assigned to issues in a project (union of all project teams)."""
+"""Who can be assigned to issues in a project (tenant users from department mappings)."""
 
 from django.contrib.auth import get_user_model
 
@@ -7,22 +7,16 @@ User = get_user_model()
 
 def assignable_users_for_project(project):
     """
-    If the project has no teams, all tenant users are assignable (backward compatible).
-    If teams exist, only users who belong to at least one team are assignable.
+    Assignment source is project department user mappings only.
+    If no users are mapped in departments, return no users.
     """
     tenant = project.tenant
     base = User.objects.filter(tenant=tenant, is_active=True).order_by("name")
-    teams = list(project.teams.all())
-    department_links = list(project.department_assignments.prefetch_related("employees__user"))
-    if not teams and not department_links:
-        return base
+    department_links = list(project.department_assignments.prefetch_related("users"))
     ids = set()
-    for team in teams:
-        ids.update(team.members.values_list("pk", flat=True))
     for link in department_links:
-        for emp in link.employees.all():
-            if emp.user_id:
-                ids.add(emp.user_id)
+        for user in link.users.all():
+            ids.add(user.id)
     if not ids:
         return User.objects.none()
     return base.filter(pk__in=ids)

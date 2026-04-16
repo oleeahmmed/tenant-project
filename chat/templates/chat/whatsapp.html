@@ -198,12 +198,24 @@
               {% if m.message_type == 'text' %}
                 <div class="text-sm text-foreground whitespace-pre-wrap break-words">{{ m.body }}</div>
               {% elif m.message_type == 'image' and m.image %}
+                {% if m.image_exists %}
                 <a href="{{ m.image.url }}" target="_blank" rel="noopener"><img class="max-h-64 max-w-[min(100%,280px)] rounded-md" src="{{ m.image.url }}" alt="" /></a>
+                {% else %}
+                <p class="text-xs text-destructive">Image file missing on server.</p>
+                {% endif %}
                 {% if m.body %}<p class="mt-1 text-sm text-foreground">{{ m.body }}</p>{% endif %}
               {% elif m.message_type == 'file' and m.file %}
+                {% if m.file_exists %}
                 <a class="text-sm text-primary underline break-all" href="{{ m.file.url }}" target="_blank" rel="noopener">{{ m.file_display_name|default:m.file.name }}</a>
+                {% else %}
+                <p class="text-xs text-destructive">File missing on server.</p>
+                {% endif %}
               {% elif m.message_type == 'voice' and m.voice %}
+                {% if m.voice_exists %}
                 <audio class="h-9 max-w-[260px]" controls src="{{ m.voice.url }}"></audio>
+                {% else %}
+                <p class="text-xs text-destructive">Voice file missing on server.</p>
+                {% endif %}
               {% else %}
                 <div class="text-sm text-foreground">{{ m.body }}</div>
               {% endif %}

@@ -38,8 +38,7 @@
               <td class="px-4 py-3 text-muted-foreground">{% if p.customer %}{{ p.customer.name }}{% else %}—{% endif %}</td>
               <td class="px-4 py-3 text-muted-foreground">{% if p.lead %}{{ p.lead.name }}{% else %}—{% endif %}</td>
               <td class="px-4 py-3 text-right whitespace-nowrap">
-                <a href="{% url 'jiraclone:project_detail' project_key=p.key %}" class="rounded-lg border border-border px-2 py-1 text-xs hover:bg-accent">Issues</a>
-                <a href="{% url 'jiraclone:project_board' project_key=p.key %}" class="rounded-lg border border-border px-2 py-1 text-xs hover:bg-accent">Board</a>
+                <a href="{% url 'jiraclone:project_board' project_key=p.key %}" class="rounded-lg border border-border px-2 py-1 text-xs hover:bg-accent">Single board</a>
                 <a href="{% url 'jiraclone:project_edit' project_key=p.key %}" class="rounded-lg border border-border px-2 py-1 text-xs hover:bg-accent">Edit</a>
               </td>
             </tr>

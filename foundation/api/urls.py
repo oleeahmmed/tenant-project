@@ -5,6 +5,7 @@ from . import views
 app_name = "foundation_api"
 
 urlpatterns = [
+    path("customers/", views.CustomerListView.as_view(), name="customers"),
     path("autocomplete/products/", views.ProductAutocompleteView.as_view(), name="autocomplete_products"),
     path("autocomplete/warehouses/", views.WarehouseAutocompleteView.as_view(), name="autocomplete_warehouses"),
     path("autocomplete/categories/", views.CategoryAutocompleteView.as_view(), name="autocomplete_categories"),

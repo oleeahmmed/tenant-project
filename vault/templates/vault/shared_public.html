@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shared credential · {{ entry.name }}</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.45; color: #111; max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; background: #fafafa; }
+    .card { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 20px 20px 8px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    h1 { font-size: 1.25rem; margin: 0 0 4px; }
+    .muted { color: #666; font-size: 0.875rem; margin-bottom: 16px; }
+    .row { margin-bottom: 14px; font-size: 0.9375rem; }
+    .row label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: #666; margin-bottom: 4px; }
+    .row .val { word-break: break-all; }
+    code.pw { display: block; background: #f4f4f5; padding: 8px 10px; border-radius: 6px; font-size: 0.875rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #eee; }
+    button { font: inherit; cursor: pointer; border: 1px solid #ccc; background: #fff; padding: 8px 14px; border-radius: 6px; }
+    button.primary { background: #111; color: #fff; border-color: #111; }
+    .warn { font-size: 0.8125rem; color: #b45309; background: #fffbeb; border: 1px solid #fcd34d; padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; }
+    footer { margin-top: 24px; font-size: 0.75rem; color: #888; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>{{ entry.name }}</h1>
+    <p class="muted">{% if tenant_name %}{{ tenant_name }} · {% endif %}Shared · {{ permission_display }}</p>
+    {% if share_permission == "edit" %}
+    <p class="warn">You have <strong>edit</strong> access on record, but this public page is <strong>view only</strong>. Ask your team to update the vault if something must change.</p>
+    {% endif %}
+    <div class="row"><label>Customer</label><div class="val">{{ customer_name }}</div></div>
+    <div class="row"><label>Project</label><div class="val">{{ project_label }}</div></div>
+    <div class="row"><label>URL</label><div class="val">{{ entry.url|default:"—" }}</div></div>
+    <div class="row"><label>Username</label><div class="val">{{ entry.username|default:"—" }}</div></div>
+    <div class="row"><label>Password</label><code class="pw" id="vault-pw">{{ password_plain|default:"—" }}</code></div>
+    {% if entry.notes %}
+    <div class="row"><label>Notes</label><div class="val" style="white-space:pre-wrap;">{{ entry.notes }}</div></div>
+    {% endif %}
+    <div class="actions">
+      <button type="button" class="primary" id="btn-copy-all">Copy all details</button>
+      {% if entry.url %}<button type="button" class="btn-copy" data-copy-key="url">Copy URL</button>{% endif %}
+      {% if entry.username %}<button type="button" class="btn-copy" data-copy-key="username">Copy username</button>{% endif %}
+      {% if password_plain %}<button type="button" class="btn-copy" data-copy-key="password">Copy password</button>{% endif %}
+    </div>
+  </div>
+  <footer>This link is tied to your invite. Do not share it further unless you trust the recipient.</footer>
+  {{ copy_payload|json_script:"vault-share-payload" }}
+  <script>
+(function () {
+  function copyText(text) {
+    if (!text) return Promise.resolve(false);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function () { return true; }).catch(function () { return legacy(text); });
+    }
+    return Promise.resolve(legacy(text));
+  }
+  function legacy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
+    document.body.appendChild(ta); ta.select();
+    try { return document.execCommand("copy"); } catch (e) { return false; }
+    finally { document.body.removeChild(ta); }
+  }
+  function flash(btn) {
+    var o = btn.textContent; btn.textContent = "Copied!"; btn.disabled = true;
+    setTimeout(function () { btn.textContent = o; btn.disabled = false; }, 1400);
+  }
+  var el = document.getElementById("vault-share-payload");
+  var payload = {};
+  try { payload = JSON.parse(el.textContent); } catch (e) {}
+  var block = [
+    "Name: " + (payload.name || "—"),
+    "Customer: " + (payload.customer || "—"),
+    "Project: " + (payload.project || "—"),
+    "URL: " + (payload.url || "—"),
+    "Username: " + (payload.username || "—"),
+    "Password: " + (payload.password || "—"),
+    "Notes: " + (payload.notes || "—"),
+  ].join("\n");
+  document.getElementById("btn-copy-all").addEventListener("click", function (ev) {
+    copyText(block).then(function (ok) { if (ok) flash(ev.target); });
+  });
+  document.querySelectorAll(".btn-copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var k = btn.getAttribute("data-copy-key");
+      var v = k && Object.prototype.hasOwnProperty.call(payload, k) ? String(payload[k] || "") : "";
+      copyText(v).then(function (ok) { if (ok) flash(btn); });
+    });
+  });
+})();
+  </script>
+</body>
+</html>

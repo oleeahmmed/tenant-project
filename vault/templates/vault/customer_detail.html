@@ -1,0 +1,58 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}{{ customer.name }} · Vault{% endblock %}
+{% block page_title %}Credential Vault · Customer details{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5 space-y-4">
+    <div class="inv-list-card rounded-xl border border-border bg-card shadow-card">
+      <div class="flex flex-wrap items-start justify-between gap-3 border-b border-border/80 bg-muted/20 px-5 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">{{ customer.name }}</h2>
+          <p class="text-sm text-muted-foreground mt-1">{{ customer.customer_code }}</p>
+        </div>
+        <a href="{% url 'vault:customer_list' %}" class="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-muted/30">Back</a>
+      </div>
+      <div class="grid gap-4 p-5 lg:grid-cols-2">
+        <div class="rounded-lg border border-border">
+          <div class="border-b border-border/70 px-4 py-3">
+            <h3 class="text-sm font-semibold text-foreground">Projects</h3>
+          </div>
+          <div class="divide-y divide-border">
+            {% for project in projects %}
+              <div class="flex items-center justify-between gap-2 px-4 py-3 text-sm">
+                <div>
+                  <p class="font-medium text-foreground">{{ project.key }}</p>
+                  <p class="text-muted-foreground">{{ project.name }}</p>
+                </div>
+                <a href="{% url 'vault:project_detail' project.key %}" class="text-primary hover:underline">Open</a>
+              </div>
+            {% empty %}
+              <p class="px-4 py-6 text-sm text-muted-foreground">No project for this customer.</p>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="rounded-lg border border-border">
+          <div class="border-b border-border/70 px-4 py-3">
+            <h3 class="text-sm font-semibold text-foreground">Categories</h3>
+          </div>
+          <div class="divide-y divide-border">
+            {% for category in categories %}
+              <div class="flex items-center justify-between gap-2 px-4 py-3 text-sm">
+                <div>
+                  <p class="font-medium text-foreground">{{ category.name }}</p>
+                </div>
+                <a href="{% url 'vault:category_edit' category.pk %}" class="text-primary hover:underline">Edit</a>
+              </div>
+            {% empty %}
+              <p class="px-4 py-6 text-sm text-muted-foreground">No category yet.</p>
+            {% endfor %}
+          </div>
+          <div class="border-t border-border/70 px-4 py-3">
+            <a href="{% url 'vault:category_create' %}?customer={{ customer.id }}" class="inline-flex rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:opacity-90">Add category</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

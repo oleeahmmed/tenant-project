@@ -15,7 +15,7 @@
       </div>
       <div class="flex flex-wrap gap-2">
         <a href="{% url 'jiraclone:project_board' project_key=project.key %}" class="rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Board</a>
-        <a href="{% url 'jiraclone:project_detail' project_key=project.key %}" class="rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Issues</a>
+        <a href="{% url 'jiraclone:project_departments' project_key=project.key %}" class="rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Departments</a>
         <a href="{% url 'jiraclone:project_team_create' project_key=project.key %}" class="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Add team</a>
       </div>
     </div>

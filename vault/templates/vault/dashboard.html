@@ -1,0 +1,62 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Credential Vault{% endblock %}
+{% block page_title %}Credential Vault{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+      <div class="border-b border-border/80 bg-card px-4 py-4">
+        <h2 class="text-xl font-bold text-foreground">Credential vault overview</h2>
+        <p class="text-sm text-muted-foreground mt-0.5">
+          Reuse Customer and Jira Project data while managing secure credentials.
+        </p>
+      </div>
+      <div class="p-4 md:p-5 space-y-4">
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="simple-card rounded-xl border border-border p-4">
+            <p class="text-xs text-muted-foreground">Categories</p>
+            <p class="text-2xl font-bold text-foreground mt-1">{{ category_count }}</p>
+          </div>
+          <div class="simple-card rounded-xl border border-border p-4">
+            <p class="text-xs text-muted-foreground">Entries</p>
+            <p class="text-2xl font-bold text-foreground mt-1">{{ entry_count }}</p>
+          </div>
+          <div class="simple-card rounded-xl border border-border p-4">
+            <p class="text-xs text-muted-foreground">Favorites</p>
+            <p class="text-2xl font-bold text-foreground mt-1">{{ favorite_count }}</p>
+          </div>
+          <a href="{% url 'vault:customer_list' %}" class="simple-card rounded-xl border border-border p-4 hover:border-primary/40 transition-colors">
+            <p class="text-xs text-muted-foreground">Quick action</p>
+            <p class="text-base font-semibold text-foreground mt-1">Open customer flow</p>
+          </a>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <a href="{% url 'vault:customer_list' %}" class="simple-card rounded-xl border border-border p-5 hover:border-primary/40 transition-colors">
+            <h3 class="text-sm font-semibold text-foreground">Customers</h3>
+            <p class="text-xs text-muted-foreground mt-1">Choose customer, then project, then credential entry.</p>
+          </a>
+          <a href="{% url 'vault:category_list' %}" class="simple-card rounded-xl border border-border p-5 hover:border-primary/40 transition-colors">
+            <h3 class="text-sm font-semibold text-foreground">Manage categories</h3>
+            <p class="text-xs text-muted-foreground mt-1">Customer + project wise folders for credentials.</p>
+          </a>
+        </div>
+
+        <div class="rounded-xl border border-border bg-muted/20 p-4">
+          <h3 class="text-sm font-semibold text-foreground">Top customers by entries</h3>
+          <ul class="mt-2 space-y-1.5 text-sm">
+            {% for row in top_customers %}
+              <li class="flex items-center justify-between">
+                <span class="text-muted-foreground">{{ row.customer__name }}</span>
+                <span class="font-medium text-foreground">{{ row.total }}</span>
+              </li>
+            {% empty %}
+              <li class="text-muted-foreground">No category data yet.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

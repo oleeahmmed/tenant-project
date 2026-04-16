@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth theme-transition">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Form Elements | Simple</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            border: 'hsl(var(--border) / <alpha-value>)',
+            input: 'hsl(var(--input) / <alpha-value>)',
+            ring: 'hsl(var(--ring) / <alpha-value>)',
+            background: 'hsl(var(--background) / <alpha-value>)',
+            foreground: 'hsl(var(--foreground) / <alpha-value>)',
+            primary: {
+              DEFAULT: 'hsl(var(--primary) / <alpha-value>)',
+              foreground: 'hsl(var(--primary-foreground) / <alpha-value>)',
+            },
+            secondary: {
+              DEFAULT: 'hsl(var(--secondary) / <alpha-value>)',
+              foreground: 'hsl(var(--secondary-foreground) / <alpha-value>)',
+            },
+            muted: {
+              DEFAULT: 'hsl(var(--muted) / <alpha-value>)',
+              foreground: 'hsl(var(--muted-foreground) / <alpha-value>)',
+            },
+            accent: {
+              DEFAULT: 'hsl(var(--accent) / <alpha-value>)',
+              foreground: 'hsl(var(--accent-foreground) / <alpha-value>)',
+            },
+            destructive: {
+              DEFAULT: 'hsl(var(--destructive) / <alpha-value>)',
+              foreground: 'hsl(var(--destructive-foreground) / <alpha-value>)',
+            },
+            card: {
+              DEFAULT: 'hsl(var(--card) / <alpha-value>)',
+              foreground: 'hsl(var(--card-foreground) / <alpha-value>)',
+            },
+            chart: {
+              1: 'hsl(var(--chart-1) / <alpha-value>)',
+              2: 'hsl(var(--chart-2) / <alpha-value>)',
+              3: 'hsl(var(--chart-3) / <alpha-value>)',
+              4: 'hsl(var(--chart-4) / <alpha-value>)',
+              5: 'hsl(var(--chart-5) / <alpha-value>)',
+            },
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+          boxShadow: {
+            card: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+            header: '0 1px 0 0 hsl(var(--border) / 1)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 222.2 84% 4.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 222.2 84% 4.9%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 222.2 84% 4.9%;
+      --primary: 222.2 47.4% 11.2%;
+      --primary-foreground: 210 40% 98%;
+      --secondary: 210 40% 96.1%;
+      --secondary-foreground: 222.2 47.4% 11.2%;
+      --muted: 210 40% 96.1%;
+      --muted-foreground: 215.4 16.3% 46.9%;
+      --accent: 210 40% 96.1%;
+      --accent-foreground: 222.2 47.4% 11.2%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 210 40% 98%;
+      --border: 214.3 31.8% 91.4%;
+      --input: 214.3 31.8% 91.4%;
+      --ring: 222.2 84% 4.9%;
+      --radius: 0.5rem;
+      --chart-1: 222.2 47.4% 11.2%;
+      --chart-2: 215.4 16.3% 46.9%;
+      --chart-3: 210 40% 96.1%;
+      --chart-4: 214.3 31.8% 91.4%;
+      --chart-5: 221.2 83.2% 53.3%;
+    }
+    /*
+      Dark — exact Shadcn/zinc reference:
+      Page #09090b | Cards #18181b | Border/active #27272a | Text #fafafa | Muted #a1a1aa
+    */
+    .dark {
+      color-scheme: dark;
+      /* #09090b */
+      --background: 240 6% 3.9%;
+      /* #fafafa */
+      --foreground: 0 0% 98%;
+      /* #18181b */
+      --card: 240 5.9% 10%;
+      --card-foreground: 0 0% 98%;
+      --popover: 240 5.9% 10%;
+      --popover-foreground: 0 0% 98%;
+      /* primary button / focus: light on dark */
+      --primary: 0 0% 98%;
+      --primary-foreground: 240 5.9% 10%;
+      /* surfaces between bg & card */
+      --secondary: 240 5% 8%;
+      --secondary-foreground: 0 0% 98%;
+      /* inputs / muted blocks */
+      --muted: 240 4.8% 12%;
+      /* #a1a1aa (zinc-400) */
+      --muted-foreground: 240 4.9% 65.9%;
+      /* #27272a — row hover + active sidebar */
+      --accent: 240 5.3% 15.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 50%;
+      --destructive-foreground: 0 0% 98%;
+      /* #27272a */
+      --border: 240 5.3% 15.9%;
+      --input: 240 5.3% 15.9%;
+      --ring: 240 4.9% 65.9%;
+      /* charts: soft blue + grays */
+      --chart-1: 221 83% 53%;
+      --chart-2: 240 4.9% 65.9%;
+      --chart-3: 240 5.3% 15.9%;
+      --chart-4: 240 5.9% 10%;
+      --chart-5: 142 71% 45%;
+    }
+    /* Smooth dark ↔ light */
+    .theme-transition,
+    .theme-transition aside,
+    .theme-transition header,
+    .theme-transition main,
+    .theme-transition .shadow-card,
+    .theme-transition .rounded-xl,
+    .theme-transition .rounded-lg,
+    .theme-transition .rounded-md {
+      transition-property: background-color, border-color, color, fill, stroke;
+      transition-duration: 300ms;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .scrollbar-thin::-webkit-scrollbar { width: 5px; height: 5px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { border-radius: 9999px; background: hsl(var(--muted-foreground) / 0.25); }
+    /* Dark: no heavy shadow — border defines cards (reference) */
+    .dark .shadow-card {
+      box-shadow: none;
+    }
+    #sidebar[data-collapsed="true"] { width: 64px !important; }
+    #sidebar[data-collapsed="true"] .sidebar-text { display: none; }
+    #sidebar[data-collapsed="true"] nav { overflow-x: hidden; }
+    #sidebar[data-collapsed="true"] .submenu-toggle + ul { display: none !important; }
+    /* Sidebar active pill — reference */
+  </style>
+</head>
+<body class="min-h-screen bg-background font-sans text-foreground antialiased transition-colors duration-300 ease-in-out">
+  <div class="flex min-h-screen">
+    <!-- Sidebar: narrow (w-52), same bg as page in dark -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col border-r border-border bg-background transition-all duration-300 ease-in-out lg:static lg:shrink-0 -translate-x-full lg:translate-x-0" data-collapsed="false">
+      <!-- Brand -->
+      <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
+        <a href="#" class="flex min-w-0 items-center gap-2.5">
+          <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <i data-lucide="sparkles" class="h-[18px] w-[18px]"></i>
+          </span>
+          <span class="sidebar-text truncate text-base font-bold tracking-tight text-foreground">Simple</span>
+        </a>
+        <span class="sidebar-text shrink-0 text-xs font-medium text-muted-foreground">v1.0.0</span>
+      </div>
+      <!-- Profile -->
+      <div class="border-b border-border px-3 py-3">
+        <div class="sidebar-text rounded-lg border border-dashed border-border p-2.5">
+          <div class="flex items-center gap-2.5">
+            <img src="https://i.pravatar.cc/96?u=maxine" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-full object-cover" />
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-semibold leading-tight text-foreground">Maxine Kennedy</p>
+              <p class="text-[11px] leading-tight text-muted-foreground">Admin Head</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <nav class="scrollbar-thin flex-1 overflow-y-auto px-2 py-2">
+        <ul class="space-y-0.5 text-[13px] leading-snug">
+          <li>
+            <a class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-accent-foreground" href="index.html">
+              <i data-lucide="layout-dashboard" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-accent-foreground" href="#">
+              <i data-lucide="zap" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                Ton AI
+                <span class="shrink-0 rounded-md bg-primary px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary-foreground">Hot</span>
+              </span>
+            </a>
+          </li>
+          <li>
+            <a class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground" href="#">
+              <i data-lucide="calendar" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Calendar</span>
+            </a>
+          </li>
+          <li>
+            <a class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground" href="#">
+              <i data-lucide="folder" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Directory</span>
+            </a>
+          </li>
+        </ul>
+
+        <p class="sidebar-text mb-1.5 mt-4 px-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Custom pages</p>
+        <ul class="space-y-0.5 text-[13px] leading-snug">
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-pages">
+              <i data-lucide="files" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Pages
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-pages" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Pricing</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Empty Page</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Timeline</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Terms &amp; Conditions</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Invoice</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-auth">
+              <i data-lucide="lock" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Authentication
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-auth" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Sign In</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Sign Up</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Reset Password</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-ui">
+              <i data-lucide="layout-grid" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                UI Components
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-ui" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Core Elements</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Interactive</a></li>
+            </ul>
+          </li>
+          <li>
+            <a class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground" href="#">
+              <i data-lucide="pie-chart" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Charts</span>
+            </a>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg bg-primary/10 px-2.5 py-2 text-left font-medium text-primary transition-colors duration-200 dark:bg-accent dark:text-foreground" data-target="sub-forms">
+              <i data-lucide="clipboard-list" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Forms
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-forms" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 font-medium text-primary" href="form-elements.html">Basic Elements</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Validation</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Wizard</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-accent-foreground" data-target="sub-tables">
+              <i data-lucide="table" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Tables
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-tables" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Static Tables</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">DataTables</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-icons">
+              <i data-lucide="tags" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Icons
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-icons" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Tabler</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Lucide</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-maps">
+              <i data-lucide="map" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Maps
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-maps" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Vector</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Leaflet</a></li>
+            </ul>
+          </li>
+        </ul>
+
+        <p class="sidebar-text mb-1.5 mt-4 px-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Menu items</p>
+        <ul class="space-y-0.5 text-[13px] leading-snug">
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-levels">
+              <i data-lucide="menu" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Menu Levels
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-levels" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Level 2.1</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Level 2.2</a></li>
+            </ul>
+          </li>
+          <li>
+            <span class="flex cursor-not-allowed items-center gap-2.5 rounded-lg px-2.5 py-2 text-muted-foreground/45">
+              <i data-lucide="ban" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Disabled Menu</span>
+            </span>
+          </li>
+        </ul>
+      </nav>
+      <div class="border-t border-border bg-background p-2">
+        <button type="button" id="btn-collapse" class="flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent">
+          <i data-lucide="panel-left-close" class="h-4 w-4 shrink-0"></i>
+          <span class="sidebar-text">Collapse Menu</span>
+        </button>
+      </div>
+    </aside>
+
+    <div id="sidebar-overlay" class="fixed inset-0 z-30 hidden bg-black/60 lg:hidden" aria-hidden="true"></div>
+
+    <div class="flex min-w-0 flex-1 flex-col">
+      <!-- Topbar -->
+      <header class="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-border bg-card px-2 shadow-header sm:gap-3 sm:px-4 lg:h-16 lg:gap-4 lg:px-6">
+        <button type="button" id="btn-menu" class="rounded-md p-2 text-muted-foreground hover:bg-accent lg:hidden" aria-label="Menu">
+          <i data-lucide="menu" class="h-5 w-5"></i>
+        </button>
+
+        <div class="hidden items-center gap-3 text-sm md:flex">
+          <a href="#" class="font-semibold text-foreground">Simple</a>
+          <span class="text-xs text-muted-foreground">v1.0.0</span>
+          <span class="h-4 w-px bg-border" aria-hidden="true"></span>
+          <a href="#" class="text-muted-foreground transition-colors hover:text-foreground">Components</a>
+          <a href="#" class="inline-flex items-center gap-0.5 text-muted-foreground transition-colors hover:text-foreground">Dropdown <i data-lucide="chevron-down" class="h-3.5 w-3.5 opacity-70"></i></a>
+          <a href="#" class="inline-flex items-center gap-0.5 text-muted-foreground transition-colors hover:text-foreground">Mega Menu <i data-lucide="chevron-down" class="h-3.5 w-3.5 opacity-70"></i></a>
+        </div>
+
+        <div class="mx-auto hidden min-w-0 max-w-xl flex-1 px-2 md:block">
+          <label class="relative block">
+            <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
+            <input type="search" placeholder="Search for something…" class="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring" />
+          </label>
+        </div>
+
+        <div class="flex flex-1 items-center justify-end gap-0.5 sm:gap-1.5">
+          <div class="relative">
+            <button type="button" class="dropdown-btn flex items-center gap-2 rounded-md border border-border bg-background px-2 py-1.5 text-xs font-medium text-foreground hover:bg-accent sm:px-3" data-dropdown="dd-theme" aria-haspopup="true">
+              <span class="hidden sm:inline text-muted-foreground">Theme:</span>
+              <span id="theme-active-label">Shadcn</span>
+              <i data-lucide="chevron-down" class="h-3.5 w-3.5 text-muted-foreground"></i>
+            </button>
+            <div id="dd-theme" class="dropdown-panel absolute right-0 z-50 mt-2 hidden w-[min(100vw-1rem,32rem)] rounded-xl border border-border bg-card p-3 shadow-lg">
+              <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Color scheme</p>
+              <p class="mb-2 text-[10px] leading-snug text-muted-foreground">Shadcn-style <code class="rounded bg-muted px-0.5">--primary</code> for light mode (buttons, links, charts). Dark mode keeps the fixed zinc palette.</p>
+              <div class="max-h-[min(52vh,20rem)] overflow-y-auto overflow-x-hidden pr-1 scrollbar-thin">
+                <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Default &amp; slate</p>
+                <div class="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  <button type="button" data-theme-item="shadcn" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium text-foreground hover:bg-accent" aria-pressed="true">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#0f172a]"></span><span class="bg-[#64748b]"></span><span class="bg-[#e2e8f0]"></span><span class="bg-[#f8fafc]"></span>
+                    </span>
+                    Shadcn
+                  </button>
+                </div>
+                <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Shadcn / tailwind hues</p>
+                <div class="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  <button type="button" data-theme-item="rose" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#e11d48]"></span><span class="bg-[#fb7185]"></span><span class="bg-[#ffe4e6]"></span><span class="bg-[#fff1f2]"></span>
+                    </span>
+                    Rose
+                  </button>
+                  <button type="button" data-theme-item="blue" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#2563eb]"></span><span class="bg-[#60a5fa]"></span><span class="bg-[#dbeafe]"></span><span class="bg-[#eff6ff]"></span>
+                    </span>
+                    Blue
+                  </button>
+                  <button type="button" data-theme-item="green" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#16a34a]"></span><span class="bg-[#4ade80]"></span><span class="bg-[#dcfce7]"></span><span class="bg-[#f0fdf4]"></span>
+                    </span>
+                    Green
+                  </button>
+                  <button type="button" data-theme-item="orange" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#ea580c]"></span><span class="bg-[#fb923c]"></span><span class="bg-[#ffedd5]"></span><span class="bg-[#fff7ed]"></span>
+                    </span>
+                    Orange
+                  </button>
+                  <button type="button" data-theme-item="violet" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#7c3aed]"></span><span class="bg-[#a78bfa]"></span><span class="bg-[#ede9fe]"></span><span class="bg-[#f5f3ff]"></span>
+                    </span>
+                    Violet
+                  </button>
+                  <button type="button" data-theme-item="amber" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#d97706]"></span><span class="bg-[#fbbf24]"></span><span class="bg-[#fef3c7]"></span><span class="bg-[#fffbeb]"></span>
+                    </span>
+                    Amber
+                  </button>
+                  <button type="button" data-theme-item="red" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#dc2626]"></span><span class="bg-[#f87171]"></span><span class="bg-[#fee2e2]"></span><span class="bg-[#fef2f2]"></span>
+                    </span>
+                    Red
+                  </button>
+                  <button type="button" data-theme-item="cyan" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#0891b2]"></span><span class="bg-[#22d3ee]"></span><span class="bg-[#cffafe]"></span><span class="bg-[#ecfeff]"></span>
+                    </span>
+                    Cyan
+                  </button>
+                  <button type="button" data-theme-item="pink" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#db2777]"></span><span class="bg-[#f472b6]"></span><span class="bg-[#fce7f3]"></span><span class="bg-[#fdf2f8]"></span>
+                    </span>
+                    Pink
+                  </button>
+                  <button type="button" data-theme-item="lime" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#65a30d]"></span><span class="bg-[#a3e635]"></span><span class="bg-[#ecfccb]"></span><span class="bg-[#f7fee7]"></span>
+                    </span>
+                    Lime
+                  </button>
+                  <button type="button" data-theme-item="indigo" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#4f46e5]"></span><span class="bg-[#818cf8]"></span><span class="bg-[#e0e7ff]"></span><span class="bg-[#eef2ff]"></span>
+                    </span>
+                    Indigo
+                  </button>
+                </div>
+                <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Brand / misc</p>
+                <div class="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  <button type="button" data-theme-item="corporate" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#3b82f6]"></span><span class="bg-[#93c5fd]"></span><span class="bg-[#dbeafe]"></span><span class="bg-[#eff6ff]"></span>
+                    </span>
+                    Corporate
+                  </button>
+                  <button type="button" data-theme-item="spotify" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#1db954]"></span><span class="bg-[#1ed760]"></span><span class="bg-[#121212]"></span><span class="bg-[#282828]"></span>
+                    </span>
+                    Spotify
+                  </button>
+                  <button type="button" data-theme-item="saas" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#8b5cf6]"></span><span class="bg-[#a78bfa]"></span><span class="bg-[#ede9fe]"></span><span class="bg-[#f5f3ff]"></span>
+                    </span>
+                    SaaS
+                  </button>
+                  <button type="button" data-theme-item="nature" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#15803d]"></span><span class="bg-[#4ade80]"></span><span class="bg-[#dcfce7]"></span><span class="bg-[#f0fdf4]"></span>
+                    </span>
+                    Nature
+                  </button>
+                  <button type="button" data-theme-item="vintage" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#ea580c]"></span><span class="bg-[#fb923c]"></span><span class="bg-[#ffedd5]"></span><span class="bg-[#fff7ed]"></span>
+                    </span>
+                    Vintage
+                  </button>
+                  <button type="button" data-theme-item="ghibli" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#0284c7]"></span><span class="bg-[#38bdf8]"></span><span class="bg-[#e0f2fe]"></span><span class="bg-[#f0f9ff]"></span>
+                    </span>
+                    Ghibli
+                  </button>
+                  <button type="button" data-theme-item="slack" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#611f69]"></span><span class="bg-[#ecb22e]"></span><span class="bg-[#36c5f0]"></span><span class="bg-[#2eb67d]"></span>
+                    </span>
+                    Slack
+                  </button>
+                </div>
+              </div>
+              <div class="mt-3 flex items-center gap-2 border-t border-border pt-3">
+                <label for="primary-color" class="text-xs text-muted-foreground shrink-0">Custom</label>
+                <input id="primary-color" type="color" value="#0f172a" class="h-9 w-full cursor-pointer rounded border border-border bg-background" title="Pick primary color" />
+              </div>
+            </div>
+          </div>
+
+          <div class="relative">
+            <button type="button" class="dropdown-btn flex items-center gap-1.5 rounded-md border border-border px-2 py-1.5 text-sm hover:bg-accent" data-dropdown="dd-lang">
+              <span class="text-base leading-none">🇬🇧</span>
+              <span class="hidden sm:inline">EN</span>
+              <i data-lucide="chevron-down" class="h-3.5 w-3.5 text-muted-foreground"></i>
+            </button>
+            <div id="dd-lang" class="dropdown-panel absolute right-0 z-50 mt-2 hidden min-w-[160px] rounded-lg border border-border bg-card py-1 shadow-lg">
+              <a class="block px-4 py-2 text-sm hover:bg-accent" href="#">English</a>
+              <a class="block px-4 py-2 text-sm hover:bg-accent" href="#">Deutsch</a>
+              <a class="block px-4 py-2 text-sm hover:bg-accent" href="#">Español</a>
+            </div>
+          </div>
+
+          <div class="relative">
+            <button type="button" class="dropdown-btn relative rounded-md p-2 text-muted-foreground hover:bg-accent" data-dropdown="dd-notify" aria-label="Notifications">
+              <i data-lucide="bell" class="h-5 w-5"></i>
+              <span class="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary ring-2 ring-card" title="9 new"></span>
+            </button>
+            <div id="dd-notify" class="dropdown-panel absolute right-0 z-50 mt-2 hidden w-80 max-h-96 overflow-y-auto rounded-xl border border-border bg-card shadow-lg">
+              <div class="flex items-center justify-between border-b border-border p-3">
+                <h3 class="text-sm font-semibold">Notifications</h3>
+                <span class="text-xs text-muted-foreground">9 Alerts</span>
+              </div>
+              <ul class="divide-y divide-border text-sm">
+                <li class="p-3 hover:bg-accent"><p class="font-medium">Backup completed successfully</p><p class="text-xs text-muted-foreground">Just now</p></li>
+                <li class="p-3 hover:bg-accent"><p class="font-medium">New bug reported in Payment Module</p><p class="text-xs text-muted-foreground">8 minutes ago</p></li>
+                <li class="p-3 hover:bg-accent"><p class="font-medium">Security policy update required</p><p class="text-xs text-muted-foreground">22 minutes ago</p></li>
+              </ul>
+              <a class="block border-t border-border p-3 text-center text-sm font-medium text-primary" href="#">View All Notifications</a>
+            </div>
+          </div>
+
+          <button type="button" id="btn-customizer" class="hidden rounded-md p-2 text-muted-foreground hover:bg-accent sm:flex" title="Settings" aria-label="Settings">
+            <i data-lucide="settings" class="h-5 w-5"></i>
+          </button>
+
+          <button type="button" id="btn-theme-toggle" class="rounded-md p-2 text-muted-foreground hover:bg-accent" aria-label="Toggle dark mode">
+            <i data-lucide="sun" id="icon-theme-sun" class="hidden h-5 w-5"></i>
+            <i data-lucide="moon" id="icon-theme-moon" class="h-5 w-5"></i>
+          </button>
+
+          <div class="relative">
+            <button type="button" class="dropdown-btn flex items-center gap-2 rounded-md py-1 pl-1 pr-2 hover:bg-accent" data-dropdown="dd-user">
+              <img src="https://i.pravatar.cc/32?u=maxine" alt="" width="32" height="32" class="h-8 w-8 rounded-full ring-1 ring-border" />
+              <span class="hidden text-sm font-medium sm:inline">Shadcn</span>
+              <i data-lucide="chevron-down" class="hidden h-4 w-4 text-muted-foreground sm:inline"></i>
+            </button>
+            <div id="dd-user" class="dropdown-panel absolute right-0 z-50 mt-2 hidden min-w-[200px] rounded-xl border border-border bg-card py-1 shadow-lg">
+              <div class="border-b border-border px-4 py-3">
+                <p class="text-sm font-semibold">Welcome back!</p>
+                <p class="text-xs text-muted-foreground">Balance: $985.25</p>
+              </div>
+              <a class="block px-4 py-2 text-sm hover:bg-accent" href="#">Profile</a>
+              <a class="block px-4 py-2 text-sm hover:bg-accent" href="#">Account Settings</a>
+              <a class="block px-4 py-2 text-sm hover:bg-accent" href="#">Support Center</a>
+              <hr class="border-border" />
+              <a class="block px-4 py-2 text-sm text-destructive hover:bg-accent" href="#">Log Out</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main -->
+      <main class="flex-1 overflow-x-auto bg-muted/40 p-4 transition-colors duration-300 ease-in-out lg:p-6">
+        <div class="mb-6 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <span class="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-foreground">Form Basics</span>
+          <span aria-hidden="true">/</span>
+          <a href="index.html" class="transition-colors hover:text-foreground">Forms</a>
+          <span aria-hidden="true">/</span>
+          <span class="text-foreground">Basic Elements</span>
+        </div>
+
+        <div class="mb-8 rounded-xl border border-border bg-card p-6 shadow-card">
+          <h1 class="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">Basic Form Elements</h1>
+          <p class="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">Build functional forms with input fields, checkboxes, radios, selects, and other essential form controls.</p>
+        </div>
+
+        <div class="space-y-6">
+          <!-- Input Textfield Type -->
+          <section class="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+            <div class="border-b border-border px-4 py-4 sm:px-6">
+              <h2 class="text-base font-semibold text-foreground">Input Textfield Type</h2>
+            </div>
+            <div class="space-y-6 p-4 sm:p-6">
+              <div class="grid gap-6 md:grid-cols-2">
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-simple">Simple Input</label>
+                  <input id="fe-simple" type="text" placeholder="Placeholder" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-float">Floating style</label>
+                  <div class="relative">
+                    <input id="fe-float" type="text" placeholder=" " class="peer w-full rounded-lg border border-input bg-background px-3 pb-2 pt-4 text-sm text-foreground placeholder-transparent focus:outline-none focus:ring-2 focus:ring-ring" />
+                    <label for="fe-float" class="pointer-events-none absolute left-3 top-1.5 text-[10px] font-medium text-muted-foreground transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:text-foreground">Floating Input</label>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-name">Name</label>
+                  <input id="fe-name" type="text" value="John Doe" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-valid">Valid Input</label>
+                  <input id="fe-valid" type="text" value="Correct value" class="w-full rounded-lg border border-green-500/50 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-500/40" />
+                  <p class="text-xs text-green-600 dark:text-green-400">Looks good.</p>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-round">Rounded Input</label>
+                  <input id="fe-round" type="text" placeholder="Rounded" class="w-full rounded-full border border-input bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                </div>
+                <div class="space-y-2 md:col-span-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-ta">Text area</label>
+                  <textarea id="fe-ta" rows="3" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Longer description"></textarea>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-muted-foreground" for="fe-dis">Disabled</label>
+                  <input id="fe-dis" type="text" disabled value="Disabled field" class="w-full cursor-not-allowed rounded-lg border border-input bg-muted/60 px-3 py-2 text-sm text-muted-foreground" />
+                </div>
+                <div class="space-y-2">
+                  <span class="text-sm font-medium text-foreground">Helping text</span>
+                  <input type="text" aria-describedby="fe-help" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                  <p id="fe-help" class="text-xs text-muted-foreground">A block of help text that breaks onto a new line and may extend beyond one line.</p>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-sel-icon">Select with Icon</label>
+                  <div class="relative">
+                    <i data-lucide="percent" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
+                    <select id="fe-sel-icon" class="w-full appearance-none rounded-lg border border-input bg-background py-2 pl-9 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                      <option>Choose Discount</option>
+                      <option>No Discount</option>
+                      <option>Flat Discount</option>
+                      <option>Percentage Discount</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-label-in">Label Input</label>
+                  <div class="flex rounded-lg border border-input bg-background">
+                    <span class="flex items-center border-r border-border bg-muted/50 px-3 text-xs font-medium text-muted-foreground">Label</span>
+                    <input id="fe-label-in" class="min-w-0 flex-1 rounded-r-lg bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" type="text" placeholder="Value" />
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-search">Search Style</label>
+                  <div class="relative">
+                    <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
+                    <input id="fe-search" type="search" placeholder="Search…" class="w-full rounded-lg border border-input bg-background py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-inv">Invalid Input</label>
+                  <input id="fe-inv" type="text" value="Wrong value" class="w-full rounded-lg border border-destructive/60 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-destructive/40" aria-invalid="true" />
+                  <p class="text-xs text-destructive">Please provide a valid value.</p>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-ph">Placeholder</label>
+                  <input id="fe-ph" type="text" placeholder="Only placeholder" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-ro">Readonly</label>
+                  <input id="fe-ro" type="text" readonly value="Readonly text" class="w-full rounded-lg border border-dashed border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground" />
+                </div>
+                <div class="space-y-2">
+                  <span class="text-sm font-medium text-foreground">Static control</span>
+                  <p class="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-foreground">email@example.com</p>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-defsel">Default Select</label>
+                  <select id="fe-defsel" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                    <option>Open this select menu</option>
+                    <option>One</option>
+                    <option>Two</option>
+                    <option>Three</option>
+                  </select>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-foreground" for="fe-multi">Multiple Select</label>
+                  <select id="fe-multi" multiple size="4" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                    <option>1</option>
+                    <option>2</option>
+                    <option>3</option>
+                    <option>4</option>
+                    <option>5</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Input Types -->
+          <section class="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+            <div class="border-b border-border px-4 py-4 sm:px-6">
+              <h2 class="text-base font-semibold text-foreground">Input Types</h2>
+            </div>
+            <div class="grid gap-4 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3">
+              <div class="space-y-2">
+                <label class="text-sm font-medium" for="fe-email">Email</label>
+                <input id="fe-email" type="email" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="you@example.com" />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium" for="fe-pw">Show/Hide Password</label>
+                <div class="relative">
+                  <input id="fe-pw" type="password" value="secret123" class="w-full rounded-lg border border-input bg-background py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                  <button type="button" class="fe-toggle-pw absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Toggle password" data-target="fe-pw">
+                    <i data-lucide="eye" class="h-4 w-4"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium" for="fe-time">Time</label>
+                <input id="fe-time" type="time" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium" for="fe-num">Number</label>
+                <input id="fe-num" type="number" min="0" step="1" value="42" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div class="space-y-2 sm:col-span-2 lg:col-span-1">
+                <label class="text-sm font-medium" for="fe-range">Range</label>
+                <input id="fe-range" type="range" class="w-full accent-primary" />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium" for="fe-pw2">Password</label>
+                <input id="fe-pw2" type="password" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium" for="fe-month">Month</label>
+                <input id="fe-month" type="month" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium" for="fe-week">Week</label>
+                <input id="fe-week" type="week" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium" for="fe-color">Color</label>
+                <input id="fe-color" type="color" class="h-10 w-full cursor-pointer rounded-lg border border-input bg-background" value="#3b82f6" />
+              </div>
+            </div>
+          </section>
+
+          <!-- Input Group -->
+          <section class="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+            <div class="border-b border-border px-4 py-4 sm:px-6">
+              <h2 class="text-base font-semibold text-foreground">Input Group</h2>
+            </div>
+            <div class="space-y-4 p-4 sm:p-6">
+              <div class="flex flex-wrap rounded-lg border border-input bg-background">
+                <span class="flex items-center border-b border-border px-3 py-2 text-sm text-muted-foreground sm:border-b-0 sm:border-r">@</span>
+                <input type="text" placeholder="Username" class="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div class="flex flex-wrap rounded-lg border border-input bg-background">
+                <span class="flex items-center border-b border-border px-3 py-2 text-sm text-muted-foreground sm:border-b-0 sm:border-r">$</span>
+                <input type="text" placeholder="Amount" class="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                <span class="flex items-center border-t border-border px-3 py-2 text-sm text-muted-foreground sm:border-l sm:border-t-0">.00</span>
+              </div>
+              <div class="flex rounded-lg border border-input bg-background">
+                <span class="flex items-center border-r border-border px-3 text-sm text-muted-foreground">With textarea</span>
+                <textarea rows="2" class="min-w-0 flex-1 resize-y bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Text"></textarea>
+              </div>
+              <div class="flex flex-wrap">
+                <span class="flex items-center rounded-l-lg border border-r-0 border-input bg-muted/40 px-3 py-2 text-sm">@</span>
+                <input type="text" class="min-w-0 flex-1 rounded-r-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Wrapping" />
+              </div>
+              <div class="flex flex-wrap gap-2 sm:flex-nowrap">
+                <input type="text" class="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Input + Button" />
+                <button type="button" class="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Button</button>
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium" for="fe-files">Multiple Files</label>
+                <input id="fe-files" type="file" multiple class="w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground" />
+              </div>
+              <div class="flex rounded-lg border border-input bg-background">
+                <span class="flex items-center border-r border-border px-3 text-sm">Recipient</span>
+                <input type="text" class="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div class="flex flex-wrap rounded-lg border border-input bg-background">
+                <button type="button" class="border-b border-border px-3 py-2 text-sm hover:bg-accent sm:border-b-0 sm:border-r">@</button>
+                <input type="email" placeholder="Email Login" class="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div class="flex flex-wrap rounded-lg border border-input bg-background">
+                <span class="flex items-center border-b border-border px-3 py-2 text-sm text-muted-foreground sm:border-b-0 sm:border-r">https://example.com/users/</span>
+                <input type="text" placeholder="vanity" class="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+              <div class="relative flex flex-wrap rounded-lg border border-input bg-background">
+                <div class="relative shrink-0 border-b border-border sm:border-b-0 sm:border-r">
+                  <button type="button" class="dropdown-btn flex items-center gap-1 px-3 py-2 text-sm hover:bg-accent" data-dropdown="fe-dd-inp">
+                    Dropdown <i data-lucide="chevron-down" class="h-3.5 w-3.5"></i>
+                  </button>
+                  <div id="fe-dd-inp" class="dropdown-panel absolute left-0 top-full z-20 mt-1 hidden min-w-[11rem] rounded-lg border border-border bg-card py-1 shadow-lg">
+                    <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-accent">Action</button>
+                    <button type="button" class="block w-full px-4 py-2 text-left text-sm hover:bg-accent">Another action</button>
+                  </div>
+                </div>
+                <input type="text" class="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Dropdown + Input" />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium" for="fe-file2">File Input</label>
+                <input id="fe-file2" type="file" class="w-full text-sm" />
+              </div>
+              <div class="flex flex-wrap rounded-lg border border-input bg-background">
+                <select class="border-b border-border bg-muted/40 px-3 py-2 text-sm sm:border-b-0 sm:border-r">
+                  <option>Options</option>
+                  <option>One</option>
+                  <option>Two</option>
+                </select>
+                <input type="text" placeholder="Input Group Select" class="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+              </div>
+            </div>
+          </section>
+
+          <!-- Floating labels -->
+          <section class="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+            <div class="border-b border-border px-4 py-4 sm:px-6">
+              <h2 class="text-base font-semibold text-foreground">Floating Labels</h2>
+            </div>
+            <div class="grid gap-4 p-4 sm:grid-cols-2 sm:p-6">
+              <div class="relative">
+                <input id="fe-fl-email" type="email" placeholder=" " class="peer w-full rounded-lg border border-input bg-background px-3 pb-2 pt-5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                <label for="fe-fl-email" class="pointer-events-none absolute left-3 top-2 text-xs text-muted-foreground transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs">Email address</label>
+              </div>
+              <div class="relative">
+                <input id="fe-fl-email2" type="email" placeholder=" " class="peer w-full rounded-lg border border-input bg-background px-3 pb-2 pt-5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                <label for="fe-fl-email2" class="pointer-events-none absolute left-3 top-2 text-xs text-muted-foreground peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm">Email address</label>
+              </div>
+              <div class="relative sm:col-span-2">
+                <textarea id="fe-fl-ta" rows="2" placeholder=" " class="peer w-full rounded-lg border border-input bg-background px-3 pb-2 pt-5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"></textarea>
+                <label for="fe-fl-ta" class="pointer-events-none absolute left-3 top-3 text-xs text-muted-foreground peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm">Comments</label>
+              </div>
+              <div class="relative">
+                <input id="fe-fl-pw" type="password" placeholder=" " class="peer w-full rounded-lg border border-input bg-background px-3 pb-2 pt-5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                <label for="fe-fl-pw" class="pointer-events-none absolute left-3 top-2 text-xs text-muted-foreground peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm">Password</label>
+              </div>
+              <div class="relative">
+                <select id="fe-fl-sel" class="peer w-full appearance-none rounded-lg border border-input bg-background px-3 pb-2 pt-5 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                  <option value=""></option>
+                  <option>One</option>
+                  <option>Two</option>
+                  <option>Three</option>
+                </select>
+                <label for="fe-fl-sel" class="pointer-events-none absolute left-3 top-2 text-xs text-muted-foreground">Select Menu</label>
+              </div>
+            </div>
+          </section>
+
+          <!-- Input Sizes -->
+          <section class="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+            <div class="border-b border-border px-4 py-4 sm:px-6">
+              <h2 class="text-base font-semibold text-foreground">Input Sizes</h2>
+            </div>
+            <div class="space-y-4 p-4 sm:p-6">
+              <div class="grid gap-3 md:grid-cols-3">
+                <div class="space-y-2">
+                  <span class="text-xs font-medium text-muted-foreground">Small</span>
+                  <input type="text" class="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Small" />
+                </div>
+                <div class="space-y-2">
+                  <span class="text-xs font-medium text-muted-foreground">Normal</span>
+                  <input type="text" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Normal" />
+                </div>
+                <div class="space-y-2">
+                  <span class="text-xs font-medium text-muted-foreground">Large</span>
+                  <input type="text" class="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Large" />
+                </div>
+              </div>
+              <div class="space-y-2">
+                <span class="text-sm font-medium">Large Select</span>
+                <select class="w-full max-w-md rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring">
+                  <option>Open this select menu</option>
+                  <option>One</option>
+                  <option>Two</option>
+                  <option>Three</option>
+                </select>
+              </div>
+              <div>
+                <p class="mb-2 text-sm font-medium">Grid Sizes</p>
+                <div class="grid grid-cols-12 gap-3">
+                  <div class="col-span-12 sm:col-span-4">
+                    <select class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                      <option>Small Select</option>
+                      <option>One</option>
+                      <option>Two</option>
+                    </select>
+                  </div>
+                  <div class="col-span-12 sm:col-span-8">
+                    <input type="text" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Grid field" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Checks, Radios, Switches -->
+          <section class="overflow-hidden rounded-xl border border-border bg-card shadow-card">
+            <div class="border-b border-border px-4 py-4 sm:px-6">
+              <h2 class="text-base font-semibold text-foreground">Checks, Radios &amp; Switches</h2>
+            </div>
+            <div class="space-y-8 p-4 sm:p-6">
+              <div>
+                <h3 class="mb-3 text-sm font-semibold text-foreground">Checkboxes</h3>
+                <div class="flex flex-col gap-3">
+                  <label class="flex cursor-pointer items-center gap-2 text-sm"><input type="checkbox" class="h-4 w-4 rounded border-input text-primary focus:ring-ring" /> Default Checkbox</label>
+                  <label class="flex cursor-pointer items-center gap-2 text-sm"><input type="checkbox" checked class="h-4 w-4 rounded border-input accent-primary" /> Light Checkbox</label>
+                  <div class="flex flex-wrap gap-4 text-sm">
+                    <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" name="in1" class="h-4 w-4 rounded border-input text-primary" /> Inline 1</label>
+                    <label class="flex cursor-pointer items-center gap-2"><input type="checkbox" name="in1" class="h-4 w-4 rounded border-input text-primary" /> Inline 2</label>
+                  </div>
+                  <label class="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground"><input type="checkbox" disabled class="h-4 w-4 rounded" /> Disabled</label>
+                  <label class="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground"><input type="checkbox" disabled checked class="h-4 w-4 rounded" /> Disabled checked</label>
+                </div>
+              </div>
+              <div>
+                <h3 class="mb-3 text-sm font-semibold text-foreground">Switches</h3>
+                <div class="flex flex-col gap-3">
+                  <label class="flex cursor-pointer items-center gap-3 text-sm">
+                    <input type="checkbox" checked class="h-6 w-11 cursor-pointer rounded-full accent-primary" />
+                    Enabled Switch
+                  </label>
+                  <label class="flex cursor-pointer items-center gap-3 text-sm text-muted-foreground">
+                    <input type="checkbox" disabled class="h-6 w-11 cursor-not-allowed rounded-full opacity-50" />
+                    Disabled Switch
+                  </label>
+                </div>
+              </div>
+              <div>
+                <h3 class="mb-3 text-sm font-semibold text-foreground">Colored Checkboxes</h3>
+                <div class="flex flex-wrap gap-4">
+                  <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="h-4 w-4 rounded border-0 bg-primary text-primary-foreground accent-primary" checked /> Primary</label>
+                  <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="h-4 w-4 accent-slate-500" checked /> Secondary</label>
+                  <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="h-4 w-4 accent-green-600" checked /> Success</label>
+                  <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="h-4 w-4 accent-sky-500" checked /> Info</label>
+                  <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="h-4 w-4 accent-amber-500" checked /> Warning</label>
+                  <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="h-4 w-4 accent-red-600" checked /> Danger</label>
+                  <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="h-4 w-4 accent-zinc-900 dark:accent-zinc-100" checked /> Dark</label>
+                </div>
+              </div>
+              <div>
+                <h3 class="mb-3 text-sm font-semibold text-foreground">Colored Switches</h3>
+                <div class="flex flex-wrap gap-4">
+                  <input type="checkbox" class="h-5 w-9 cursor-pointer accent-primary" checked aria-label="Primary" />
+                  <input type="checkbox" class="h-5 w-9 cursor-pointer accent-slate-500" checked aria-label="Secondary" />
+                  <input type="checkbox" class="h-5 w-9 cursor-pointer accent-green-600" checked aria-label="Success" />
+                  <input type="checkbox" class="h-5 w-9 cursor-pointer accent-sky-500" checked aria-label="Info" />
+                  <input type="checkbox" class="h-5 w-9 cursor-pointer accent-amber-500" checked aria-label="Warning" />
+                  <input type="checkbox" class="h-5 w-9 cursor-pointer accent-red-600" checked aria-label="Danger" />
+                  <input type="checkbox" class="h-5 w-9 cursor-pointer accent-zinc-900 dark:accent-zinc-100" checked aria-label="Dark" />
+                </div>
+              </div>
+              <div>
+                <h3 class="mb-3 text-sm font-semibold text-foreground">Radios</h3>
+                <div class="flex flex-col gap-2 text-sm">
+                  <label class="flex cursor-pointer items-center gap-2"><input type="radio" name="fe-r1" class="h-4 w-4 border-input text-primary" /> Option 1</label>
+                  <label class="flex cursor-pointer items-center gap-2"><input type="radio" name="fe-r1" class="h-4 w-4 border-input text-primary" checked /> Option 2</label>
+                  <div class="flex gap-4">
+                    <label class="flex cursor-pointer items-center gap-2"><input type="radio" name="fe-r2" class="h-4 w-4" /> Inline 1</label>
+                    <label class="flex cursor-pointer items-center gap-2"><input type="radio" name="fe-r2" class="h-4 w-4" checked /> Inline 2</label>
+                  </div>
+                  <label class="flex cursor-pointer items-center gap-2 text-muted-foreground"><input type="radio" name="fe-r3" disabled checked class="h-4 w-4" /> Disabled Checked Radio</label>
+                </div>
+              </div>
+              <div>
+                <h3 class="mb-3 text-sm font-semibold text-foreground">Colored Radios</h3>
+                <div class="flex flex-wrap gap-4 text-sm">
+                  <label class="flex items-center gap-2"><input type="radio" name="fe-cr" class="h-4 w-4 accent-primary" checked /> Primary</label>
+                  <label class="flex items-center gap-2"><input type="radio" name="fe-cr" class="h-4 w-4 accent-slate-500" /> Secondary</label>
+                  <label class="flex items-center gap-2"><input type="radio" name="fe-cr" class="h-4 w-4 accent-green-600" /> Success</label>
+                  <label class="flex items-center gap-2"><input type="radio" name="fe-cr" class="h-4 w-4 accent-sky-500" /> Info</label>
+                  <label class="flex items-center gap-2"><input type="radio" name="fe-cr" class="h-4 w-4 accent-amber-500" /> Warning</label>
+                  <label class="flex items-center gap-2"><input type="radio" name="fe-cr" class="h-4 w-4 accent-red-600" /> Danger</label>
+                  <label class="flex items-center gap-2"><input type="radio" name="fe-cr" class="h-4 w-4 accent-zinc-900 dark:accent-zinc-100" /> Dark</label>
+                </div>
+              </div>
+              <div>
+                <h3 class="mb-3 text-sm font-semibold text-foreground">Checkbox Toggle (segmented)</h3>
+                <div class="inline-flex rounded-lg border border-input bg-muted/40 p-1">
+                  <label class="cursor-pointer rounded-md px-3 py-1.5 text-sm has-[:checked]:bg-card has-[:checked]:shadow-sm"><input type="radio" name="fe-seg" class="sr-only" checked />One</label>
+                  <label class="cursor-pointer rounded-md px-3 py-1.5 text-sm has-[:checked]:bg-card has-[:checked]:shadow-sm"><input type="radio" name="fe-seg" class="sr-only" />Two</label>
+                  <label class="cursor-pointer rounded-md px-3 py-1.5 text-sm has-[:checked]:bg-card has-[:checked]:shadow-sm"><input type="radio" name="fe-seg" class="sr-only" />Three</label>
+                </div>
+              </div>
+              <div>
+                <h3 class="mb-3 text-sm font-semibold text-foreground">Radio Toggle</h3>
+                <div class="inline-flex rounded-lg border border-input bg-muted/40 p-1">
+                  <label class="cursor-pointer rounded-md px-3 py-1.5 text-sm has-[:checked]:bg-card has-[:checked]:shadow-sm"><input type="radio" name="fe-seg2" class="sr-only" />Left</label>
+                  <label class="cursor-pointer rounded-md px-3 py-1.5 text-sm has-[:checked]:bg-card has-[:checked]:shadow-sm"><input type="radio" name="fe-seg2" class="sr-only" checked />Middle</label>
+                  <label class="cursor-pointer rounded-md px-3 py-1.5 text-sm has-[:checked]:bg-card has-[:checked]:shadow-sm"><input type="radio" name="fe-seg2" class="sr-only" />Right</label>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <footer class="mt-10 flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
+          <p>© Simple — Pure HTML + Tailwind (Shadcn tokens)</p>
+          <div class="flex items-center gap-3">
+            <span>59.5GB of 200GB Free</span>
+            <div class="h-2 w-32 overflow-hidden rounded-full bg-muted">
+              <div class="h-full w-[30%] rounded-full bg-primary"></div>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <!-- Customizer -->
+    <aside id="customizer" class="fixed inset-y-0 right-0 z-50 w-[300px] max-w-full translate-x-full border-l border-border bg-card shadow-2xl transition-transform duration-200" aria-hidden="true">
+      <div class="flex h-14 items-center justify-between border-b border-border px-4">
+        <h2 class="font-semibold">Admin Customizer</h2>
+        <button type="button" id="btn-close-customizer" class="rounded-md p-2 text-muted-foreground hover:bg-accent" aria-label="Close">✕</button>
+      </div>
+      <div class="h-[calc(100vh-3.5rem)] space-y-6 overflow-y-auto p-4 text-sm">
+        <p class="text-muted-foreground">Configure layout, styles, and preferences.</p>
+        <div>
+          <h3 class="mb-3 font-semibold text-foreground">Color scheme</h3>
+          <div class="flex gap-3">
+            <button type="button" id="customizer-light" class="flex-1 rounded-lg border-2 border-primary p-3 text-xs font-medium">Light</button>
+            <button type="button" id="customizer-dark" class="flex-1 rounded-lg border border-border p-3 text-xs">Dark</button>
+          </div>
+        </div>
+        <div>
+          <h3 class="mb-3 font-semibold">Primary color</h3>
+          <div class="flex items-center gap-3">
+            <input id="primary-color-panel" type="color" value="#0f172a" class="h-12 w-full cursor-pointer rounded border border-border" />
+          </div>
+          <p class="mt-2 text-xs text-muted-foreground">Synced with header theme picker.</p>
+        </div>
+      </div>
+    </aside>
+    <div id="customizer-backdrop" class="fixed inset-0 z-40 hidden bg-black/50"></div>
+
+    <!-- Floating toolbar -->
+    <div class="fixed bottom-6 right-6 z-30 flex flex-col gap-1 rounded-xl border border-border bg-card p-1.5 shadow-lg">
+      <button type="button" class="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Widget"><i data-lucide="box" class="h-4 w-4"></i></button>
+      <button type="button" class="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Search"><i data-lucide="search" class="h-4 w-4"></i></button>
+      <button type="button" class="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Layers"><i data-lucide="layers" class="h-4 w-4"></i></button>
+      <button type="button" class="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Edit"><i data-lucide="pencil" class="h-4 w-4"></i></button>
+    </div>
+
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <script>
+      if (window.lucide) lucide.createIcons();
+    </script>
+    <script>
+      document.querySelectorAll('.fe-toggle-pw').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-target');
+          var inp = id ? document.getElementById(id) : null;
+          if (!inp) return;
+          var show = inp.type === 'password';
+          inp.type = show ? 'text' : 'password';
+          var icon = btn.querySelector('i');
+          if (icon) {
+            icon.setAttribute('data-lucide', show ? 'eye-off' : 'eye');
+            if (window.lucide && lucide.createIcons) lucide.createIcons();
+          }
+        });
+      });
+    </script>
+    <script src="app.js"></script>
+  </body>
+</html>

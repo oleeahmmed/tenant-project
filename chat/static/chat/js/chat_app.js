@@ -7,9 +7,12 @@
   try {
     cfg = cfgEl && cfgEl.textContent ? JSON.parse(cfgEl.textContent) : {};
   } catch (e) {}
-  /* Django APPEND_SLASH: POST without trailing slash → 301 → fetch may drop multipart body */
-  if (cfg.sendUrl && cfg.sendUrl.indexOf("?") === -1 && cfg.sendUrl.slice(-1) !== "/") {
-    cfg.sendUrl += "/";
+  function normalizedSendUrl() {
+    var fromForm = form ? form.getAttribute("action") || "" : "";
+    var u = fromForm || cfg.sendUrl || "";
+    /* APPEND_SLASH safety for POST endpoints */
+    if (u && u.indexOf("?") === -1 && u.slice(-1) !== "/") u += "/";
+    return u;
   }
 
   function showErr(msg) {
@@ -51,19 +54,21 @@
 
     var bubble = document.createElement("div");
     bubble.className = "wa-bubble";
-    if (m.type === "text") {
+    var mt = (m.type != null ? String(m.type) : "").toLowerCase();
+    if (mt === "text") {
       var t = document.createElement("div");
       t.className = "text-sm text-foreground whitespace-pre-wrap break-words";
       t.textContent = m.body || "";
       bubble.appendChild(t);
-    } else if (m.type === "image" && m.image_url) {
+    } else if (mt === "image" && (m.image_url || m.file_url)) {
+      var srcImg = m.image_url || m.file_url;
       var a = document.createElement("a");
-      a.href = m.image_url;
+      a.href = srcImg;
       a.target = "_blank";
       a.rel = "noopener";
       var img = document.createElement("img");
       img.className = "max-h-64 max-w-[min(100%,280px)] rounded-md";
-      img.src = m.image_url;
+      img.src = srcImg;
       img.alt = "";
       a.appendChild(img);
       bubble.appendChild(a);
@@ -73,15 +78,38 @@
         cap.textContent = m.body;
         bubble.appendChild(cap);
       }
-    } else if (m.type === "file" && m.file_url) {
-      var fl = document.createElement("a");
-      fl.className = "text-sm text-primary underline break-all";
-      fl.href = m.file_url;
-      fl.target = "_blank";
-      fl.rel = "noopener";
-      fl.textContent = m.file_name || "File";
-      bubble.appendChild(fl);
-    } else if (m.type === "voice" && m.voice_url) {
+    } else if (mt === "file" && m.file_url) {
+      var url = m.file_url;
+      var looksImg =
+        /\.(jpe?g|png|gif|webp|bmp|tif|tiff|heic|heif)(\?|#|$)/i.test(url) ||
+        /\.(jpe?g|png|gif|webp|bmp|tif|tiff|heic|heif)$/i.test(m.file_name || "");
+      if (looksImg) {
+        var a2 = document.createElement("a");
+        a2.href = url;
+        a2.target = "_blank";
+        a2.rel = "noopener";
+        var img2 = document.createElement("img");
+        img2.className = "max-h-64 max-w-[min(100%,280px)] rounded-md";
+        img2.src = url;
+        img2.alt = "";
+        a2.appendChild(img2);
+        bubble.appendChild(a2);
+        if (m.body) {
+          var cap2 = document.createElement("p");
+          cap2.className = "mt-1 text-sm text-foreground";
+          cap2.textContent = m.body;
+          bubble.appendChild(cap2);
+        }
+      } else {
+        var fl = document.createElement("a");
+        fl.className = "text-sm text-primary underline break-all";
+        fl.href = m.file_url;
+        fl.target = "_blank";
+        fl.rel = "noopener";
+        fl.textContent = m.file_name || "File";
+        bubble.appendChild(fl);
+      }
+    } else if (mt === "voice" && m.voice_url) {
       var aud = document.createElement("audio");
       aud.className = "h-9 max-w-[260px]";
       aud.controls = true;
@@ -105,8 +133,18 @@
   }
 
   function connectWs() {
-    if (!cfg.wsUrl || !window.WebSocket) return;
-    var socket = new WebSocket(cfg.wsUrl);
+    if (!window.WebSocket) return;
+    var wsUrl = cfg.wsUrl;
+    if (!wsUrl && cfg.wsPath) {
+      var proto = window.location.protocol === "https:" ? "wss" : "ws";
+      wsUrl = proto + "://" + window.location.host + cfg.wsPath;
+    }
+    if (!wsUrl && cfg.roomId) {
+      var proto2 = window.location.protocol === "https:" ? "wss" : "ws";
+      wsUrl = proto2 + "://" + window.location.host + "/ws/chat/" + cfg.roomId + "/";
+    }
+    if (!wsUrl) return;
+    var socket = new WebSocket(wsUrl);
     socket.onmessage = function (ev) {
       try {
         var data = JSON.parse(ev.data);
@@ -117,6 +155,9 @@
     };
     socket.onclose = function () {
       window.setTimeout(connectWs, 3000);
+    };
+    socket.onerror = function () {
+      showErr("Realtime connection interrupted. Messages still send via HTTP.");
     };
   }
   connectWs();
@@ -190,7 +231,8 @@
   }
 
   function sendWithFiles(extra) {
-    if (!form || !cfg.sendUrl) {
+    var sendUrl = normalizedSendUrl();
+    if (!form || !sendUrl) {
       showErr("Cannot send — reload the page.");
       return;
     }
@@ -205,15 +247,15 @@
       showErr("Security token missing — refresh the page and try again.");
       return;
     }
-    fetch(cfg.sendUrl, {
+    fetch(sendUrl, {
       method: "POST",
       headers: {
         "X-Requested-With": "XMLHttpRequest",
         "X-CSRFToken": token,
+        Accept: "application/json",
       },
       body: fd,
       credentials: "same-origin",
-      redirect: "manual",
     })
       .then(function (r) {
         return r.text().then(function (text) {
@@ -228,12 +270,25 @@
       })
       .then(function (res) {
         if (!res.ok || !res.data.ok) {
-          var msg =
-            (res.data && (res.data.error || (res.data.errors && JSON.stringify(res.data.errors)))) ||
-            ("HTTP " + res.status);
+          var msg = "Send failed.";
+          if (res.data && typeof res.data.error === "string" && res.data.error) {
+            msg = res.data.error;
+          } else if (res.data && typeof res.data.detail === "string" && res.data.detail) {
+            msg = res.data.detail;
+          } else if (res.data && res.data.errors) {
+            msg = "Validation failed.";
+          } else {
+            msg = "HTTP " + res.status;
+          }
           if (res.data && res.data.errors) {
             try {
-              msg = JSON.stringify(res.data.errors);
+              var asObj = res.data.errors;
+              var keys = Object.keys(asObj || {});
+              if (keys.length) {
+                var first = keys[0];
+                var firstErr = (asObj[first] && asObj[first][0] && asObj[first][0].message) || "";
+                if (firstErr) msg = first + ": " + firstErr;
+              }
             } catch (e) {}
           }
           showErr(typeof msg === "string" ? msg : "Send failed.");
@@ -251,22 +306,28 @@
 
   if (!form) return;
 
+  function hasAttachmentInFormData(fd) {
+    if (!fd) return false;
+    var keys = ["image", "file", "voice"];
+    for (var i = 0; i < keys.length; i++) {
+      var v = fd.get(keys[i]);
+      if (v && typeof v === "object" && typeof v.size === "number" && v.size > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     var fd = new FormData(form);
     var text = (fd.get("body") || "").toString().trim();
-    var img = form.querySelector('[name="image"]');
-    var fil = form.querySelector('[name="file"]');
-    var voc = form.querySelector('[name="voice"]');
-    var hasFile =
-      (img && img.files && img.files.length) ||
-      (fil && fil.files && fil.files.length) ||
-      (voc && voc.files && voc.files.length);
+    var hasFile = hasAttachmentInFormData(fd);
     if (!text && !hasFile) {
       showErr("Type a message or attach a file.");
       return;
     }
-    if (!cfg.sendUrl || !window.fetch) {
+    if (!normalizedSendUrl() || !window.fetch) {
       form.submit();
       return;
     }
@@ -274,4 +335,20 @@
   });
 
   if (panel) panel.scrollTop = panel.scrollHeight;
+
+  ["image", "file", "voice"].forEach(function (name) {
+    var input = form ? form.querySelector('[name="' + name + '"]') : null;
+    if (!input) return;
+    input.addEventListener("change", function () {
+      var f = input.files && input.files[0];
+      if (!f) return;
+      showErr("Attached: " + f.name + " (" + Math.ceil(f.size / 1024) + " KB)");
+      /* Auto-send attachment immediately after selection */
+      if (window.fetch && normalizedSendUrl()) {
+        sendWithFiles(null);
+      } else {
+        form.submit();
+      }
+    });
+  });
 })();

@@ -1,6 +1,8 @@
 import json
+import logging
 
 from django.contrib import messages
+from django.conf import settings
 from django.db.models import Max
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -17,6 +19,151 @@ from .mixins import ChatDashboardAccessMixin, ChatPageContextMixin
 from .models import ChatMember, ChatMessage, ChatRoom
 from .services import create_group_room, get_or_create_direct_room
 
+logger = logging.getLogger(__name__)
+
+
+def _upload_basename(upload) -> str:
+    return (getattr(upload, "name", "") or "").split("/")[-1].split("\\")[-1]
+
+
+def _upload_ext(upload) -> str:
+    name = (_upload_basename(upload) or "").lower()
+    if "." not in name:
+        return ""
+    return name.rsplit(".", 1)[-1]
+
+
+def _upload_ct(upload) -> str:
+    if upload is None:
+        return ""
+    return (getattr(upload, "content_type", None) or "").lower()
+
+
+def _looks_like_raster_image(upload) -> bool:
+    """
+    Browsers often send camera/gallery files as application/octet-stream or with no extension.
+    ImageField still needs a raster Pillow can open (HEIC may fail — handled via save fallback).
+    """
+    if upload is None:
+        return False
+    ct = _upload_ct(upload)
+    ext = _upload_ext(upload)
+    if ct == "image/svg+xml" or ext == "svg":
+        return False
+    if ct.startswith("image/"):
+        return True
+    if ext in ("jpg", "jpeg", "png", "gif", "webp", "bmp", "tif", "tiff", "jfif", "heic", "heif"):
+        return True
+    if ct not in ("application/octet-stream", "binary/octet-stream", ""):
+        return False
+    try:
+        from io import BytesIO
+
+        from PIL import Image as PILImage
+
+        upload.seek(0)
+        head = upload.read(512 * 1024)
+        upload.seek(0)
+        if not head:
+            return False
+        im = PILImage.open(BytesIO(head))
+        im.load()
+        im.close()
+        return True
+    except Exception:
+        try:
+            upload.seek(0)
+        except Exception:
+            pass
+        return False
+
+
+def _create_message_with_image_fallback(
+    *,
+    room,
+    sender,
+    message_type,
+    body,
+    save_image,
+    save_file,
+    save_voice,
+    display,
+):
+    """
+    Try normal create; if ImageField rejects the file (e.g. HEIC / odd encodings),
+    store the same upload on ``file`` so the attachment is not lost.
+    """
+    display = (display or "")[:255]
+    try:
+        return ChatMessage.objects.create(
+            room=room,
+            sender=sender,
+            message_type=message_type,
+            body=body,
+            image=save_image,
+            file=save_file,
+            voice=save_voice,
+            file_display_name=display,
+        )
+    except Exception:
+        if save_image and not save_file:
+            return ChatMessage.objects.create(
+                room=room,
+                sender=sender,
+                message_type=ChatMessage.MessageType.FILE,
+                body=body,
+                image=None,
+                file=save_image,
+                voice=save_voice,
+                file_display_name=(_upload_basename(save_image) or display or "photo")[:255],
+            )
+        raise
+
+
+def _message_payload(request, msg: ChatMessage) -> dict:
+    """Shape used by JSON + WebSocket clients (``type`` must be the stored code: image, file, …)."""
+    mtype = msg.message_type
+    if hasattr(mtype, "value"):
+        mtype = mtype.value
+    sender = msg.sender
+    sender_name = getattr(sender, "name", None) or getattr(sender, "email", "") or ""
+    image_url = None
+    if msg.image:
+        try:
+            if msg.image.storage.exists(msg.image.name):
+                image_url = request.build_absolute_uri(msg.image.url)
+        except Exception:
+            image_url = None
+
+    file_url = None
+    if msg.file:
+        try:
+            if msg.file.storage.exists(msg.file.name):
+                file_url = request.build_absolute_uri(msg.file.url)
+        except Exception:
+            file_url = None
+
+    voice_url = None
+    if msg.voice:
+        try:
+            if msg.voice.storage.exists(msg.voice.name):
+                voice_url = request.build_absolute_uri(msg.voice.url)
+        except Exception:
+            voice_url = None
+
+    return {
+        "id": msg.pk,
+        "type": str(mtype),
+        "body": msg.body,
+        "sender": sender_name,
+        "sender_id": msg.sender_id,
+        "created": msg.created_at.isoformat(),
+        "image_url": image_url,
+        "file_url": file_url,
+        "file_name": msg.file_display_name or (_upload_basename(msg.file) if msg.file else ""),
+        "voice_url": voice_url,
+    }
+
 
 def _last_messages_for_rooms(room_ids: list) -> dict:
     if not room_ids:
@@ -30,6 +177,29 @@ def _last_messages_for_rooms(room_ids: list) -> dict:
         if msg.room_id not in last_by:
             last_by[msg.room_id] = msg
     return last_by
+
+
+def _mark_media_availability(messages):
+    for m in messages:
+        m.image_exists = False
+        m.file_exists = False
+        m.voice_exists = False
+        if m.image:
+            try:
+                m.image_exists = bool(m.image.storage.exists(m.image.name))
+            except Exception:
+                m.image_exists = False
+        if m.file:
+            try:
+                m.file_exists = bool(m.file.storage.exists(m.file.name))
+            except Exception:
+                m.file_exists = False
+        if m.voice:
+            try:
+                m.voice_exists = bool(m.voice.storage.exists(m.voice.name))
+            except Exception:
+                m.voice_exists = False
+    return messages
 
 
 def _tenant_users_queryset(request):
@@ -98,19 +268,19 @@ class ChatAppView(ChatDashboardAccessMixin, TemplateView):
         if active:
             ctx["room_id"] = active.pk
             ctx["active_room"] = active
-            ctx["chat_messages"] = (
+            chat_messages = list(
                 ChatMessage.objects.filter(room=active)
                 .select_related("sender")
                 .order_by("created_at")[:200]
             )
+            ctx["chat_messages"] = _mark_media_availability(chat_messages)
             ws_scheme = "wss" if request.is_secure() else "ws"
             host = request.get_host()
             payload = {
                 "roomId": active.pk,
                 "displayTitle": active.display_title(request.user),
-                "sendUrl": request.build_absolute_uri(
-                    reverse("chat:send_message", kwargs={"room_id": active.pk})
-                ),
+                "sendUrl": reverse("chat:send_message", kwargs={"room_id": active.pk}),
+                "wsPath": f"/ws/chat/{active.pk}/",
                 "wsUrl": f"{ws_scheme}://{host}/ws/chat/{active.pk}/",
             }
             ctx["chat_json"] = json.dumps(payload)
@@ -161,6 +331,12 @@ class PostMessageView(ChatDashboardAccessMixin, View):
         room = _room_for_user(request, room_id)
         form = ChatMessageForm(request.POST, request.FILES)
         if not form.is_valid():
+            logger.warning(
+                "Chat upload validation failed room=%s user=%s errors=%s",
+                room.pk,
+                request.user.pk,
+                form.errors.as_json(),
+            )
             if request.headers.get("X-Requested-With") == "XMLHttpRequest":
                 return JsonResponse(
                     {
@@ -178,11 +354,6 @@ class PostMessageView(ChatDashboardAccessMixin, View):
         file = form.cleaned_data.get("file")
         voice = form.cleaned_data.get("voice")
 
-        def _ctype(f):
-            if f is None:
-                return ""
-            return (getattr(f, "content_type", None) or "").lower()
-
         msg_type = ChatMessage.MessageType.TEXT
         save_image = None
         save_file = None
@@ -193,25 +364,23 @@ class PostMessageView(ChatDashboardAccessMixin, View):
             msg_type = ChatMessage.MessageType.VOICE
             save_voice = voice
         elif image:
-            ct = _ctype(image)
-            if ct.startswith("image/") or (getattr(image, "name", "") or "").lower().rsplit(".", 1)[-1] in (
-                "jpg",
-                "jpeg",
-                "png",
-                "gif",
-                "webp",
-                "bmp",
-            ):
+            ct = _upload_ct(image)
+            ext = _upload_ext(image)
+            if ct == "image/svg+xml" or ext == "svg":
+                msg_type = ChatMessage.MessageType.FILE
+                save_file = image
+                display = (_upload_basename(image) or "")[:255]
+            elif _looks_like_raster_image(image):
                 msg_type = ChatMessage.MessageType.IMAGE
                 save_image = image
             else:
                 msg_type = ChatMessage.MessageType.FILE
                 save_file = image
-                display = (getattr(image, "name", "") or "")[:255]
+                display = (_upload_basename(image) or "")[:255]
         elif file:
             msg_type = ChatMessage.MessageType.FILE
             save_file = file
-            display = (getattr(file, "name", "") or "")[:255]
+            display = (_upload_basename(file) or "")[:255]
 
         if not body and not save_image and not save_file and not save_voice:
             if request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -219,23 +388,83 @@ class PostMessageView(ChatDashboardAccessMixin, View):
             return redirect(f"{reverse('chat:chat_app')}?room={room.pk}")
 
         if not display and save_file:
-            display = (getattr(save_file, "name", "") or "")[:255]
+            display = (_upload_basename(save_file) or "")[:255]
 
         try:
-            msg = ChatMessage.objects.create(
-                room=room,
-                sender=request.user,
-                message_type=msg_type,
-                body=body,
-                image=save_image,
-                file=save_file,
-                voice=save_voice,
-                file_display_name=display[:255],
-            )
+            if msg_type == ChatMessage.MessageType.IMAGE and save_image:
+                msg = _create_message_with_image_fallback(
+                    room=room,
+                    sender=request.user,
+                    message_type=msg_type,
+                    body=body,
+                    save_image=save_image,
+                    save_file=None,
+                    save_voice=save_voice,
+                    display=display,
+                )
+            else:
+                msg = ChatMessage.objects.create(
+                    room=room,
+                    sender=request.user,
+                    message_type=msg_type,
+                    body=body,
+                    image=save_image,
+                    file=save_file,
+                    voice=save_voice,
+                    file_display_name=display[:255],
+                )
+            # Ensure saved attachments physically exist; otherwise prevent broken 404 messages.
+            missing = []
+            if msg.image:
+                try:
+                    if not msg.image.storage.exists(msg.image.name):
+                        missing.append("image")
+                except Exception:
+                    missing.append("image")
+            if msg.file:
+                try:
+                    if not msg.file.storage.exists(msg.file.name):
+                        missing.append("file")
+                except Exception:
+                    missing.append("file")
+            if msg.voice:
+                try:
+                    if not msg.voice.storage.exists(msg.voice.name):
+                        missing.append("voice")
+                except Exception:
+                    missing.append("voice")
+            if missing:
+                logger.error(
+                    "Chat attachment missing after save room=%s user=%s msg=%s missing=%s",
+                    room.pk,
+                    request.user.pk,
+                    msg.pk,
+                    ",".join(missing),
+                )
+                msg.delete()
+                if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                    return JsonResponse(
+                        {"ok": False, "error": "Attachment upload failed on server storage. Please retry."},
+                        status=400,
+                    )
+                messages.error(request, "Attachment upload failed. Please retry.")
+                return redirect(f"{reverse('chat:chat_app')}?room={room.pk}")
         except Exception:
+            logger.exception(
+                "Chat attachment save failed room=%s user=%s type=%s image=%s file=%s voice=%s",
+                room.pk,
+                request.user.pk,
+                str(msg_type),
+                bool(save_image),
+                bool(save_file),
+                bool(save_voice),
+            )
             if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                detail = "Could not save this attachment. Try another file or format."
+                if settings.DEBUG:
+                    detail = "Could not save attachment (see server log for traceback)."
                 return JsonResponse(
-                    {"ok": False, "error": "Could not save this attachment. Try another file or format."},
+                    {"ok": False, "error": detail},
                     status=400,
                 )
             messages.error(request, "Could not save attachment.")
@@ -243,18 +472,7 @@ class PostMessageView(ChatDashboardAccessMixin, View):
 
         ws_payload = {
             "event": "new_message",
-            "message": {
-                "id": msg.pk,
-                "type": str(msg.message_type),
-                "body": msg.body,
-                "sender": request.user.name,
-                "sender_id": request.user.pk,
-                "created": msg.created_at.isoformat(),
-                "image_url": request.build_absolute_uri(msg.image.url) if msg.image else None,
-                "file_url": request.build_absolute_uri(msg.file.url) if msg.file else None,
-                "file_name": msg.file_display_name or (msg.file.name if msg.file else ""),
-                "voice_url": request.build_absolute_uri(msg.voice.url) if msg.voice else None,
-            },
+            "message": _message_payload(request, msg),
         }
         broadcast_room_message(room.pk, ws_payload)
 

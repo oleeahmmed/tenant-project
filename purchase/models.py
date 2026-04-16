@@ -151,7 +151,7 @@ class GoodsReceipt(PurchaseTimestampedModel):
     def clean(self):
         if self.purchase_order_id and self.supplier_id and self.purchase_order.supplier_id != self.supplier_id:
             raise ValidationError({"supplier": "Supplier must match selected purchase order."})
-        if self.purchase_order_id and self.purchase_order.tenant_id != self.tenant_id:
+        if self.tenant_id and self.purchase_order_id and self.purchase_order.tenant_id != self.tenant_id:
             raise ValidationError({"purchase_order": "Purchase order must belong to same tenant."})
 
 
@@ -215,7 +215,7 @@ class PurchaseReturn(PurchaseTimestampedModel):
         self.total_amount = sum((l.line_total for l in self.lines.all()), Decimal("0"))
 
     def clean(self):
-        if self.goods_receipt_id and self.goods_receipt.tenant_id != self.tenant_id:
+        if self.tenant_id and self.goods_receipt_id and self.goods_receipt.tenant_id != self.tenant_id:
             raise ValidationError({"goods_receipt": "Goods receipt must belong to same tenant."})
         if self.goods_receipt_id and self.supplier_id and self.goods_receipt.supplier_id != self.supplier_id:
             raise ValidationError({"supplier": "Supplier must match selected goods receipt."})

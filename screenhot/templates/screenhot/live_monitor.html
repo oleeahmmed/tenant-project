@@ -10,23 +10,76 @@
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
         <div>
           <h2 class="text-xl font-bold text-foreground">Live monitor</h2>
-          <p class="text-sm text-muted-foreground mt-0.5">Latest screenshot and current attendance status per employee.</p>
+          <p id="projectLabel" class="text-sm text-muted-foreground mt-0.5">Latest screenshot and current attendance status per employee.</p>
         </div>
       </div>
       <div class="inv-list-filter border-b border-border/70 px-4 py-4">
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <select id="monitorEmployee" class="inv-list-control">
-            <option value="">All employees</option>
-          </select>
-          <button type="button" id="refreshMonitor" class="inline-flex items-center justify-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent">
-            Refresh
+        <div id="departmentButtons" class="flex flex-wrap items-center gap-2">
+          <button type="button" class="monitor-dept-btn inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-accent" data-dept="">
+            All departments
           </button>
-          <p class="text-xs text-muted-foreground self-center">Auto refresh প্রতি 10 সেকেন্ড</p>
         </div>
+        <p class="mt-3 text-xs text-muted-foreground">Auto refresh প্রতি 10 সেকেন্ড</p>
       </div>
       <div id="liveMonitorGrid" class="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
         <div class="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">Loading...</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div id="videoGenerateModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+  <div class="w-full max-w-xl rounded-xl border border-border bg-card shadow-card">
+    <div class="flex items-center justify-between border-b border-border px-4 py-3">
+      <h3 class="text-base font-semibold text-foreground">Generate monitor video</h3>
+      <button type="button" data-close-modal class="rounded-md border border-border px-3 py-1 text-xs text-muted-foreground hover:bg-accent">Close</button>
+    </div>
+    <form id="videoGenerateForm" class="space-y-3 p-4">
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div>
+          <label class="mb-1 block text-xs text-muted-foreground">Employee</label>
+          <input id="videoEmployeeLabel" type="text" class="inv-list-control" readonly />
+          <input id="videoEmployee" type="hidden" />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs text-muted-foreground">FPS</label>
+          <input id="videoFps" type="number" min="1" max="30" value="2" class="inv-list-control" />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs text-muted-foreground">Date from</label>
+          <input id="videoDateFrom" type="date" class="inv-list-control" required />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs text-muted-foreground">Date to</label>
+          <input id="videoDateTo" type="date" class="inv-list-control" required />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs text-muted-foreground">Time from (optional)</label>
+          <input id="videoTimeFrom" type="time" class="inv-list-control" />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs text-muted-foreground">Time to (optional)</label>
+          <input id="videoTimeTo" type="time" class="inv-list-control" />
+        </div>
+      </div>
+      <div class="flex items-center justify-between gap-3 pt-2">
+        <p id="videoJobStatus" class="text-xs text-muted-foreground">Fill the form and submit.</p>
+        <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+          Submit
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="videoPlayerModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
+  <div class="w-full max-w-3xl rounded-xl border border-border bg-card shadow-card">
+    <div class="flex items-center justify-between border-b border-border px-4 py-3">
+      <h3 class="text-base font-semibold text-foreground">Generated video</h3>
+      <button type="button" data-close-player class="rounded-md border border-border px-3 py-1 text-xs text-muted-foreground hover:bg-accent">Close</button>
+    </div>
+    <div class="p-4">
+      <video id="generatedVideoPlayer" controls class="h-auto max-h-[70vh] w-full rounded-lg border border-border bg-black"></video>
     </div>
   </div>
 </div>
@@ -37,8 +90,22 @@
 <script>
 (function () {
   const apiBase = '/api/screenhot';
-  const employeeSelect = document.getElementById('monitorEmployee');
+  const initialProjectKey = '{{ request.GET.project_key|default_if_none:""|escapejs }}';
+  const projectLabel = document.getElementById('projectLabel');
+  const departmentButtons = document.getElementById('departmentButtons');
+  const videoGenerateModal = document.getElementById('videoGenerateModal');
+  const videoGenerateForm = document.getElementById('videoGenerateForm');
+  const videoStatusText = document.getElementById('videoJobStatus');
+  const videoEmployeeLabel = document.getElementById('videoEmployeeLabel');
+  const videoEmployeeSelect = document.getElementById('videoEmployee');
+  const videoDateFromInput = document.getElementById('videoDateFrom');
+  const videoDateToInput = document.getElementById('videoDateTo');
+  const videoPlayerModal = document.getElementById('videoPlayerModal');
+  const videoPlayer = document.getElementById('generatedVideoPlayer');
   const grid = document.getElementById('liveMonitorGrid');
+  let currentProject = null;
+  let activeDepartmentId = '';
+  let pendingJobId = null;
   let timer = null;
 
   function fmt(value) {
@@ -48,19 +115,56 @@
     return d.toLocaleString();
   }
 
-  async function loadEmployees() {
-    const res = await fetch(`${apiBase}/employees/`, { credentials: 'same-origin' });
-    if (!res.ok) return;
-    const users = await res.json();
-    employeeSelect.innerHTML = '<option value="">All employees</option>' + users.map(u =>
-      `<option value="${u.id}">${u.name} (${u.email})</option>`
-    ).join('');
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return '';
+  }
+
+  function paramsForScope(projectKey, departmentId, employeeId) {
+    const params = new URLSearchParams();
+    if (projectKey) params.set('project_key', projectKey);
+    if (departmentId) params.set('department_id', departmentId);
+    if (employeeId) params.set('employee_id', employeeId);
+    return params;
+  }
+
+  async function loadProjects() {
+    const res = await fetch(`${apiBase}/projects/`, { credentials: 'same-origin' });
+    if (!res.ok) return [];
+    const rows = await res.json();
+    currentProject = rows.find(p => p.key === initialProjectKey) || null;
+    if (currentProject) {
+      projectLabel.textContent = `Project: ${currentProject.key} - ${currentProject.name}`;
+    } else {
+      projectLabel.textContent = 'Project not selected. Please open from project board.';
+    }
+    return rows;
+  }
+
+  async function loadDepartments(projectKey) {
+    if (!projectKey) {
+      departmentButtons.innerHTML = '';
+      return [];
+    }
+    const params = new URLSearchParams({ project_key: projectKey });
+    const res = await fetch(`${apiBase}/departments/?${params.toString()}`, { credentials: 'same-origin' });
+    if (!res.ok) return [];
+    const rows = await res.json();
+    departmentButtons.innerHTML =
+      '<button type="button" class="monitor-dept-btn inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-accent" data-dept="">All departments</button>' +
+      rows.map(d => `<button type="button" class="monitor-dept-btn inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-accent" data-dept="${d.id}">${d.name}</button>`).join('');
+    return rows;
   }
 
   async function loadMonitor() {
+    if (!initialProjectKey) {
+      grid.innerHTML = '<div class="rounded-xl border border-amber-300 bg-card p-4 text-sm text-amber-700">Project context missing. Open live monitor from a Jira project page.</div>';
+      return;
+    }
     grid.innerHTML = '<div class="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">Loading...</div>';
-    const params = new URLSearchParams();
-    if (employeeSelect.value) params.set('employee_id', employeeSelect.value);
+    const params = paramsForScope(initialProjectKey, activeDepartmentId, '');
     const qs = params.toString();
     const res = await fetch(`${apiBase}/live-monitor/${qs ? `?${qs}` : ''}`, { credentials: 'same-origin' });
     if (!res.ok) {
@@ -93,8 +197,19 @@
             ? '<span class="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700">Live</span>'
             : `<span class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">${row.screenshot_reason || 'Not live'}</span>`}
         </div>
+        <button
+          type="button"
+          class="open-generate-card mt-3 inline-flex items-center justify-center rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:opacity-90"
+          data-employee-id="${row.employee.id}"
+          data-employee-name="${(row.employee.name || '').replace(/"/g, '&quot;')}"
+          data-employee-email="${(row.employee.email || '').replace(/"/g, '&quot;')}"
+        >
+          Generate video
+        </button>
       </div>
     `).join('');
+    bindCardGenerateButtons();
+    paintActiveDepartment();
   }
 
   function startTimer() {
@@ -102,11 +217,139 @@
     timer = setInterval(loadMonitor, 10000);
   }
 
-  document.getElementById('refreshMonitor').addEventListener('click', loadMonitor);
-  employeeSelect.addEventListener('change', loadMonitor);
+  function openGenerateModal() {
+    videoStatusText.textContent = 'Fill the form and submit.';
+    videoGenerateModal.classList.remove('hidden');
+    videoGenerateModal.classList.add('flex');
+  }
 
-  Promise.resolve(loadEmployees()).finally(function () {
-    loadMonitor();
+  function closeGenerateModal() {
+    videoGenerateModal.classList.add('hidden');
+    videoGenerateModal.classList.remove('flex');
+  }
+
+  function openPlayer(url) {
+    videoPlayer.src = url;
+    videoPlayerModal.classList.remove('hidden');
+    videoPlayerModal.classList.add('flex');
+    videoPlayer.play().catch(() => {});
+  }
+
+  function closePlayer() {
+    videoPlayer.pause();
+    videoPlayer.src = '';
+    videoPlayerModal.classList.add('hidden');
+    videoPlayerModal.classList.remove('flex');
+  }
+
+  async function pollVideoStatus(jobId) {
+    pendingJobId = jobId;
+    videoStatusText.textContent = `Job #${jobId} submitted. Processing in background...`;
+    const run = async function () {
+      if (!pendingJobId) return;
+      const res = await fetch(`${apiBase}/video/status/${jobId}/`, { credentials: 'same-origin' });
+      if (!res.ok) {
+        videoStatusText.textContent = 'Could not read job status.';
+        return;
+      }
+      const data = await res.json();
+      if (data.status === 'completed' && data.output_url) {
+        pendingJobId = null;
+        videoStatusText.textContent = 'Video generated successfully.';
+        closeGenerateModal();
+        openPlayer(data.output_url);
+        return;
+      }
+      if (data.status === 'failed') {
+        pendingJobId = null;
+        videoStatusText.textContent = data.error_message || 'Video generation failed.';
+        return;
+      }
+      setTimeout(run, 3000);
+    };
+    setTimeout(run, 1500);
+  }
+
+  function paintActiveDepartment() {
+    Array.prototype.forEach.call(document.querySelectorAll('.monitor-dept-btn'), function (btn) {
+      const isActive = String(btn.dataset.dept || '') === String(activeDepartmentId || '');
+      if (isActive) {
+        btn.classList.add('bg-primary/10', 'text-primary');
+      } else {
+        btn.classList.remove('bg-primary/10', 'text-primary');
+      }
+    });
+  }
+
+  function bindDepartmentButtons() {
+    Array.prototype.forEach.call(document.querySelectorAll('.monitor-dept-btn'), function (btn) {
+      btn.addEventListener('click', async function () {
+        activeDepartmentId = btn.dataset.dept || '';
+        await loadMonitor();
+      });
+    });
+    paintActiveDepartment();
+  }
+
+  function bindCardGenerateButtons() {
+    Array.prototype.forEach.call(document.querySelectorAll('.open-generate-card'), function (btn) {
+      btn.addEventListener('click', function () {
+        const employeeId = btn.dataset.employeeId || '';
+        const employeeName = btn.dataset.employeeName || 'Employee';
+        const employeeEmail = btn.dataset.employeeEmail || '';
+        videoEmployeeSelect.value = employeeId;
+        videoEmployeeLabel.value = employeeEmail ? `${employeeName} (${employeeEmail})` : employeeName;
+        openGenerateModal();
+      });
+    });
+  }
+
+  document.querySelector('[data-close-modal]').addEventListener('click', closeGenerateModal);
+  document.querySelector('[data-close-player]').addEventListener('click', closePlayer);
+  videoDateFromInput.addEventListener('change', function () {
+    if (!videoDateFromInput.value) return;
+    if (!videoDateToInput.value || videoDateToInput.value < videoDateFromInput.value) {
+      videoDateToInput.value = videoDateFromInput.value;
+    }
+  });
+
+  videoGenerateForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    const payload = {
+      target_user: videoEmployeeSelect.value,
+      date_from: document.getElementById('videoDateFrom').value,
+      date_to: document.getElementById('videoDateTo').value,
+      time_from: document.getElementById('videoTimeFrom').value || null,
+      time_to: document.getElementById('videoTimeTo').value || null,
+      fps: Number(document.getElementById('videoFps').value || 2),
+    };
+    if (initialProjectKey) payload.project_key = initialProjectKey;
+    if (activeDepartmentId) payload.department_id = activeDepartmentId;
+    if (!payload.target_user || !payload.date_from || !payload.date_to || !initialProjectKey) {
+      videoStatusText.textContent = 'Project context, employee, date from and date to are required.';
+      return;
+    }
+    const res = await fetch(`${apiBase}/video/generate/`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+      },
+      body: JSON.stringify(payload),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      videoStatusText.textContent = body.detail || 'Video generate request failed.';
+      return;
+    }
+    await pollVideoStatus(body.job_id);
+  });
+
+  Promise.resolve(loadProjects()).finally(async function () {
+    await loadDepartments(initialProjectKey);
+    bindDepartmentButtons();
+    await loadMonitor();
     startTimer();
   });
 })();

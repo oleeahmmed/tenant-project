@@ -45,5 +45,5 @@ htmlcov/
 # erp_project/
 
 # Exclude ui reference folder
-ui/
+# ui/
 guide.md

@@ -1,3 +1,5 @@
+import base64
+import hashlib
 import os
 from pathlib import Path
 from datetime import timedelta
@@ -8,6 +10,16 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False") == "True"
+
+# Vault: Fernet key for VaultEntry password encryption. Set ENTRY_ENCRYPTION_KEY in .env for production.
+# In DEBUG, if unset, derive a stable key from SECRET_KEY so local dev works without extra env vars.
+_vault_enc = (os.getenv("ENTRY_ENCRYPTION_KEY") or "").strip()
+if not _vault_enc and DEBUG and SECRET_KEY:
+    _vault_enc = base64.urlsafe_b64encode(
+        hashlib.sha256(f"vault-entry-fernet:{SECRET_KEY}".encode()).digest()
+    ).decode()
+ENTRY_ENCRYPTION_KEY = _vault_enc
+
 ALLOWED_HOSTS = ["*"]
 
 # When DEBUG=False, still serve /media/ in small deployments (set True); production should use nginx.
@@ -40,6 +52,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "auth_tenants",
+    "notification",
     "hrm",
     "recruitment",
     "foundation",
@@ -49,6 +62,7 @@ INSTALLED_APPS = [
     "sales",
     "production",
     "jiraclone",
+    "vault",
     "channels",
     "chat",
     "pos",

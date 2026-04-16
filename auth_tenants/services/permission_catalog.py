@@ -11,6 +11,7 @@ MODULE_TO_APP_LABELS = {
     "sales": ["sales"],
     "production": ["production"],
     "jiraclone": ["jiraclone"],
+    "vault": ["vault"],
     "chat": ["chat"],
     "pos": ["pos"],
     "hrm": ["hrm"],
@@ -18,6 +19,7 @@ MODULE_TO_APP_LABELS = {
     "auth_tenants": ["auth_tenants"],
     "support": ["support"],
     "screenhot": ["screenhot"],
+    "notification": ["notification"],
 }
 
 CRUD_ACTIONS = ("view", "add", "change", "delete")

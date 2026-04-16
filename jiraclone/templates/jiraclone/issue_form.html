@@ -5,7 +5,7 @@
 <div class="inv-list-shell sm:p-1.5">
   <div class="mx-auto max-w-2xl">
     <nav class="text-sm text-muted-foreground mb-4 px-1 md:px-0">
-      <a href="{% url 'jiraclone:project_detail' project_key=project.key %}" class="hover:text-foreground">{{ project.key }}</a>
+      <a href="{% url 'jiraclone:project_board' project_key=project.key %}" class="hover:text-foreground">{{ project.key }}</a>
       {% if issue %}
       <span class="mx-1">/</span>
       <a href="{% url 'jiraclone:issue_detail' project_key=project.key pk=issue.pk %}" class="hover:text-foreground">{{ issue.issue_key }}</a>
@@ -35,7 +35,7 @@
           {% if issue %}
           <a href="{% url 'jiraclone:issue_detail' project_key=project.key pk=issue.pk %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
           {% else %}
-          <a href="{% url 'jiraclone:project_detail' project_key=project.key %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
+          <a href="{% url 'jiraclone:project_board' project_key=project.key %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Cancel</a>
           {% endif %}
         </div>
       </form>

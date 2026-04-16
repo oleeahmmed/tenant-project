@@ -1,12 +1,22 @@
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import include, path, re_path
 from django.shortcuts import redirect
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
 
+from vault.views import VaultSharedEntryPublicView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Chrome DevTools optional probe — avoids harmless 404 noise in runserver logs.
+    re_path(
+        r"^\.well-known/appspecific/com\.chrome\.devtools\.json$",
+        lambda request: HttpResponse(status=204),
+    ),
+    # Public signed link for vault email shares (no login; not under /dashboard/).
+    path("vault/share/", VaultSharedEntryPublicView.as_view(), name="vault_public_share"),
     path('', lambda request: redirect('login'), name='home'),
     path('', include('auth_tenants.urls')),
     path('dashboard/hrm/', include('hrm.urls')),
@@ -17,6 +27,8 @@ urlpatterns = [
     path('dashboard/sales/', include('sales.urls')),
     path('dashboard/production/', include('production.urls')),
     path('dashboard/jiraclone/', include(('jiraclone.urls', 'jiraclone'), namespace='jiraclone')),
+    path('dashboard/notifications/', include(('notification.urls', 'notification'), namespace='notification')),
+    path('dashboard/vault/', include(('vault.urls', 'vault'), namespace='vault')),
     path('dashboard/chat/', include(('chat.urls', 'chat'), namespace='chat')),
     path('dashboard/pos/', include(('pos.urls', 'pos'), namespace='pos')),
     path('dashboard/support/', include(('support.urls', 'support'), namespace='support')),
@@ -25,7 +37,7 @@ urlpatterns = [
     path('api/auth/', include('auth_tenants.api.urls')),
     path('api/foundation/', include(('foundation.api.urls', 'foundation_api'), namespace='foundation_api')),
     path('api/inventory/', include(('inventory.api.urls', 'inventory_api'), namespace='inventory_api')),
-    path('api/jiraclone/', include(('jiraclone.api_urls', 'jiraclone_api'), namespace='jiraclone_api')),
+    path('api/jiraclone/', include(('jiraclone.api.urls', 'jiraclone_api'), namespace='jiraclone_api')),
     path('api/screenhot/', include(('screenhot.api.urls', 'screenhot_api'), namespace='screenhot_api')),
 ]
 

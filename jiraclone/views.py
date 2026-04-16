@@ -21,6 +21,7 @@ from .forms import (
 )
 from .mixins import JiraCloneAdminMixin, JiraCloneDashboardAccessMixin, JiraClonePageContextMixin
 from .models import Issue, JiraProject, ProjectDepartmentAssignment, ProjectTeam
+from .services.assignees import assignable_users_for_project
 
 
 def build_project_onboarding_progress(project):
@@ -98,18 +99,8 @@ class CustomerOnboardListView(JiraCloneDashboardAccessMixin, JiraClonePageContex
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        tenant = self.request.hrm_tenant
         q = (self.request.GET.get("q") or "").strip()
         show_all = (self.request.GET.get("show_all") or "").strip() == "1"
-        customers = Customer.objects.filter(tenant=tenant, is_active=True)
-        if q:
-            customers = customers.filter(
-                Q(name__icontains=q) | Q(customer_code__icontains=q) | Q(email__icontains=q)
-            )
-        elif not show_all:
-            customers = customers.none()
-        customers = customers.order_by("name")
-        ctx["customers"] = customers
         ctx["selected"] = {"q": q, "show_all": show_all}
         return ctx
 
@@ -129,15 +120,20 @@ class CustomerOnboardDetailView(JiraCloneDashboardAccessMixin, JiraClonePageCont
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         customer = self.object
+        q = (self.request.GET.get("q") or "").strip()
         projects = list(
             JiraProject.objects.filter(
             tenant=self.request.hrm_tenant, customer=customer
             ).order_by("key")
         )
+        if q:
+            ql = q.lower()
+            projects = [p for p in projects if ql in (p.key or "").lower() or ql in (p.name or "").lower()]
         project_rows = []
         for project in projects:
             project_rows.append({"project": project, "progress": build_project_onboarding_progress(project)})
         ctx["project_rows"] = project_rows
+        ctx["selected"] = {"q": q}
         return ctx
 
 
@@ -167,7 +163,7 @@ class ProjectCreateView(JiraCloneAdminMixin, JiraClonePageContextMixin, CreateVi
                 self.object.customer = customer
         self.object.save()
         messages.success(self.request, f"Project {self.object.key} created.")
-        return redirect("jiraclone:project_detail", project_key=self.object.key)
+        return redirect("jiraclone:project_board", project_key=self.object.key)
 
     def get_initial(self):
         initial = super().get_initial()
@@ -203,50 +199,14 @@ class ProjectUpdateView(JiraCloneAdminMixin, JiraClonePageContextMixin, ProjectB
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy("jiraclone:project_detail", kwargs={"project_key": self.object.key})
+        return reverse_lazy("jiraclone:project_board", kwargs={"project_key": self.object.key})
 
 
 class ProjectDetailView(
     JiraCloneDashboardAccessMixin, JiraClonePageContextMixin, ProjectByKeyMixin, DetailView
 ):
-    model = JiraProject
-    template_name = "jiraclone/project_detail.html"
-    context_object_name = "project"
-
-    def get_queryset(self):
-        return JiraProject.objects.filter(tenant=self.request.hrm_tenant)
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        project = self.object
-        q = (self.request.GET.get("q") or "").strip()
-        status_id = (self.request.GET.get("status") or "").strip()
-        assignee_id = (self.request.GET.get("assignee") or "").strip()
-        qs = (
-            Issue.objects.filter(project=project)
-            .select_related("issue_type", "status", "reporter")
-            .prefetch_related("assignees")
-        )
-        if q:
-            iq = Q(summary__icontains=q) | Q(description__icontains=q)
-            if q.isdigit():
-                iq |= Q(number=int(q))
-            qs = qs.filter(iq)
-        if status_id.isdigit():
-            qs = qs.filter(status_id=int(status_id))
-        if assignee_id.isdigit():
-            qs = qs.filter(assignees__id=int(assignee_id)).distinct()
-        ctx["issues"] = qs.order_by("-number")
-        ctx["department_assignments"] = project.department_assignments.select_related("department").prefetch_related(
-            "employees"
-        )
-        ctx["onboarding_progress"] = build_project_onboarding_progress(project)
-        ctx["statuses_filter"] = project.issue_statuses.order_by("order")
-        from auth_tenants.models import User
-
-        ctx["tenant_users"] = User.objects.filter(tenant=self.request.hrm_tenant).order_by("name")
-        ctx["selected"] = {"q": q, "status": status_id, "assignee": assignee_id}
-        return ctx
+    def get(self, request, *args, **kwargs):
+        return redirect("jiraclone:project_board", project_key=(kwargs.get("project_key") or "").strip().upper())
 
 
 class BoardView(
@@ -283,7 +243,8 @@ class BoardView(
         ]
         ctx["can_manage_board"] = self.request.user.has_tenant_permission("jiraclone.manage")
         ctx["statuses_json"] = json.dumps([{"id": s.id, "name": s.name} for s in statuses])
-        ctx["team_count"] = project.teams.count()
+        ctx["department_count"] = project.department_assignments.count()
+        ctx["assignable_users"] = list(assignable_users_for_project(project).values("id", "name"))
         return ctx
 
 
@@ -308,8 +269,10 @@ class IssueDetailView(JiraCloneDashboardAccessMixin, JiraClonePageContextMixin, 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         issue = self.object
+        can_manage_issue = self.request.user.has_tenant_permission("jiraclone.manage")
         ctx["comment_form"] = IssueCommentForm()
         ctx["comments"] = issue.comments.select_related("author").order_by("created_at")
+        ctx["can_manage_issue"] = can_manage_issue
         ctx["subtasks"] = (
             issue.subtasks.select_related("issue_type", "status")
             .prefetch_related("assignees")

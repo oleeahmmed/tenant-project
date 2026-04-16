@@ -22,6 +22,7 @@ from foundation.models import (
     Warehouse,
 )
 from hrm.tenant_scope import get_hrm_tenant, user_belongs_to_workspace_tenant
+from jiraclone.models import JiraProject
 
 
 def _resolve_tenant(request, module_code="foundation", required_permission="foundation.view"):
@@ -124,10 +125,62 @@ class CustomerAutocompleteView(FoundationSessionAPIView):
         limit = _limit(request)
         qs = Customer.objects.filter(tenant=tenant, is_active=True).only("id", "customer_code", "name")
         if q:
-            qs = qs.filter(Q(customer_code__icontains=q) | Q(name__icontains=q) | Q(email__icontains=q))
+            qs = qs.filter(name__icontains=q)
         qs = qs.order_by("name")[:limit]
         results = [
             {"id": c.id, "label": f"{c.customer_code} — {c.name}", "code": c.customer_code, "name": c.name}
+            for c in qs
+        ]
+        return Response({"results": results})
+
+
+class CustomerListView(FoundationSessionAPIView):
+    """Richer customer feed for app UIs (cards, autocomplete, dynamic filtering)."""
+
+    def get(self, request):
+        tenant = _resolve_tenant(request)
+        if not tenant:
+            return Response({"detail": "No workspace tenant."}, status=403)
+        q = request.GET.get("q", "").strip()
+        show_all = (request.GET.get("show_all") or "").strip() == "1"
+        limit = _limit(request, default=40, cap=200)
+        qs = Customer.objects.filter(tenant=tenant, is_active=True).only(
+            "id",
+            "customer_code",
+            "name",
+            "email",
+            "phone",
+            "city",
+            "country",
+        )
+        if q:
+            qs = qs.filter(name__icontains=q)
+        elif not show_all:
+            qs = qs.none()
+        qs = qs.order_by("name")[:limit]
+        customer_ids = [c.id for c in qs]
+        first_project_by_customer = {}
+        if customer_ids:
+            project_rows = (
+                JiraProject.objects.filter(tenant=tenant, customer_id__in=customer_ids, is_active=True)
+                .only("key", "customer_id")
+                .order_by("customer_id", "key")
+            )
+            for p in project_rows:
+                if p.customer_id not in first_project_by_customer:
+                    first_project_by_customer[p.customer_id] = p.key
+        results = [
+            {
+                "id": c.id,
+                "label": f"{c.customer_code} — {c.name}",
+                "code": c.customer_code,
+                "name": c.name,
+                "email": c.email or "",
+                "phone": c.phone or "",
+                "city": c.city or "",
+                "country": c.country or "",
+                "first_project_key": first_project_by_customer.get(c.id) or "",
+            }
             for c in qs
         ]
         return Response({"results": results})

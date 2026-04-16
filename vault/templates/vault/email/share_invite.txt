@@ -1,0 +1,13 @@
+{% if tenant_name %}{{ tenant_name }} — {% endif %}Credential shared with you
+
+{% if shared_by_label %}Shared by: {{ shared_by_label }}
+{% endif %}
+Entry: {{ entry.name }}
+Permission: {{ permission_label }}
+{% if expires_at %}Access expires: {{ expires_at }}
+{% endif %}
+
+Open this secure link to view the credential (do not forward):
+{{ link }}
+
+This link is private. Anyone with the link can see the username and password.

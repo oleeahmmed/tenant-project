@@ -1,0 +1,208 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Vault Entry{% endblock %}
+{% block page_title %}Credential Vault · {{ entry.name }}{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="grid gap-4 lg:grid-cols-3">
+      <div class="inv-list-card rounded-xl border border-border bg-card shadow-card lg:col-span-2">
+        <div class="border-b border-border/80 bg-muted/20 px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-bold text-foreground">{{ entry.name }}</h2>
+            <p class="text-sm text-muted-foreground mt-1">{% if entry.category.customer %}{{ entry.category.customer.name }}{% else %}-{% endif %} / {{ entry.category.name }}</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="vault-copy-all-btn" class="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-muted/30">Copy details</button>
+            <a href="{% url 'vault:entry_edit' entry.pk %}" class="rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-muted/30">Edit</a>
+          </div>
+        </div>
+        {{ entry_copy_payload|json_script:"vault-entry-copy-data" }}
+        <div class="p-5 space-y-3 text-sm">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-muted-foreground">Customer:</span>
+            <span class="text-foreground">{% if entry.category.customer %}{{ entry.category.customer.name }}{% else %}-{% endif %}</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-muted-foreground">Project:</span>
+            <span class="text-foreground">{% if entry.project %}{{ entry.project.key }}{% else %}-{% endif %}</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-muted-foreground">URL:</span>
+            <span class="text-foreground break-all">{{ entry.url|default:"-" }}</span>
+            {% if entry.url %}
+            <button type="button" class="vault-copy-field rounded border border-border px-2 py-0.5 text-xs text-foreground hover:bg-muted/30" data-key="url">Copy</button>
+            {% endif %}
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-muted-foreground">Username:</span>
+            <span class="text-foreground">{{ entry.username|default:"-" }}</span>
+            {% if entry.username %}
+            <button type="button" class="vault-copy-field rounded border border-border px-2 py-0.5 text-xs text-foreground hover:bg-muted/30" data-key="username">Copy</button>
+            {% endif %}
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-muted-foreground">Password:</span>
+            {% if password_reveal_active %}
+              {% if revealed_password %}
+                <code class="rounded bg-muted px-2 py-1 text-foreground break-all">{{ revealed_password }}</code>
+                <button type="button" class="vault-copy-field rounded border border-border px-2 py-0.5 text-xs text-foreground hover:bg-muted/30" data-key="password">Copy</button>
+              {% elif password_missing %}
+                <span class="text-muted-foreground">No password saved yet — open <strong>Edit</strong> and set one.</span>
+              {% elif password_reveal_unreadable %}
+                <span class="text-sm text-red-700">Could not read this password (wrong encryption key or corrupted data). If you changed <code class="text-xs">ENTRY_ENCRYPTION_KEY</code>, old passwords cannot be decrypted.</span>
+              {% endif %}
+              <form method="post" action="{% url 'vault:entry_hide_password' entry.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="rounded-lg border border-border px-2 py-1 text-xs text-foreground hover:bg-muted/30">Hide</button>
+              </form>
+            {% else %}
+              <code class="rounded bg-muted px-2 py-1 text-muted-foreground">Hidden</code>
+              <form method="post" action="{% url 'vault:entry_reveal' entry.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="rounded-lg border border-border px-2 py-1 text-xs text-foreground hover:bg-muted/30">Reveal</button>
+              </form>
+            {% endif %}
+          </div>
+          <div><span class="text-muted-foreground">Notes:</span> <p class="mt-1 whitespace-pre-wrap text-foreground">{{ entry.notes|default:"-" }}</p></div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="inv-list-card rounded-xl border border-border bg-card shadow-card p-4">
+          <h3 class="text-sm font-semibold text-foreground mb-2">Attach file</h3>
+          <form method="post" action="{% url 'vault:entry_attachment' entry.pk %}" enctype="multipart/form-data" class="space-y-2">
+            {% csrf_token %}
+            <div class="grid gap-2 sm:grid-cols-2">
+              {% for field in attachment_form %}
+                <div>
+                  <label class="mb-1 block text-xs text-muted-foreground">{{ field.label }}</label>
+                  {{ field }}
+                </div>
+              {% endfor %}
+            </div>
+            <button type="submit" class="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:opacity-90">Upload</button>
+          </form>
+          <ul class="mt-3 space-y-1 text-xs">
+            {% for file in entry.attachments.all %}
+              <li><a href="{{ file.file.url }}" class="text-primary hover:underline">{{ file.title|default:file.file.name }}</a></li>
+            {% empty %}
+              <li class="text-muted-foreground">No attachment yet.</li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <div class="inv-list-card rounded-xl border border-border bg-card shadow-card p-4">
+          <h3 class="text-sm font-semibold text-foreground mb-2">Share entry</h3>
+          <p class="text-xs text-muted-foreground mb-3">Saves the invite and sends an email with a secure link. The recipient can open it without logging in (keep the link private).</p>
+          <form method="post" action="{% url 'vault:entry_share' entry.pk %}" class="space-y-2">
+            {% csrf_token %}
+            <div class="grid gap-2 sm:grid-cols-2">
+              {% for field in share_form %}
+                <div>
+                  <label class="mb-1 block text-xs text-muted-foreground">{{ field.label }}</label>
+                  {{ field }}
+                </div>
+              {% endfor %}
+            </div>
+            <button type="submit" class="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:opacity-90">Save &amp; email invite</button>
+          </form>
+          <ul class="mt-3 space-y-1 text-xs">
+            {% for share in entry.shares.all %}
+              <li class="text-muted-foreground">
+                {{ share.shared_with_email }} ({{ share.get_permission_display }})
+                {% if share.expires_at %}· until {{ share.expires_at }}{% endif %}
+                {% if not share.is_active %}· <span class="text-red-600">inactive</span>{% endif %}
+              </li>
+            {% empty %}
+              <li class="text-muted-foreground">No shares yet.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  function flashBtn(btn, ok) {
+    if (!btn) return;
+    var prev = btn.textContent;
+    btn.textContent = ok ? "Copied!" : "Failed";
+    btn.disabled = true;
+    setTimeout(function () {
+      btn.textContent = prev;
+      btn.disabled = false;
+    }, 1600);
+  }
+
+  function copyText(text) {
+    if (text == null || text === "") return Promise.resolve(false);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function () { return true; }).catch(function () { return legacyCopy(text); });
+    }
+    return Promise.resolve(legacyCopy(text));
+  }
+
+  function legacyCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      return document.execCommand("copy");
+    } catch (e) {
+      return false;
+    } finally {
+      document.body.removeChild(ta);
+    }
+  }
+
+  function getCopyPayload() {
+    var el = document.getElementById("vault-entry-copy-data");
+    if (!el || !el.textContent) return null;
+    try {
+      return JSON.parse(el.textContent);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function buildShareBlock() {
+    var d = getCopyPayload();
+    if (!d) return "";
+    var lines = [];
+    lines.push("Name: " + (d.name || "-"));
+    lines.push("Customer: " + (d.customer || "-"));
+    lines.push("Project: " + (d.project || "-"));
+    lines.push("URL: " + (d.url || "-"));
+    lines.push("Username: " + (d.username || "-"));
+    if (d.password) {
+      lines.push("Password: " + d.password);
+    } else {
+      lines.push("Password: (reveal on this page first to include the real password)");
+    }
+    lines.push("Notes: " + (d.notes || "-"));
+    return lines.join("\n");
+  }
+
+  var allBtn = document.getElementById("vault-copy-all-btn");
+  if (allBtn) {
+    allBtn.addEventListener("click", function () {
+      copyText(buildShareBlock()).then(function (ok) { flashBtn(allBtn, ok); });
+    });
+  }
+
+  document.querySelectorAll(".vault-copy-field").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var key = btn.getAttribute("data-key");
+      var d = getCopyPayload();
+      var v = d && key && Object.prototype.hasOwnProperty.call(d, key) ? String(d[key] || "") : "";
+      copyText(v).then(function (ok) { flashBtn(btn, ok); });
+    });
+  });
+})();
+</script>
+{% endblock %}

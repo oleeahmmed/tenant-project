@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth theme-transition">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Dashboard | Simple</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            border: 'hsl(var(--border) / <alpha-value>)',
+            input: 'hsl(var(--input) / <alpha-value>)',
+            ring: 'hsl(var(--ring) / <alpha-value>)',
+            background: 'hsl(var(--background) / <alpha-value>)',
+            foreground: 'hsl(var(--foreground) / <alpha-value>)',
+            primary: {
+              DEFAULT: 'hsl(var(--primary) / <alpha-value>)',
+              foreground: 'hsl(var(--primary-foreground) / <alpha-value>)',
+            },
+            secondary: {
+              DEFAULT: 'hsl(var(--secondary) / <alpha-value>)',
+              foreground: 'hsl(var(--secondary-foreground) / <alpha-value>)',
+            },
+            muted: {
+              DEFAULT: 'hsl(var(--muted) / <alpha-value>)',
+              foreground: 'hsl(var(--muted-foreground) / <alpha-value>)',
+            },
+            accent: {
+              DEFAULT: 'hsl(var(--accent) / <alpha-value>)',
+              foreground: 'hsl(var(--accent-foreground) / <alpha-value>)',
+            },
+            destructive: {
+              DEFAULT: 'hsl(var(--destructive) / <alpha-value>)',
+              foreground: 'hsl(var(--destructive-foreground) / <alpha-value>)',
+            },
+            card: {
+              DEFAULT: 'hsl(var(--card) / <alpha-value>)',
+              foreground: 'hsl(var(--card-foreground) / <alpha-value>)',
+            },
+            popover: {
+              DEFAULT: 'hsl(var(--popover) / <alpha-value>)',
+              foreground: 'hsl(var(--popover-foreground) / <alpha-value>)',
+            },
+            chart: {
+              1: 'hsl(var(--chart-1) / <alpha-value>)',
+              2: 'hsl(var(--chart-2) / <alpha-value>)',
+              3: 'hsl(var(--chart-3) / <alpha-value>)',
+              4: 'hsl(var(--chart-4) / <alpha-value>)',
+              5: 'hsl(var(--chart-5) / <alpha-value>)',
+            },
+          },
+          borderRadius: {
+            lg: 'var(--radius)',
+            md: 'calc(var(--radius) - 2px)',
+            sm: 'calc(var(--radius) - 4px)',
+          },
+          boxShadow: {
+            card: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+            header: '0 1px 0 0 hsl(var(--border) / 1)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 222.2 84% 4.9%;
+      --card: 0 0% 100%;
+      --card-foreground: 222.2 84% 4.9%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 222.2 84% 4.9%;
+      --primary: 222.2 47.4% 11.2%;
+      --primary-foreground: 210 40% 98%;
+      --secondary: 210 40% 96.1%;
+      --secondary-foreground: 222.2 47.4% 11.2%;
+      --muted: 210 40% 96.1%;
+      --muted-foreground: 215.4 16.3% 46.9%;
+      --accent: 210 40% 96.1%;
+      --accent-foreground: 222.2 47.4% 11.2%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 210 40% 98%;
+      --border: 214.3 31.8% 91.4%;
+      --input: 214.3 31.8% 91.4%;
+      --ring: 222.2 84% 4.9%;
+      --radius: 0.5rem;
+      --chart-1: 222.2 47.4% 11.2%;
+      --chart-2: 215.4 16.3% 46.9%;
+      --chart-3: 210 40% 96.1%;
+      --chart-4: 214.3 31.8% 91.4%;
+      --chart-5: 221.2 83.2% 53.3%;
+    }
+    /*
+      Dark — exact Shadcn/zinc reference:
+      Page #09090b | Cards #18181b | Border/active #27272a | Text #fafafa | Muted #a1a1aa
+    */
+    .dark {
+      color-scheme: dark;
+      /* #09090b */
+      --background: 240 6% 3.9%;
+      /* #fafafa */
+      --foreground: 0 0% 98%;
+      /* #18181b */
+      --card: 240 5.9% 10%;
+      --card-foreground: 0 0% 98%;
+      --popover: 240 5.9% 10%;
+      --popover-foreground: 0 0% 98%;
+      /* primary button / focus: light on dark */
+      --primary: 0 0% 98%;
+      --primary-foreground: 240 5.9% 10%;
+      /* surfaces between bg & card */
+      --secondary: 240 5% 8%;
+      --secondary-foreground: 0 0% 98%;
+      /* inputs / muted blocks */
+      --muted: 240 4.8% 12%;
+      /* #a1a1aa (zinc-400) */
+      --muted-foreground: 240 4.9% 65.9%;
+      /* #27272a — row hover + active sidebar */
+      --accent: 240 5.3% 15.9%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 50%;
+      --destructive-foreground: 0 0% 98%;
+      /* #27272a */
+      --border: 240 5.3% 15.9%;
+      --input: 240 5.3% 15.9%;
+      --ring: 240 4.9% 65.9%;
+      /* charts: soft blue + grays */
+      --chart-1: 221 83% 53%;
+      --chart-2: 240 4.9% 65.9%;
+      --chart-3: 240 5.3% 15.9%;
+      --chart-4: 240 5.9% 10%;
+      --chart-5: 142 71% 45%;
+    }
+    /* Smooth dark ↔ light */
+    .theme-transition,
+    .theme-transition aside,
+    .theme-transition header,
+    .theme-transition main,
+    .theme-transition .shadow-card,
+    .theme-transition .rounded-xl,
+    .theme-transition .rounded-lg,
+    .theme-transition .rounded-md {
+      transition-property: background-color, border-color, color, fill, stroke;
+      transition-duration: 300ms;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .scrollbar-thin::-webkit-scrollbar { width: 5px; height: 5px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { border-radius: 9999px; background: hsl(var(--muted-foreground) / 0.25); }
+    /* Dark: no heavy shadow — border defines cards (reference) */
+    .dark .shadow-card {
+      box-shadow: none;
+    }
+    #sidebar[data-collapsed="true"] { width: 64px !important; }
+    #sidebar[data-collapsed="true"] .sidebar-text { display: none; }
+    #sidebar[data-collapsed="true"] nav { overflow-x: hidden; }
+    #sidebar[data-collapsed="true"] .submenu-toggle + ul { display: none !important; }
+    /* Sidebar active pill — reference */
+  </style>
+</head>
+<body class="min-h-screen bg-background font-sans text-foreground antialiased transition-colors duration-300 ease-in-out">
+  <div class="flex min-h-screen">
+    <!-- Sidebar: narrow (w-52), same bg as page in dark -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col border-r border-border bg-background transition-all duration-300 ease-in-out lg:static lg:shrink-0 -translate-x-full lg:translate-x-0" data-collapsed="false">
+      <!-- Brand -->
+      <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
+        <a href="#" class="flex min-w-0 items-center gap-2.5">
+          <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <i data-lucide="sparkles" class="h-[18px] w-[18px]"></i>
+          </span>
+          <span class="sidebar-text truncate text-base font-bold tracking-tight text-foreground">Simple</span>
+        </a>
+        <span class="sidebar-text shrink-0 text-xs font-medium text-muted-foreground">v1.0.0</span>
+      </div>
+      <!-- Profile -->
+      <div class="border-b border-border px-3 py-3">
+        <div class="sidebar-text rounded-lg border border-dashed border-border p-2.5">
+          <div class="flex items-center gap-2.5">
+            <img src="https://i.pravatar.cc/96?u=maxine" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-full object-cover" />
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-semibold leading-tight text-foreground">Maxine Kennedy</p>
+              <p class="text-[11px] leading-tight text-muted-foreground">Admin Head</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <nav class="scrollbar-thin flex-1 overflow-y-auto px-2 py-2">
+        <ul class="space-y-0.5 text-[13px] leading-snug">
+          <li>
+            <a class="flex items-center gap-2.5 rounded-lg bg-primary/10 px-2.5 py-2 font-medium text-primary transition-colors duration-200 dark:bg-accent dark:text-foreground" href="index.html">
+              <i data-lucide="layout-dashboard" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-accent-foreground" href="#">
+              <i data-lucide="zap" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                Ton AI
+                <span class="shrink-0 rounded-md bg-primary px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary-foreground">Hot</span>
+              </span>
+            </a>
+          </li>
+          <li>
+            <a class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground" href="#">
+              <i data-lucide="calendar" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Calendar</span>
+            </a>
+          </li>
+          <li>
+            <a class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground" href="index.html#directory-app">
+              <i data-lucide="folder" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Directory</span>
+            </a>
+          </li>
+        </ul>
+
+        <p class="sidebar-text mb-1.5 mt-4 px-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Custom pages</p>
+        <ul class="space-y-0.5 text-[13px] leading-snug">
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-pages">
+              <i data-lucide="files" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Pages
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-pages" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Pricing</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Empty Page</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Timeline</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Terms &amp; Conditions</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Invoice</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-auth">
+              <i data-lucide="lock" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Authentication
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-auth" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Sign In</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Sign Up</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Reset Password</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-ui">
+              <i data-lucide="layout-grid" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                UI Components
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-ui" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Core Elements</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Interactive</a></li>
+            </ul>
+          </li>
+          <li>
+            <a class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground" href="#">
+              <i data-lucide="pie-chart" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Charts</span>
+            </a>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-accent-foreground" data-target="sub-forms">
+              <i data-lucide="clipboard-list" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Forms
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-forms" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="form-elements.html">Basic Elements</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Validation</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Wizard</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground transition-colors duration-200 hover:bg-accent hover:text-accent-foreground" data-target="sub-tables">
+              <i data-lucide="table" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Tables
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-tables" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Static Tables</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">DataTables</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-icons">
+              <i data-lucide="tags" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Icons
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-icons" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Tabler</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Lucide</a></li>
+            </ul>
+          </li>
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-maps">
+              <i data-lucide="map" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Maps
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-maps" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Vector</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Leaflet</a></li>
+            </ul>
+          </li>
+        </ul>
+
+        <p class="sidebar-text mb-1.5 mt-4 px-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Menu items</p>
+        <ul class="space-y-0.5 text-[13px] leading-snug">
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-muted-foreground hover:bg-accent hover:text-accent-foreground" data-target="sub-levels">
+              <i data-lucide="menu" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between font-normal">
+                Menu Levels
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-levels" class="sidebar-text mt-0.5 hidden space-y-0.5 border-l border-border/80 pl-3 ml-3.5">
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Level 2.1</a></li>
+              <li><a class="block py-1.5 pl-1 text-muted-foreground hover:text-foreground" href="#">Level 2.2</a></li>
+            </ul>
+          </li>
+          <li>
+            <span class="flex cursor-not-allowed items-center gap-2.5 rounded-lg px-2.5 py-2 text-muted-foreground/45">
+              <i data-lucide="ban" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text">Disabled Menu</span>
+            </span>
+          </li>
+        </ul>
+      </nav>
+      <div class="border-t border-border bg-background p-2">
+        <button type="button" id="btn-collapse" class="flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent">
+          <i data-lucide="panel-left-close" class="h-4 w-4 shrink-0"></i>
+          <span class="sidebar-text">Collapse Menu</span>
+        </button>
+      </div>
+    </aside>
+
+    <div id="sidebar-overlay" class="fixed inset-0 z-30 hidden bg-black/60 lg:hidden" aria-hidden="true"></div>
+
+    <div class="flex min-w-0 flex-1 flex-col">
+      <!-- Topbar -->
+      <header class="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-border bg-card px-2 shadow-header sm:gap-3 sm:px-4 lg:h-16 lg:gap-4 lg:px-6">
+        <button type="button" id="btn-menu" class="rounded-md p-2 text-muted-foreground hover:bg-accent lg:hidden" aria-label="Menu">
+          <i data-lucide="menu" class="h-5 w-5"></i>
+        </button>
+
+        <div class="hidden items-center gap-3 text-sm md:flex">
+          <a href="#" class="font-semibold text-foreground">Simple</a>
+          <span class="text-xs text-muted-foreground">v1.0.0</span>
+          <span class="h-4 w-px bg-border" aria-hidden="true"></span>
+          <a href="#" class="text-muted-foreground transition-colors hover:text-foreground">Components</a>
+          <a href="#" class="inline-flex items-center gap-0.5 text-muted-foreground transition-colors hover:text-foreground">Dropdown <i data-lucide="chevron-down" class="h-3.5 w-3.5 opacity-70"></i></a>
+          <a href="#" class="inline-flex items-center gap-0.5 text-muted-foreground transition-colors hover:text-foreground">Mega Menu <i data-lucide="chevron-down" class="h-3.5 w-3.5 opacity-70"></i></a>
+        </div>
+
+        <div class="mx-auto hidden min-w-0 max-w-xl flex-1 px-2 md:block">
+          <label class="relative block">
+            <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"></i>
+            <input type="search" placeholder="Search for something…" class="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring" />
+          </label>
+        </div>
+
+        <div class="flex flex-1 items-center justify-end gap-0.5 sm:gap-1.5">
+          <div class="relative">
+            <button type="button" class="dropdown-btn flex items-center gap-2 rounded-md border border-border bg-background px-2 py-1.5 text-xs font-medium text-foreground hover:bg-accent sm:px-3" data-dropdown="dd-theme" aria-haspopup="true">
+              <span class="hidden sm:inline text-muted-foreground">Theme:</span>
+              <span id="theme-active-label">Shadcn</span>
+              <i data-lucide="chevron-down" class="h-3.5 w-3.5 text-muted-foreground"></i>
+            </button>
+            <div id="dd-theme" class="dropdown-panel absolute right-0 z-50 mt-2 hidden w-[min(100vw-1rem,32rem)] rounded-xl border border-border bg-card p-3 shadow-lg">
+              <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Color scheme</p>
+              <p class="mb-2 text-[10px] leading-snug text-muted-foreground">Shadcn-style <code class="rounded bg-muted px-0.5">--primary</code> for light mode (buttons, links, charts). Dark mode keeps the fixed zinc palette.</p>
+              <div class="max-h-[min(52vh,20rem)] overflow-y-auto overflow-x-hidden pr-1 scrollbar-thin">
+                <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Default &amp; slate</p>
+                <div class="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  <button type="button" data-theme-item="shadcn" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium text-foreground hover:bg-accent" aria-pressed="true">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#0f172a]"></span><span class="bg-[#64748b]"></span><span class="bg-[#e2e8f0]"></span><span class="bg-[#f8fafc]"></span>
+                    </span>
+                    Shadcn
+                  </button>
+                </div>
+                <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Shadcn / tailwind hues</p>
+                <div class="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  <button type="button" data-theme-item="rose" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#e11d48]"></span><span class="bg-[#fb7185]"></span><span class="bg-[#ffe4e6]"></span><span class="bg-[#fff1f2]"></span>
+                    </span>
+                    Rose
+                  </button>
+                  <button type="button" data-theme-item="blue" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#2563eb]"></span><span class="bg-[#60a5fa]"></span><span class="bg-[#dbeafe]"></span><span class="bg-[#eff6ff]"></span>
+                    </span>
+                    Blue
+                  </button>
+                  <button type="button" data-theme-item="green" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#16a34a]"></span><span class="bg-[#4ade80]"></span><span class="bg-[#dcfce7]"></span><span class="bg-[#f0fdf4]"></span>
+                    </span>
+                    Green
+                  </button>
+                  <button type="button" data-theme-item="orange" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#ea580c]"></span><span class="bg-[#fb923c]"></span><span class="bg-[#ffedd5]"></span><span class="bg-[#fff7ed]"></span>
+                    </span>
+                    Orange
+                  </button>
+                  <button type="button" data-theme-item="violet" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#7c3aed]"></span><span class="bg-[#a78bfa]"></span><span class="bg-[#ede9fe]"></span><span class="bg-[#f5f3ff]"></span>
+                    </span>
+                    Violet
+                  </button>
+                  <button type="button" data-theme-item="amber" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#d97706]"></span><span class="bg-[#fbbf24]"></span><span class="bg-[#fef3c7]"></span><span class="bg-[#fffbeb]"></span>
+                    </span>
+                    Amber
+                  </button>
+                  <button type="button" data-theme-item="red" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#dc2626]"></span><span class="bg-[#f87171]"></span><span class="bg-[#fee2e2]"></span><span class="bg-[#fef2f2]"></span>
+                    </span>
+                    Red
+                  </button>
+                  <button type="button" data-theme-item="cyan" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#0891b2]"></span><span class="bg-[#22d3ee]"></span><span class="bg-[#cffafe]"></span><span class="bg-[#ecfeff]"></span>
+                    </span>
+                    Cyan
+                  </button>
+                  <button type="button" data-theme-item="pink" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#db2777]"></span><span class="bg-[#f472b6]"></span><span class="bg-[#fce7f3]"></span><span class="bg-[#fdf2f8]"></span>
+                    </span>
+                    Pink
+                  </button>
+                  <button type="button" data-theme-item="lime" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#65a30d]"></span><span class="bg-[#a3e635]"></span><span class="bg-[#ecfccb]"></span><span class="bg-[#f7fee7]"></span>
+                    </span>
+                    Lime
+                  </button>
+                  <button type="button" data-theme-item="indigo" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#4f46e5]"></span><span class="bg-[#818cf8]"></span><span class="bg-[#e0e7ff]"></span><span class="bg-[#eef2ff]"></span>
+                    </span>
+                    Indigo
+                  </button>
+                </div>
+                <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Brand / misc</p>
+                <div class="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  <button type="button" data-theme-item="corporate" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#3b82f6]"></span><span class="bg-[#93c5fd]"></span><span class="bg-[#dbeafe]"></span><span class="bg-[#eff6ff]"></span>
+                    </span>
+                    Corporate
+                  </button>
+                  <button type="button" data-theme-item="spotify" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#1db954]"></span><span class="bg-[#1ed760]"></span><span class="bg-[#121212]"></span><span class="bg-[#282828]"></span>
+                    </span>
+                    Spotify
+                  </button>
+                  <button type="button" data-theme-item="saas" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#8b5cf6]"></span><span class="bg-[#a78bfa]"></span><span class="bg-[#ede9fe]"></span><span class="bg-[#f5f3ff]"></span>
+                    </span>
+                    SaaS
+                  </button>
+                  <button type="button" data-theme-item="nature" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#15803d]"></span><span class="bg-[#4ade80]"></span><span class="bg-[#dcfce7]"></span><span class="bg-[#f0fdf4]"></span>
+                    </span>
+                    Nature
+                  </button>
+                  <button type="button" data-theme-item="vintage" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#ea580c]"></span><span class="bg-[#fb923c]"></span><span class="bg-[#ffedd5]"></span><span class="bg-[#fff7ed]"></span>
+                    </span>
+                    Vintage
+                  </button>
+                  <button type="button" data-theme-item="ghibli" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#0284c7]"></span><span class="bg-[#38bdf8]"></span><span class="bg-[#e0f2fe]"></span><span class="bg-[#f0f9ff]"></span>
+                    </span>
+                    Ghibli
+                  </button>
+                  <button type="button" data-theme-item="slack" class="theme-swatch-btn flex flex-col items-center gap-1 rounded-lg border border-border p-1.5 text-center text-[9px] font-medium hover:bg-accent">
+                    <span class="grid h-9 w-9 grid-cols-2 gap-px overflow-hidden rounded border border-border">
+                      <span class="bg-[#611f69]"></span><span class="bg-[#ecb22e]"></span><span class="bg-[#36c5f0]"></span><span class="bg-[#2eb67d]"></span>
+                    </span>
+                    Slack
+                  </button>
+                </div>
+              </div>
+              <div class="mt-3 flex items-center gap-2 border-t border-border pt-3">
+                <label for="primary-color" class="text-xs text-muted-foreground shrink-0">Custom</label>
+                <input id="primary-color" type="color" value="#0f172a" class="h-9 w-full cursor-pointer rounded border border-border bg-background" title="Pick primary color" />
+              </div>
+            </div>
+          </div>
+
+          <div class="relative">
+            <button type="button" class="dropdown-btn flex items-center gap-1.5 rounded-md border border-border px-2 py-1.5 text-sm hover:bg-accent" data-dropdown="dd-lang">
+              <span class="text-base leading-none">🇬🇧</span>
+              <span class="hidden sm:inline">EN</span>
+              <i data-lucide="chevron-down" class="h-3.5 w-3.5 text-muted-foreground"></i>
+            </button>
+            <div id="dd-lang" class="dropdown-panel absolute right-0 z-50 mt-2 hidden min-w-[160px] rounded-lg border border-border bg-card py-1 shadow-lg">
+              <a class="block px-4 py-2 text-sm hover:bg-accent" href="#">English</a>
+              <a class="block px-4 py-2 text-sm hover:bg-accent" href="#">Deutsch</a>
+              <a class="block px-4 py-2 text-sm hover:bg-accent" href="#">Español</a>
+            </div>
+          </div>
+
+          <div class="relative">
+            <button type="button" class="dropdown-btn relative rounded-md p-2 text-muted-foreground hover:bg-accent" data-dropdown="dd-notify" aria-label="Notifications">
+              <i data-lucide="bell" class="h-5 w-5"></i>
+              <span class="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary ring-2 ring-card" title="9 new"></span>
+            </button>
+            <div id="dd-notify" class="dropdown-panel absolute right-0 z-50 mt-2 hidden w-80 max-h-96 overflow-y-auto rounded-xl border border-border bg-card shadow-lg">
+              <div class="flex items-center justify-between border-b border-border p-3">
+                <h3 class="text-sm font-semibold">Notifications</h3>
+                <span class="text-xs text-muted-foreground">9 Alerts</span>
+              </div>
+              <ul class="divide-y divide-border text-sm">
+                <li class="p-3 hover:bg-accent"><p class="font-medium">Backup completed successfully</p><p class="text-xs text-muted-foreground">Just now</p></li>
+                <li class="p-3 hover:bg-accent"><p class="font-medium">New bug reported in Payment Module</p><p class="text-xs text-muted-foreground">8 minutes ago</p></li>
+                <li class="p-3 hover:bg-accent"><p class="font-medium">Security policy update required</p><p class="text-xs text-muted-foreground">22 minutes ago</p></li>
+              </ul>
+              <a class="block border-t border-border p-3 text-center text-sm font-medium text-primary" href="#">View All Notifications</a>
+            </div>
+          </div>
+
+          <button type="button" id="btn-customizer" class="hidden rounded-md p-2 text-muted-foreground hover:bg-accent sm:flex" title="Settings" aria-label="Settings">
+            <i data-lucide="settings" class="h-5 w-5"></i>
+          </button>
+
+          <button type="button" id="btn-theme-toggle" class="rounded-md p-2 text-muted-foreground hover:bg-accent" aria-label="Toggle dark mode">
+            <i data-lucide="sun" id="icon-theme-sun" class="hidden h-5 w-5"></i>
+            <i data-lucide="moon" id="icon-theme-moon" class="h-5 w-5"></i>
+          </button>
+
+          <div class="relative">
+            <button type="button" class="dropdown-btn flex items-center gap-2 rounded-md py-1 pl-1 pr-2 hover:bg-accent" data-dropdown="dd-user">
+              <img src="https://i.pravatar.cc/32?u=maxine" alt="" width="32" height="32" class="h-8 w-8 rounded-full ring-1 ring-border" />
+              <span class="hidden text-sm font-medium sm:inline">Shadcn</span>
+              <i data-lucide="chevron-down" class="hidden h-4 w-4 text-muted-foreground sm:inline"></i>
+            </button>
+            <div id="dd-user" class="dropdown-panel absolute right-0 z-50 mt-2 hidden min-w-[200px] rounded-xl border border-border bg-card py-1 shadow-lg">
+              <div class="border-b border-border px-4 py-3">
+                <p class="text-sm font-semibold">Welcome back!</p>
+                <p class="text-xs text-muted-foreground">Balance: $985.25</p>
+              </div>
+              <a class="block px-4 py-2 text-sm hover:bg-accent" href="#">Profile</a>
+              <a class="block px-4 py-2 text-sm hover:bg-accent" href="#">Account Settings</a>
+              <a class="block px-4 py-2 text-sm hover:bg-accent" href="#">Support Center</a>
+              <hr class="border-border" />
+              <a class="block px-4 py-2 text-sm text-destructive hover:bg-accent" href="#">Log Out</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main -->
+      <main class="flex-1 overflow-x-auto bg-muted/40 p-4 transition-colors duration-300 ease-in-out lg:p-6">
+        <div class="mx-auto mb-8 max-w-5xl text-center">
+          <p class="mb-2 text-sm text-muted-foreground">Medium and Large Business</p>
+          <h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">The Ultimate Admin &amp; Dashboard Theme</h1>
+          <p class="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">A premium collection of elegant, accessible components and a powerful codebase. Built for modern frameworks. Developer friendly. Production ready.</p>
+        </div>
+
+        <!-- Contact Directory — https://coderthemes.com/simple/html/directory.html -->
+        <div id="directory-app" class="mb-10 scroll-mt-24">
+          <div class="mb-6 text-center sm:text-left">
+            <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">People &amp; Teams</p>
+            <h2 class="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">Contact Directory App</h2>
+            <p class="mx-auto mt-2 max-w-3xl text-sm text-muted-foreground sm:mx-0">Effortlessly manage and browse contacts with a clean, searchable interface. Ideal for teams, organizations, and internal directories.</p>
+          </div>
+
+          <div class="mb-6 rounded-xl border border-border bg-card p-4 shadow-card sm:p-5">
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
+              <div class="space-y-1.5">
+                <label class="text-xs font-medium text-muted-foreground" for="dir-designation">Designation</label>
+                <select id="dir-designation" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                  <option>All</option>
+                  <option>Manager</option>
+                  <option>Developer</option>
+                  <option>Designer</option>
+                  <option>Sales</option>
+                  <option>Support</option>
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-medium text-muted-foreground" for="dir-location">Location</label>
+                <select id="dir-location" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                  <option>All</option>
+                  <option>USA</option>
+                  <option>UK</option>
+                  <option>Germany</option>
+                  <option>India</option>
+                  <option>Canada</option>
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-medium text-muted-foreground" for="dir-dept">Department</label>
+                <select id="dir-dept" class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                  <option>All</option>
+                  <option>UI/UX</option>
+                  <option>Engineering</option>
+                  <option>HR</option>
+                  <option>Marketing</option>
+                  <option>Finance</option>
+                </select>
+              </div>
+              <div class="flex sm:col-span-2 lg:col-span-1 lg:justify-end">
+                <button type="button" class="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90 sm:w-auto">Apply</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <article class="flex flex-col rounded-xl border border-border bg-card p-5 shadow-card transition-colors hover:border-primary/20">
+              <div class="flex gap-4">
+                <img src="https://i.pravatar.cc/120?u=danielc" alt="" width="64" height="64" class="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-border" />
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-base font-semibold text-foreground">Daniel Carter</h3>
+                    <span class="text-xs font-medium text-muted-foreground">USA</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground">Product Manager</p>
+                  <span class="mt-1 inline-block rounded bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">Verified</span>
+                </div>
+              </div>
+              <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <li><a href="#" class="inline-flex items-center gap-1 transition-colors hover:text-foreground"><i data-lucide="share-2" class="h-3.5 w-3.5"></i> Share</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 transition-colors hover:text-foreground"><i data-lucide="pencil" class="h-3.5 w-3.5"></i> Edit</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 transition-colors hover:text-foreground"><i data-lucide="ban" class="h-3.5 w-3.5"></i> Block</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 text-destructive hover:text-destructive/90"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Delete</a></li>
+              </ul>
+              <p class="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">Daniel is a tech-savvy product manager with a track record of launching scalable SaaS products.</p>
+              <button type="button" class="mt-4 w-full rounded-lg border border-border bg-background py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent">View Profile</button>
+              <div class="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Campaigns</p><p class="text-lg font-bold text-foreground">76</p></div>
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Contacts</p><p class="text-lg font-bold text-foreground">335</p></div>
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Engagement</p><p class="text-lg font-bold text-primary">97%</p></div>
+              </div>
+            </article>
+
+            <article class="flex flex-col rounded-xl border border-border bg-card p-5 shadow-card transition-colors hover:border-primary/20">
+              <div class="flex gap-4">
+                <img src="https://i.pravatar.cc/120?u=liamc" alt="" width="64" height="64" class="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-border" />
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-base font-semibold text-foreground">Liam Carter</h3>
+                    <span class="text-xs font-medium text-muted-foreground">USA</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground">Creative Director</p>
+                  <span class="mt-1 inline-block rounded bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">Verified</span>
+                </div>
+              </div>
+              <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="share-2" class="h-3.5 w-3.5"></i> Share</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="pencil" class="h-3.5 w-3.5"></i> Edit</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="ban" class="h-3.5 w-3.5"></i> Block</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 text-destructive"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Delete</a></li>
+              </ul>
+              <p class="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">Liam leads design teams and defines creative visions across multi-channel campaigns.</p>
+              <button type="button" class="mt-4 w-full rounded-lg border border-border bg-background py-2 text-sm font-medium hover:bg-accent">View Profile</button>
+              <div class="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Campaigns</p><p class="text-lg font-bold text-foreground">132</p></div>
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Contacts</p><p class="text-lg font-bold text-foreground">580</p></div>
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Engagement</p><p class="text-lg font-bold text-primary">91%</p></div>
+              </div>
+            </article>
+
+            <article class="flex flex-col rounded-xl border border-border bg-card p-5 shadow-card transition-colors hover:border-primary/20">
+              <div class="flex gap-4">
+                <img src="https://i.pravatar.cc/120?u=emmas" alt="" width="64" height="64" class="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-border" />
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-base font-semibold text-foreground">Emma Scott</h3>
+                    <span class="text-xs font-medium text-muted-foreground">UK</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground">UI/UX Designer</p>
+                </div>
+              </div>
+              <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="share-2" class="h-3.5 w-3.5"></i> Share</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="pencil" class="h-3.5 w-3.5"></i> Edit</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="ban" class="h-3.5 w-3.5"></i> Block</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 text-destructive"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Delete</a></li>
+              </ul>
+              <p class="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">Emma specializes in creating intuitive, user-centered web and mobile interfaces.</p>
+              <button type="button" class="mt-4 w-full rounded-lg border border-border bg-background py-2 text-sm font-medium hover:bg-accent">View Profile</button>
+              <div class="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Campaigns</p><p class="text-lg font-bold text-foreground">115</p></div>
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Contacts</p><p class="text-lg font-bold text-foreground">430</p></div>
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Engagement</p><p class="text-lg font-bold text-primary">87%</p></div>
+              </div>
+            </article>
+
+            <article class="flex flex-col rounded-xl border border-border bg-card p-5 shadow-card transition-colors hover:border-primary/20">
+              <div class="flex gap-4">
+                <img src="https://i.pravatar.cc/120?u=noahb" alt="" width="64" height="64" class="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-border" />
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-base font-semibold text-foreground">Noah Blake</h3>
+                    <span class="text-xs font-medium text-muted-foreground">Australia</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground">Frontend Developer</p>
+                </div>
+              </div>
+              <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="share-2" class="h-3.5 w-3.5"></i> Share</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="pencil" class="h-3.5 w-3.5"></i> Edit</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="ban" class="h-3.5 w-3.5"></i> Block</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 text-destructive"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Delete</a></li>
+              </ul>
+              <p class="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">Noah builds scalable and responsive interfaces with modern JavaScript frameworks.</p>
+              <button type="button" class="mt-4 w-full rounded-lg border border-border bg-background py-2 text-sm font-medium hover:bg-accent">View Profile</button>
+              <div class="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Campaigns</p><p class="text-lg font-bold text-foreground">121</p></div>
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Contacts</p><p class="text-lg font-bold text-foreground">400</p></div>
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Engagement</p><p class="text-lg font-bold text-primary">93%</p></div>
+              </div>
+            </article>
+
+            <article class="flex flex-col rounded-xl border border-border bg-card p-5 shadow-card transition-colors hover:border-primary/20">
+              <div class="flex gap-4">
+                <img src="https://i.pravatar.cc/120?u=oliviaw" alt="" width="64" height="64" class="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-border" />
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-base font-semibold text-foreground">Olivia White</h3>
+                    <span class="text-xs font-medium text-muted-foreground">France</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground">Marketing Manager</p>
+                </div>
+              </div>
+              <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="share-2" class="h-3.5 w-3.5"></i> Share</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="pencil" class="h-3.5 w-3.5"></i> Edit</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="ban" class="h-3.5 w-3.5"></i> Block</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 text-destructive"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Delete</a></li>
+              </ul>
+              <p class="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">Olivia drives customer acquisition through strategic performance campaigns.</p>
+              <button type="button" class="mt-4 w-full rounded-lg border border-border bg-background py-2 text-sm font-medium hover:bg-accent">View Profile</button>
+              <div class="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Campaigns</p><p class="text-lg font-bold text-foreground">140</p></div>
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Contacts</p><p class="text-lg font-bold text-foreground">560</p></div>
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Engagement</p><p class="text-lg font-bold text-primary">88%</p></div>
+              </div>
+            </article>
+
+            <article class="flex flex-col rounded-xl border border-border bg-card p-5 shadow-card transition-colors hover:border-primary/20">
+              <div class="flex gap-4">
+                <img src="https://i.pravatar.cc/120?u=ethanm" alt="" width="64" height="64" class="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-border" />
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-base font-semibold text-foreground">Ethan Moore</h3>
+                    <span class="text-xs font-medium text-muted-foreground">Germany</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground">Brand Consultant</p>
+                </div>
+              </div>
+              <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="share-2" class="h-3.5 w-3.5"></i> Share</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="pencil" class="h-3.5 w-3.5"></i> Edit</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 hover:text-foreground"><i data-lucide="ban" class="h-3.5 w-3.5"></i> Block</a></li>
+                <li><a href="#" class="inline-flex items-center gap-1 text-destructive"><i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Delete</a></li>
+              </ul>
+              <p class="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">Ethan helps startups position their brand with high-impact storytelling.</p>
+              <button type="button" class="mt-4 w-full rounded-lg border border-border bg-background py-2 text-sm font-medium hover:bg-accent">View Profile</button>
+              <div class="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-4 text-center">
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Campaigns</p><p class="text-lg font-bold text-foreground">98</p></div>
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Contacts</p><p class="text-lg font-bold text-foreground">380</p></div>
+                <div><p class="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Engagement</p><p class="text-lg font-bold text-primary">79%</p></div>
+              </div>
+            </article>
+          </div>
+
+          <nav class="mt-8 flex flex-wrap items-center justify-center gap-1" aria-label="Directory pagination">
+            <button type="button" class="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-border bg-card px-2 text-sm text-muted-foreground hover:bg-accent disabled:opacity-40" disabled aria-label="Previous">«</button>
+            <button type="button" class="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg bg-primary text-sm font-medium text-primary-foreground">1</button>
+            <button type="button" class="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-border bg-card text-sm hover:bg-accent">2</button>
+            <button type="button" class="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-border bg-card text-sm hover:bg-accent">3</button>
+            <button type="button" class="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-border bg-card text-sm hover:bg-accent">4</button>
+            <button type="button" class="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-border bg-card text-sm hover:bg-accent">5</button>
+            <button type="button" class="inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-lg border border-border bg-card px-2 text-sm hover:bg-accent" aria-label="Next">»</button>
+          </nav>
+        </div>
+
+        <!-- Static tables (Basic + Custom) — Coderthemes Simple reference -->
+        <div id="static-tables" class="mb-6 space-y-6">
+          <div>
+            <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Bootstrap Tables</p>
+            <h2 class="text-lg font-semibold text-foreground">Static Tables</h2>
+            <p class="mt-1 text-sm text-muted-foreground">Display structured data using simple, responsive tables.</p>
+          </div>
+
+          <section class="rounded-xl border border-border bg-card shadow-card">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-4 sm:px-6">
+              <h3 class="text-base font-semibold text-foreground">Basic Table</h3>
+              <a href="#" class="text-sm font-medium text-primary hover:underline">View Docs</a>
+            </div>
+            <p class="border-b border-border px-4 py-3 text-sm text-muted-foreground sm:px-6">Add the base table styles below, then extend with optional modifiers or custom classes.</p>
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[720px] text-left text-sm">
+                <thead>
+                  <tr class="border-b border-border text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <th class="px-4 py-3 sm:px-5">Product Name</th>
+                    <th class="px-4 py-3 sm:px-5">Category</th>
+                    <th class="px-4 py-3 sm:px-5">Price</th>
+                    <th class="px-4 py-3 sm:px-5">Stock</th>
+                    <th class="px-4 py-3 sm:px-5">Rating</th>
+                    <th class="px-4 py-3 sm:px-5">Status</th>
+                    <th class="px-4 py-3 text-right sm:px-5">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                  <tr class="text-foreground transition-colors hover:bg-muted/35">
+                    <td class="px-4 py-3 font-medium sm:px-5">Wireless Headphones</td>
+                    <td class="px-4 py-3 text-muted-foreground sm:px-5">Electronics</td>
+                    <td class="px-4 py-3 tabular-nums sm:px-5">$99.00</td>
+                    <td class="px-4 py-3 tabular-nums sm:px-5">120</td>
+                    <td class="px-4 py-3 sm:px-5">4.5 ★</td>
+                    <td class="px-4 py-3 sm:px-5"><span class="inline-flex items-center rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Active</span></td>
+                    <td class="px-4 py-3 text-right sm:px-5">
+                      <div class="inline-flex flex-wrap items-center justify-end gap-2">
+                        <button type="button" class="inline-flex items-center justify-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90">Edit</button>
+                        <button type="button" class="inline-flex items-center justify-center rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground shadow-sm transition-opacity hover:opacity-90">Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="text-foreground transition-colors hover:bg-muted/35">
+                    <td class="px-4 py-3 font-medium sm:px-5">Running Shoes</td>
+                    <td class="px-4 py-3 text-muted-foreground sm:px-5">Footwear</td>
+                    <td class="px-4 py-3 tabular-nums sm:px-5">$59.99</td>
+                    <td class="px-4 py-3 tabular-nums sm:px-5">80</td>
+                    <td class="px-4 py-3 sm:px-5">4.2 ★</td>
+                    <td class="px-4 py-3 sm:px-5"><span class="inline-flex items-center rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Active</span></td>
+                    <td class="px-4 py-3 text-right sm:px-5">
+                      <div class="inline-flex flex-wrap items-center justify-end gap-2">
+                        <button type="button" class="inline-flex items-center justify-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90">Edit</button>
+                        <button type="button" class="inline-flex items-center justify-center rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground shadow-sm transition-opacity hover:opacity-90">Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="text-foreground transition-colors hover:bg-muted/35">
+                    <td class="px-4 py-3 font-medium sm:px-5">Smartwatch</td>
+                    <td class="px-4 py-3 text-muted-foreground sm:px-5">Wearables</td>
+                    <td class="px-4 py-3 tabular-nums sm:px-5">$129.00</td>
+                    <td class="px-4 py-3 tabular-nums sm:px-5">0</td>
+                    <td class="px-4 py-3 sm:px-5">4.0 ★</td>
+                    <td class="px-4 py-3 sm:px-5"><span class="inline-flex items-center rounded-md bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive">Out of Stock</span></td>
+                    <td class="px-4 py-3 text-right sm:px-5">
+                      <div class="inline-flex flex-wrap items-center justify-end gap-2">
+                        <button type="button" class="inline-flex items-center justify-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90">Edit</button>
+                        <button type="button" class="inline-flex items-center justify-center rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground shadow-sm transition-opacity hover:opacity-90">Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="text-foreground transition-colors hover:bg-muted/35">
+                    <td class="px-4 py-3 font-medium sm:px-5">Gaming Mouse</td>
+                    <td class="px-4 py-3 text-muted-foreground sm:px-5">Accessories</td>
+                    <td class="px-4 py-3 tabular-nums sm:px-5">$39.50</td>
+                    <td class="px-4 py-3 tabular-nums sm:px-5">250</td>
+                    <td class="px-4 py-3 sm:px-5">4.7 ★</td>
+                    <td class="px-4 py-3 sm:px-5"><span class="inline-flex items-center rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Active</span></td>
+                    <td class="px-4 py-3 text-right sm:px-5">
+                      <div class="inline-flex flex-wrap items-center justify-end gap-2">
+                        <button type="button" class="inline-flex items-center justify-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90">Edit</button>
+                        <button type="button" class="inline-flex items-center justify-center rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground shadow-sm transition-opacity hover:opacity-90">Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="text-foreground transition-colors hover:bg-muted/35">
+                    <td class="px-4 py-3 font-medium sm:px-5">Office Chair</td>
+                    <td class="px-4 py-3 text-muted-foreground sm:px-5">Furniture</td>
+                    <td class="px-4 py-3 tabular-nums sm:px-5">$149.00</td>
+                    <td class="px-4 py-3 tabular-nums sm:px-5">35</td>
+                    <td class="px-4 py-3 sm:px-5">4.3 ★</td>
+                    <td class="px-4 py-3 sm:px-5"><span class="inline-flex items-center rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Active</span></td>
+                    <td class="px-4 py-3 text-right sm:px-5">
+                      <div class="inline-flex flex-wrap items-center justify-end gap-2">
+                        <button type="button" class="inline-flex items-center justify-center rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90">Edit</button>
+                        <button type="button" class="inline-flex items-center justify-center rounded-md bg-destructive px-3 py-1.5 text-xs font-medium text-destructive-foreground shadow-sm transition-opacity hover:opacity-90">Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="rounded-xl border border-border bg-card shadow-card">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-4 sm:px-6">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="text-base font-semibold text-foreground">Custom Table</h3>
+                <span class="rounded-md bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">Exclusive</span>
+              </div>
+              <a href="#" class="text-sm font-medium text-primary hover:underline">View Docs</a>
+            </div>
+            <p class="border-b border-border px-4 py-3 text-sm text-muted-foreground sm:px-6">Extra horizontal padding on the first and last cells for a roomier layout.</p>
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[760px] text-left text-sm">
+                <thead>
+                  <tr class="border-b border-border text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <th class="pl-6 pr-4 py-3 sm:pl-8 sm:pr-5">Product Name</th>
+                    <th class="px-4 py-3 sm:px-5">Category</th>
+                    <th class="px-4 py-3 sm:px-5">Price</th>
+                    <th class="px-4 py-3 sm:px-5">Stock</th>
+                    <th class="px-4 py-3 sm:px-5">Rating</th>
+                    <th class="px-4 py-3 sm:px-5">Status</th>
+                    <th class="pl-4 pr-6 py-3 text-right sm:pl-5 sm:pr-8">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y-0">
+                  <tr class="border-b border-border/60 text-foreground transition-colors last:border-b-0 hover:bg-muted/35">
+                    <td class="pl-6 pr-4 py-4 font-medium sm:pl-8 sm:pr-5">Bluetooth Speaker</td>
+                    <td class="px-4 py-4 text-muted-foreground sm:px-5">Audio</td>
+                    <td class="px-4 py-4 tabular-nums sm:px-5">$49.00</td>
+                    <td class="px-4 py-4 tabular-nums sm:px-5">200</td>
+                    <td class="px-4 py-4 sm:px-5">4.6 ★</td>
+                    <td class="px-4 py-4 sm:px-5"><span class="inline-flex items-center rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Active</span></td>
+                    <td class="relative pl-4 pr-6 py-4 text-right sm:pl-5 sm:pr-8">
+                      <div class="relative inline-flex justify-end">
+                        <button type="button" class="dropdown-btn inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" data-dropdown="static-tbl-dd-0" aria-haspopup="true" aria-label="Row actions"><i data-lucide="more-vertical" class="h-4 w-4"></i></button>
+                        <div id="static-tbl-dd-0" class="dropdown-panel absolute right-0 top-full z-50 mt-1 hidden min-w-[10rem] rounded-lg border border-border bg-popover py-1 text-popover-foreground shadow-lg">
+                          <a href="#" class="block px-4 py-2 text-sm hover:bg-accent">View</a>
+                          <a href="#" class="block px-4 py-2 text-sm hover:bg-accent">Edit</a>
+                          <a href="#" class="block px-4 py-2 text-sm text-destructive hover:bg-accent">Delete</a>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="border-b border-border/60 text-foreground transition-colors last:border-b-0 hover:bg-muted/35">
+                    <td class="pl-6 pr-4 py-4 font-medium sm:pl-8 sm:pr-5">Leather Wallet</td>
+                    <td class="px-4 py-4 text-muted-foreground sm:px-5">Accessories</td>
+                    <td class="px-4 py-4 tabular-nums sm:px-5">$29.99</td>
+                    <td class="px-4 py-4 tabular-nums sm:px-5">150</td>
+                    <td class="px-4 py-4 sm:px-5">4.3 ★</td>
+                    <td class="px-4 py-4 sm:px-5"><span class="inline-flex items-center rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Active</span></td>
+                    <td class="relative pl-4 pr-6 py-4 text-right sm:pl-5 sm:pr-8">
+                      <div class="relative inline-flex justify-end">
+                        <button type="button" class="dropdown-btn inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" data-dropdown="static-tbl-dd-1" aria-haspopup="true" aria-label="Row actions"><i data-lucide="more-vertical" class="h-4 w-4"></i></button>
+                        <div id="static-tbl-dd-1" class="dropdown-panel absolute right-0 top-full z-50 mt-1 hidden min-w-[10rem] rounded-lg border border-border bg-popover py-1 text-popover-foreground shadow-lg">
+                          <a href="#" class="block px-4 py-2 text-sm hover:bg-accent">View</a>
+                          <a href="#" class="block px-4 py-2 text-sm hover:bg-accent">Edit</a>
+                          <a href="#" class="block px-4 py-2 text-sm text-destructive hover:bg-accent">Delete</a>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="border-b border-border/60 text-foreground transition-colors last:border-b-0 hover:bg-muted/35">
+                    <td class="pl-6 pr-4 py-4 font-medium sm:pl-8 sm:pr-5">Fitness Tracker</td>
+                    <td class="px-4 py-4 text-muted-foreground sm:px-5">Wearables</td>
+                    <td class="px-4 py-4 tabular-nums sm:px-5">$89.00</td>
+                    <td class="px-4 py-4 tabular-nums sm:px-5">60</td>
+                    <td class="px-4 py-4 sm:px-5">4.1 ★</td>
+                    <td class="px-4 py-4 sm:px-5"><span class="inline-flex items-center rounded-md border border-border bg-muted/80 px-2 py-0.5 text-xs font-medium text-foreground">Limited Stock</span></td>
+                    <td class="relative pl-4 pr-6 py-4 text-right sm:pl-5 sm:pr-8">
+                      <div class="relative inline-flex justify-end">
+                        <button type="button" class="dropdown-btn inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" data-dropdown="static-tbl-dd-2" aria-haspopup="true" aria-label="Row actions"><i data-lucide="more-vertical" class="h-4 w-4"></i></button>
+                        <div id="static-tbl-dd-2" class="dropdown-panel absolute right-0 top-full z-50 mt-1 hidden min-w-[10rem] rounded-lg border border-border bg-popover py-1 text-popover-foreground shadow-lg">
+                          <a href="#" class="block px-4 py-2 text-sm hover:bg-accent">View</a>
+                          <a href="#" class="block px-4 py-2 text-sm hover:bg-accent">Edit</a>
+                          <a href="#" class="block px-4 py-2 text-sm text-destructive hover:bg-accent">Delete</a>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="border-b border-border/60 text-foreground transition-colors last:border-b-0 hover:bg-muted/35">
+                    <td class="pl-6 pr-4 py-4 font-medium sm:pl-8 sm:pr-5">4K Monitor</td>
+                    <td class="px-4 py-4 text-muted-foreground sm:px-5">Electronics</td>
+                    <td class="px-4 py-4 tabular-nums sm:px-5">$349.00</td>
+                    <td class="px-4 py-4 tabular-nums sm:px-5">30</td>
+                    <td class="px-4 py-4 sm:px-5">4.8 ★</td>
+                    <td class="px-4 py-4 sm:px-5"><span class="inline-flex items-center rounded-md bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">Active</span></td>
+                    <td class="relative pl-4 pr-6 py-4 text-right sm:pl-5 sm:pr-8">
+                      <div class="relative inline-flex justify-end">
+                        <button type="button" class="dropdown-btn inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" data-dropdown="static-tbl-dd-3" aria-haspopup="true" aria-label="Row actions"><i data-lucide="more-vertical" class="h-4 w-4"></i></button>
+                        <div id="static-tbl-dd-3" class="dropdown-panel absolute right-0 top-full z-50 mt-1 hidden min-w-[10rem] rounded-lg border border-border bg-popover py-1 text-popover-foreground shadow-lg">
+                          <a href="#" class="block px-4 py-2 text-sm hover:bg-accent">View</a>
+                          <a href="#" class="block px-4 py-2 text-sm hover:bg-accent">Edit</a>
+                          <a href="#" class="block px-4 py-2 text-sm text-destructive hover:bg-accent">Delete</a>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="text-foreground transition-colors hover:bg-muted/35">
+                    <td class="pl-6 pr-4 py-4 font-medium sm:pl-8 sm:pr-5">Standing Desk</td>
+                    <td class="px-4 py-4 text-muted-foreground sm:px-5">Furniture</td>
+                    <td class="px-4 py-4 tabular-nums sm:px-5">$499.00</td>
+                    <td class="px-4 py-4 tabular-nums sm:px-5">10</td>
+                    <td class="px-4 py-4 sm:px-5">4.4 ★</td>
+                    <td class="px-4 py-4 sm:px-5"><span class="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">New</span></td>
+                    <td class="relative pl-4 pr-6 py-4 text-right sm:pl-5 sm:pr-8">
+                      <div class="relative inline-flex justify-end">
+                        <button type="button" class="dropdown-btn inline-flex items-center justify-center rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground" data-dropdown="static-tbl-dd-4" aria-haspopup="true" aria-label="Row actions"><i data-lucide="more-vertical" class="h-4 w-4"></i></button>
+                        <div id="static-tbl-dd-4" class="dropdown-panel absolute right-0 top-full z-50 mt-1 hidden min-w-[10rem] rounded-lg border border-border bg-popover py-1 text-popover-foreground shadow-lg">
+                          <a href="#" class="block px-4 py-2 text-sm hover:bg-accent">View</a>
+                          <a href="#" class="block px-4 py-2 text-sm hover:bg-accent">Edit</a>
+                          <a href="#" class="block px-4 py-2 text-sm text-destructive hover:bg-accent">Delete</a>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <!-- Today's Prompts + bar chart -->
+          <div class="rounded-lg border border-border bg-card p-5 shadow-card transition-colors duration-300 ease-in-out">
+            <h3 class="mb-3 text-sm font-semibold text-muted-foreground">Today&apos;s Prompts</h3>
+            <div class="mb-4 flex h-24 items-end justify-between gap-1">
+              <svg class="h-full w-full text-chart-1" viewBox="0 0 120 64" preserveAspectRatio="none" aria-hidden="true">
+                <rect x="4" y="40" width="10" height="20" fill="currentColor" opacity="0.35" rx="2" />
+                <rect x="18" y="28" width="10" height="32" fill="currentColor" opacity="0.5" rx="2" />
+                <rect x="32" y="35" width="10" height="25" fill="currentColor" opacity="0.4" rx="2" />
+                <rect x="46" y="20" width="10" height="40" fill="currentColor" opacity="0.65" rx="2" />
+                <rect x="60" y="32" width="10" height="28" fill="currentColor" opacity="0.45" rx="2" />
+                <rect x="74" y="24" width="10" height="36" fill="currentColor" opacity="0.55" rx="2" />
+                <rect x="88" y="8" width="10" height="52" fill="currentColor" rx="2" />
+                <rect x="102" y="30" width="10" height="30" fill="currentColor" opacity="0.42" rx="2" />
+              </svg>
+            </div>
+            <div class="flex justify-between gap-4">
+              <div>
+                <p class="text-xs text-muted-foreground">Today</p>
+                <p class="text-2xl font-bold text-card-foreground">1,245</p>
+                <p class="text-xs text-muted-foreground">prompts</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-muted-foreground">Yesterday</p>
+                <p class="text-lg font-semibold text-card-foreground">1,110</p>
+              </div>
+            </div>
+            <p class="mt-3 text-xs font-medium text-primary">Prompt volume increased by <strong>12%</strong> today</p>
+          </div>
+
+          <!-- Active Users -->
+          <div class="rounded-lg border border-border bg-card p-5 shadow-card transition-colors duration-300 ease-in-out">
+            <h3 class="mb-3 text-sm font-semibold text-muted-foreground">Active Users</h3>
+            <p class="text-4xl font-bold text-card-foreground">342</p>
+            <p class="text-sm text-muted-foreground">In the last hour</p>
+            <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div class="h-full w-[68%] rounded-full bg-primary"></div>
+            </div>
+            <p class="mt-4 text-xs text-muted-foreground">Avg. Session Time</p>
+            <p class="text-lg font-semibold text-card-foreground">4m 12s</p>
+          </div>
+
+          <!-- Response Accuracy: pie (foreground + muted) -->
+          <div class="rounded-lg border border-border bg-card p-5 shadow-card transition-colors duration-300 ease-in-out">
+            <h3 class="mb-3 text-sm font-semibold text-muted-foreground">Response Accuracy</h3>
+            <div class="flex items-center gap-4">
+              <div class="relative h-24 w-24 shrink-0">
+                <svg viewBox="0 0 36 36" class="h-full w-full -rotate-90">
+                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="hsl(var(--muted))" stroke-width="3" />
+                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="hsl(var(--foreground) / 1)" stroke-width="3" stroke-dasharray="94.3 5.7" stroke-linecap="round" />
+                </svg>
+                <span class="absolute inset-0 flex items-center justify-center text-xs font-bold text-card-foreground">94%</span>
+              </div>
+              <p class="text-sm text-muted-foreground">Current accuracy: <strong class="text-foreground">94.3%</strong></p>
+            </div>
+          </div>
+
+          <!-- Token usage area -->
+          <div class="rounded-lg border border-border bg-card p-5 shadow-card transition-colors duration-300 ease-in-out">
+            <h3 class="mb-3 text-sm font-semibold text-muted-foreground">Token Usage</h3>
+            <svg class="mb-3 h-16 w-full text-muted-foreground" viewBox="0 0 120 48" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="hsl(var(--primary) / 0.35)" />
+                  <stop offset="100%" stop-color="hsl(var(--primary) / 0)" />
+                </linearGradient>
+              </defs>
+              <path d="M0 40 Q 20 38 40 28 T 80 20 T 120 8 L 120 48 L 0 48 Z" fill="url(#g1)" />
+              <path d="M0 40 Q 20 38 40 28 T 80 20 T 120 8" fill="none" stroke="hsl(var(--primary) / 1)" stroke-width="1.5" />
+            </svg>
+            <div class="flex justify-between text-sm">
+              <span class="text-muted-foreground">Today <strong class="text-card-foreground">920,400</strong></span>
+              <span class="text-muted-foreground">Yesterday <strong class="text-card-foreground">865,100</strong></span>
+            </div>
+            <p class="mt-2 text-xs font-medium text-primary">Token usage up <strong>6.4%</strong> from yesterday</p>
+          </div>
+        </div>
+
+        <!-- Large row: AI Requests + Usage Duration -->
+        <div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-5">
+          <div class="rounded-lg border border-border bg-card p-5 shadow-card transition-colors duration-300 ease-in-out lg:col-span-3">
+            <div class="mb-4 flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h3 class="text-sm font-semibold text-muted-foreground">AI Requests</h3>
+                <p class="mt-1 text-4xl font-bold tracking-tight text-card-foreground">807,621</p>
+                <p class="text-sm text-muted-foreground">Total AI requests in last 30 days</p>
+              </div>
+              <div class="text-right text-sm">
+                <p class="text-muted-foreground">Today <strong class="text-card-foreground">920,400</strong></p>
+                <p class="text-muted-foreground">Yesterday <strong class="text-card-foreground">865,100</strong></p>
+              </div>
+            </div>
+            <svg class="h-36 w-full" viewBox="0 0 400 128" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="areaA" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="hsl(var(--chart-2) / 0.2)" />
+                  <stop offset="100%" stop-color="hsl(var(--chart-2) / 0)" />
+                </linearGradient>
+                <linearGradient id="areaB" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="hsl(var(--primary) / 0.15)" />
+                  <stop offset="100%" stop-color="hsl(var(--primary) / 0)" />
+                </linearGradient>
+              </defs>
+              <path d="M0 100 L 40 85 L 80 95 L 120 70 L 160 78 L 200 55 L 240 62 L 280 45 L 320 50 L 360 35 L 400 40 L 400 120 L 0 120 Z" fill="url(#areaA)" />
+              <path d="M0 100 L 40 85 L 80 95 L 120 70 L 160 78 L 200 55 L 240 62 L 280 45 L 320 50 L 360 35 L 400 40" fill="none" stroke="hsl(var(--chart-2) / 1)" stroke-width="1.5" stroke-dasharray="6 4" />
+              <path d="M0 105 L 50 95 L 100 100 L 150 88 L 200 75 L 250 82 L 300 65 L 350 72 L 400 55 L 400 120 L 0 120 Z" fill="url(#areaB)" />
+              <path d="M0 105 L 50 95 L 100 100 L 150 88 L 200 75 L 250 82 L 300 65 L 350 72 L 400 55" fill="none" stroke="hsl(var(--foreground) / 1)" stroke-width="2" />
+              <line x1="0" y1="120" x2="400" y2="120" stroke="hsl(var(--border))" stroke-width="1" />
+            </svg>
+            <div class="mt-1 flex justify-between text-[10px] font-medium text-muted-foreground">
+              <span>0h</span><span>3h</span><span>6h</span><span>9h</span><span>12h</span><span>15h</span><span>18h</span><span>21h</span>
+            </div>
+          </div>
+          <div class="rounded-lg border border-border bg-card p-5 shadow-card transition-colors duration-300 ease-in-out lg:col-span-2">
+            <p class="text-xs uppercase tracking-wide text-muted-foreground">Data from May</p>
+            <h3 class="mt-2 text-sm font-semibold text-muted-foreground">Usage Duration</h3>
+            <p class="mt-2 text-4xl font-bold text-card-foreground">9 Months</p>
+            <p class="text-sm text-muted-foreground">Including 4 weeks this quarter</p>
+            <div class="mt-6 space-y-2 border-t border-border pt-4 text-sm text-muted-foreground">
+              <p>Last accessed: <strong class="text-card-foreground">12.06.2025</strong></p>
+              <p>Last update: <strong class="text-card-foreground">16.06.2025</strong></p>
+              <p class="pt-2 font-medium text-primary">You received 2 new AI feedback reports</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tables: main + right column (reference layout) -->
+        <div class="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-start">
+          <section class="overflow-hidden rounded-xl border border-border bg-card shadow-card transition-colors duration-300 ease-in-out lg:col-span-7">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4 sm:p-5">
+              <h2 class="text-base font-semibold text-foreground sm:text-lg">Recent AI Sessions</h2>
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent dark:border-white/10">
+                  <i data-lucide="plus" class="h-4 w-4"></i>
+                  New Session
+                </button>
+                <button type="button" class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90">
+                  <i data-lucide="file-down" class="h-4 w-4"></i>
+                  Export Logs
+                </button>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[640px] text-left text-sm">
+                <thead>
+                  <tr class="border-b border-border text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <th class="px-4 py-3 sm:px-5">User</th>
+                    <th class="px-4 py-3 sm:px-5">Model</th>
+                    <th class="px-4 py-3 sm:px-5">Date</th>
+                    <th class="px-4 py-3 sm:px-5">Tokens</th>
+                    <th class="px-4 py-3 sm:px-5">Status</th>
+                    <th class="w-12 px-2 py-3 text-center sm:px-3"><span class="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                  <tr class="transition-colors hover:bg-muted/40">
+                    <td class="px-4 py-3 sm:px-5">
+                      <div class="flex items-center gap-3">
+                        <img class="h-9 w-9 shrink-0 rounded-full object-cover" src="https://i.pravatar.cc/36?u=1" alt="" width="36" height="36" />
+                        <div class="min-w-0 leading-tight">
+                          <p class="font-semibold text-foreground">Alice Cooper</p>
+                          <p class="text-xs text-muted-foreground">#AI-5001</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-foreground sm:px-5">GPT-4</td>
+                    <td class="px-4 py-3 text-muted-foreground sm:px-5">2025-05-01</td>
+                    <td class="px-4 py-3 tabular-nums text-foreground sm:px-5">2,304</td>
+                    <td class="px-4 py-3 sm:px-5">
+                      <span class="inline-flex items-center gap-2 text-foreground">
+                        <span class="h-2 w-2 shrink-0 rounded-full bg-primary"></span>
+                        Completed
+                      </span>
+                    </td>
+                    <td class="px-2 py-3 text-center sm:px-3">
+                      <button type="button" class="inline-flex rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Actions"><i data-lucide="more-vertical" class="h-4 w-4"></i></button>
+                    </td>
+                  </tr>
+                  <tr class="transition-colors hover:bg-muted/40">
+                    <td class="px-4 py-3 sm:px-5">
+                      <div class="flex items-center gap-3">
+                        <img class="h-9 w-9 shrink-0 rounded-full object-cover" src="https://i.pravatar.cc/36?u=2" alt="" width="36" height="36" />
+                        <div class="min-w-0 leading-tight">
+                          <p class="font-semibold text-foreground">David Lee</p>
+                          <p class="text-xs text-muted-foreground">#AI-5002</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 sm:px-5">DALL·E</td>
+                    <td class="px-4 py-3 text-muted-foreground sm:px-5">2025-04-30</td>
+                    <td class="px-4 py-3 tabular-nums sm:px-5">580</td>
+                    <td class="px-4 py-3 sm:px-5">
+                      <span class="inline-flex items-center gap-2 text-foreground">
+                        <span class="h-2 w-2 shrink-0 rounded-full border-2 border-primary bg-transparent"></span>
+                        Pending
+                      </span>
+                    </td>
+                    <td class="px-2 py-3 text-center sm:px-3">
+                      <button type="button" class="inline-flex rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Actions"><i data-lucide="more-vertical" class="h-4 w-4"></i></button>
+                    </td>
+                  </tr>
+                  <tr class="transition-colors hover:bg-muted/40">
+                    <td class="px-4 py-3 sm:px-5">
+                      <div class="flex items-center gap-3">
+                        <img class="h-9 w-9 shrink-0 rounded-full object-cover" src="https://i.pravatar.cc/36?u=4" alt="" width="36" height="36" />
+                        <div class="min-w-0 leading-tight">
+                          <p class="font-semibold text-foreground">James Wilson</p>
+                          <p class="text-xs text-muted-foreground">#AI-5004</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 sm:px-5">GPT-3.5</td>
+                    <td class="px-4 py-3 text-muted-foreground sm:px-5">2025-04-28</td>
+                    <td class="px-4 py-3 tabular-nums sm:px-5">760</td>
+                    <td class="px-4 py-3 sm:px-5">
+                      <span class="inline-flex items-center gap-2 text-foreground">
+                        <span class="h-2 w-2 shrink-0 rounded-full bg-destructive"></span>
+                        Failed
+                      </span>
+                    </td>
+                    <td class="px-2 py-3 text-center sm:px-3">
+                      <button type="button" class="inline-flex rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Actions"><i data-lucide="more-vertical" class="h-4 w-4"></i></button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="flex flex-col gap-3 border-t border-border px-4 py-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <p>Showing 1 to 10 of 2684 Sessions</p>
+              <div class="flex items-center gap-1">
+                <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border hover:bg-accent disabled:opacity-40" disabled aria-label="Previous"><i data-lucide="chevron-left" class="h-4 w-4"></i></button>
+                <button type="button" class="inline-flex h-8 min-w-[2rem] items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground">1</button>
+                <button type="button" class="inline-flex h-8 min-w-[2rem] items-center justify-center rounded-md border border-border hover:bg-accent">2</button>
+                <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border hover:bg-accent" aria-label="Next"><i data-lucide="chevron-right" class="h-4 w-4"></i></button>
+              </div>
+            </div>
+          </section>
+
+          <div class="flex flex-col gap-4 lg:col-span-5">
+            <section class="overflow-hidden rounded-xl border border-border bg-card shadow-card transition-colors duration-300 ease-in-out">
+              <div class="border-b border-border px-4 py-4 sm:px-5">
+                <h2 class="text-base font-semibold text-foreground">AI Model Usage Summary</h2>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-border text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <th class="px-4 py-2.5 text-left sm:px-5">Model</th>
+                      <th class="px-2 py-2.5 text-right tabular-nums">Requests</th>
+                      <th class="px-2 py-2.5 text-right tabular-nums sm:px-3">Total Tokens</th>
+                      <th class="hidden px-2 py-2.5 text-right tabular-nums sm:table-cell">Avg</th>
+                      <th class="px-4 py-2.5 text-right text-xs sm:px-5">Last Used</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-border">
+                    <tr><td class="px-4 py-2.5 font-medium sm:px-5">GPT-4</td><td class="px-2 py-2.5 text-right">1,248</td><td class="px-2 py-2.5 text-right sm:px-3">2,483,920</td><td class="hidden px-2 py-2.5 text-right text-muted-foreground sm:table-cell">1,989</td><td class="px-4 py-2.5 text-right text-xs text-muted-foreground sm:px-5">2025-06-15</td></tr>
+                    <tr><td class="px-4 py-2.5 font-medium sm:px-5">DALL·E</td><td class="px-2 py-2.5 text-right">328</td><td class="px-2 py-2.5 text-right sm:px-3">194,320</td><td class="hidden px-2 py-2.5 text-right text-muted-foreground sm:table-cell">592</td><td class="px-4 py-2.5 text-right text-xs text-muted-foreground sm:px-5">2025-06-14</td></tr>
+                    <tr><td class="px-4 py-2.5 font-medium sm:px-5">Claude 2</td><td class="px-2 py-2.5 text-right">814</td><td class="px-2 py-2.5 text-right sm:px-3">1,102,390</td><td class="hidden px-2 py-2.5 text-right text-muted-foreground sm:table-cell">1,354</td><td class="px-4 py-2.5 text-right text-xs text-muted-foreground sm:px-5">2025-06-13</td></tr>
+                    <tr><td class="px-4 py-2.5 font-medium sm:px-5">Whisper</td><td class="px-2 py-2.5 text-right">512</td><td class="px-2 py-2.5 text-right sm:px-3">653,210</td><td class="hidden px-2 py-2.5 text-right text-muted-foreground sm:table-cell">1,275</td><td class="px-4 py-2.5 text-right text-xs text-muted-foreground sm:px-5">2025-06-12</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="border-t border-border px-4 py-2.5 text-right text-xs text-muted-foreground sm:px-5">Updated 1 hour ago</p>
+            </section>
+
+            <section class="overflow-hidden rounded-xl border border-border bg-card shadow-card transition-colors duration-300 ease-in-out">
+              <div class="border-b border-border px-4 py-4 sm:px-5">
+                <h2 class="text-base font-semibold text-foreground">AI API Performance Metrics</h2>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-border text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      <th class="px-4 py-2.5 text-left sm:px-5">Endpoint</th>
+                      <th class="px-2 py-2.5 text-right">Latency</th>
+                      <th class="px-2 py-2.5 text-right">Req</th>
+                      <th class="px-2 py-2.5 text-right">Err %</th>
+                      <th class="px-4 py-2.5 text-right sm:px-5">Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-border">
+                    <tr><td class="max-w-[140px] truncate px-4 py-2.5 font-mono text-xs sm:max-w-none sm:px-5">/v1/chat/completions</td><td class="px-2 py-2.5 text-right tabular-nums">720ms</td><td class="px-2 py-2.5 text-right tabular-nums">8,204</td><td class="px-2 py-2.5 text-right tabular-nums">0.18%</td><td class="px-4 py-2.5 text-right tabular-nums sm:px-5">128.34</td></tr>
+                    <tr><td class="max-w-[140px] truncate px-4 py-2.5 font-mono text-xs sm:max-w-none sm:px-5">/v1/images/generations</td><td class="px-2 py-2.5 text-right">930ms</td><td class="px-2 py-2.5 text-right">1,029</td><td class="px-2 py-2.5 text-right">0.03%</td><td class="px-4 py-2.5 text-right sm:px-5">43.89</td></tr>
+                    <tr><td class="max-w-[140px] truncate px-4 py-2.5 font-mono text-xs sm:max-w-none sm:px-5">/v1/embeddings</td><td class="px-2 py-2.5 text-right">610ms</td><td class="px-2 py-2.5 text-right">2,170</td><td class="px-2 py-2.5 text-right">0.10%</td><td class="px-4 py-2.5 text-right sm:px-5">24.98</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="border-t border-border px-4 py-2.5 text-right text-xs text-muted-foreground sm:px-5">API stats updated: 2025-06-16 08:32 AM</p>
+            </section>
+          </div>
+        </div>
+
+        <footer class="flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground">
+          <p>© Simple — Pure HTML + Tailwind (Shadcn tokens)</p>
+          <div class="flex items-center gap-3">
+            <span>59.5GB of 200GB Free</span>
+            <div class="h-2 w-32 overflow-hidden rounded-full bg-muted">
+              <div class="h-full w-[30%] rounded-full bg-primary"></div>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <!-- Customizer -->
+    <aside id="customizer" class="fixed inset-y-0 right-0 z-50 w-[300px] max-w-full translate-x-full border-l border-border bg-card shadow-2xl transition-transform duration-200" aria-hidden="true">
+      <div class="flex h-14 items-center justify-between border-b border-border px-4">
+        <h2 class="font-semibold">Admin Customizer</h2>
+        <button type="button" id="btn-close-customizer" class="rounded-md p-2 text-muted-foreground hover:bg-accent" aria-label="Close">✕</button>
+      </div>
+      <div class="h-[calc(100vh-3.5rem)] space-y-6 overflow-y-auto p-4 text-sm">
+        <p class="text-muted-foreground">Configure layout, styles, and preferences.</p>
+        <div>
+          <h3 class="mb-3 font-semibold text-foreground">Color scheme</h3>
+          <div class="flex gap-3">
+            <button type="button" id="customizer-light" class="flex-1 rounded-lg border-2 border-primary p-3 text-xs font-medium">Light</button>
+            <button type="button" id="customizer-dark" class="flex-1 rounded-lg border border-border p-3 text-xs">Dark</button>
+          </div>
+        </div>
+        <div>
+          <h3 class="mb-3 font-semibold">Primary color</h3>
+          <div class="flex items-center gap-3">
+            <input id="primary-color-panel" type="color" value="#0f172a" class="h-12 w-full cursor-pointer rounded border border-border" />
+          </div>
+          <p class="mt-2 text-xs text-muted-foreground">Synced with header theme picker.</p>
+        </div>
+      </div>
+    </aside>
+    <div id="customizer-backdrop" class="fixed inset-0 z-40 hidden bg-black/50"></div>
+
+    <!-- Floating toolbar -->
+    <div class="fixed bottom-6 right-6 z-30 flex flex-col gap-1 rounded-xl border border-border bg-card p-1.5 shadow-lg">
+      <button type="button" class="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Widget"><i data-lucide="box" class="h-4 w-4"></i></button>
+      <button type="button" class="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Search"><i data-lucide="search" class="h-4 w-4"></i></button>
+      <button type="button" class="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Layers"><i data-lucide="layers" class="h-4 w-4"></i></button>
+      <button type="button" class="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Edit"><i data-lucide="pencil" class="h-4 w-4"></i></button>
+    </div>
+
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <script>
+      if (window.lucide) lucide.createIcons();
+    </script>
+    <script src="app.js"></script>
+  </body>
+</html>

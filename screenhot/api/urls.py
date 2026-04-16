@@ -5,6 +5,8 @@ from . import views
 app_name = "screenhot_api"
 
 urlpatterns = [
+    path("projects/", views.ProjectOptionsView.as_view(), name="project_options"),
+    path("departments/", views.DepartmentOptionsView.as_view(), name="department_options"),
     path("employees/", views.EmployeeOptionsView.as_view(), name="employee_options"),
     path("live-monitor/", views.LiveMonitorView.as_view(), name="live_monitor"),
     path("screenshots/upload/", views.ScreenshotUploadView.as_view(), name="screenshot_upload"),

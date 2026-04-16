@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 
 from auth_tenants.models import User
 from hrm.tenant_scope import get_hrm_tenant, user_belongs_to_workspace_tenant
+from jiraclone.models import JiraProject
 from screenhot.models import AttendanceRecord, ScreenshotRecord, VideoJob
 from screenhot.tasks import enqueue_video_job
 
@@ -53,6 +54,24 @@ class ScreenhotTenantScopedAPIView(APIView):
         if not target:
             self.permission_denied(self.request, message="Invalid employee for tenant.")
         return target
+
+    def resolve_project(self, tenant, project_key):
+        key = (project_key or "").strip().upper()
+        if not key:
+            return None
+        project = JiraProject.objects.filter(tenant=tenant, key=key, is_active=True).first()
+        if not project:
+            self.permission_denied(self.request, message="Invalid project for tenant.")
+        return project
+
+    def project_user_ids(self, project, department_id=None):
+        rows = project.department_assignments.prefetch_related("users")
+        if department_id:
+            rows = rows.filter(department_id=department_id)
+        user_ids = set()
+        for row in rows:
+            user_ids.update(row.users.values_list("id", flat=True))
+        return user_ids
 
 
 class ScreenshotUploadView(ScreenhotTenantScopedAPIView):
@@ -208,12 +227,21 @@ class VideoGenerateView(ScreenhotTenantScopedAPIView):
         tenant = self.get_tenant()
         serializer = VideoJobCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        project = self.resolve_project(tenant, request.data.get("project_key"))
+        department_id = request.data.get("department_id")
 
         target_user = serializer.validated_data["target_user"]
         if target_user.role != "super_admin" and target_user.tenant_id != tenant.id:
             return Response({"detail": "Target user is outside current tenant."}, status=status.HTTP_400_BAD_REQUEST)
         if target_user.role != "super_admin" and not User.objects.filter(pk=target_user.pk, tenant=tenant).exists():
             return Response({"detail": "Target user is invalid for tenant."}, status=status.HTTP_400_BAD_REQUEST)
+        if project is not None:
+            scoped_user_ids = self.project_user_ids(project, department_id=department_id)
+            if target_user.id not in scoped_user_ids:
+                return Response(
+                    {"detail": "Target user is not assigned to the selected project/department."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         job = VideoJob.objects.create(
             tenant=tenant,
@@ -278,7 +306,13 @@ class EmployeeOptionsView(ScreenhotTenantScopedAPIView):
 
     def get(self, request):
         tenant = self.get_tenant()
-        users = User.objects.filter(tenant=tenant, is_active=True).order_by("name", "email")
+        project = self.resolve_project(tenant, request.GET.get("project_key"))
+        department_id = request.GET.get("department_id")
+        users = User.objects.filter(tenant=tenant, is_active=True)
+        if project is not None:
+            user_ids = self.project_user_ids(project, department_id=department_id)
+            users = users.filter(id__in=user_ids)
+        users = users.order_by("name", "email")
         data = [
             {
                 "id": u.id,
@@ -286,6 +320,42 @@ class EmployeeOptionsView(ScreenhotTenantScopedAPIView):
                 "email": u.email,
             }
             for u in users
+        ]
+        return Response(data)
+
+
+class ProjectOptionsView(ScreenhotTenantScopedAPIView):
+    required_permission = "screenhot.view"
+
+    def get(self, request):
+        tenant = self.get_tenant()
+        projects = JiraProject.objects.filter(tenant=tenant, is_active=True).order_by("key")
+        data = [
+            {
+                "id": p.id,
+                "key": p.key,
+                "name": p.name,
+            }
+            for p in projects
+        ]
+        return Response(data)
+
+
+class DepartmentOptionsView(ScreenhotTenantScopedAPIView):
+    required_permission = "screenhot.view"
+
+    def get(self, request):
+        tenant = self.get_tenant()
+        project = self.resolve_project(tenant, request.GET.get("project_key"))
+        if project is None:
+            return Response([])
+        rows = project.department_assignments.select_related("department").order_by("order", "department__name")
+        data = [
+            {
+                "id": row.department_id,
+                "name": row.department.name,
+            }
+            for row in rows
         ]
         return Response(data)
 
@@ -298,7 +368,11 @@ class LiveMonitorView(ScreenhotTenantScopedAPIView):
         now = timezone.now()
         live_cutoff = now - timezone.timedelta(seconds=30)
         employee_id = request.GET.get("employee_id")
+        project = self.resolve_project(tenant, request.GET.get("project_key"))
+        department_id = request.GET.get("department_id")
         users = User.objects.filter(tenant=tenant, is_active=True).order_by("name", "email")
+        if project is not None:
+            users = users.filter(id__in=self.project_user_ids(project, department_id=department_id))
         if employee_id:
             users = users.filter(pk=employee_id)
 

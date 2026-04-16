@@ -19,11 +19,13 @@ WORKSPACE_MODULE_CODES = (
     "production",
     "pos",
     "jiraclone",
+    "vault",
     "recruitment",
     "hrm",
     "chat",
     "support",
     "screenhot",
+    "notification",
 )
 
 
