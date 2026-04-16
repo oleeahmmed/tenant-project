@@ -405,15 +405,34 @@
   <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
   <aside id="sidebar" class="simple-sidebar fixed inset-y-0 left-0 z-40 flex w-[240px] flex-col border-r border-border bg-background transition-all duration-300 ease-in-out lg:static lg:shrink-0 -translate-x-full lg:translate-x-0" data-collapsed="false">
 
-    <!-- Brand — Coderthemes Simple: slim bar + version -->
-    <div class="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border px-3">
+    <!-- Company brand -->
+    <div class="flex h-14 shrink-0 items-center border-b border-border px-3">
       <a href="{% url 'dashboard' %}" class="flex min-w-0 items-center gap-2.5">
-        <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-          <i data-lucide="sparkles" class="h-[18px] w-[18px]"></i>
-        </span>
-        <span class="sidebar-text truncate text-base font-bold tracking-tight text-foreground">Simple</span>
+        {% if request.hrm_tenant %}
+          {% if request.hrm_tenant.logo %}
+            <img src="{{ request.hrm_tenant.logo.url }}" alt="" class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border" />
+          {% else %}
+            <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold ring-1 ring-border">
+              {{ request.hrm_tenant.name|first|upper }}
+            </span>
+          {% endif %}
+          <span class="sidebar-text truncate text-base font-bold tracking-tight text-foreground">{{ request.hrm_tenant.name }}</span>
+        {% elif request.user.tenant %}
+          {% if request.user.tenant.logo %}
+            <img src="{{ request.user.tenant.logo.url }}" alt="" class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border" />
+          {% else %}
+            <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold ring-1 ring-border">
+              {{ request.user.tenant.name|first|upper }}
+            </span>
+          {% endif %}
+          <span class="sidebar-text truncate text-base font-bold tracking-tight text-foreground">{{ request.user.tenant.name }}</span>
+        {% else %}
+          <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold ring-1 ring-border">
+            S
+          </span>
+          <span class="sidebar-text truncate text-base font-bold tracking-tight text-foreground">Workspace</span>
+        {% endif %}
       </a>
-      <span class="sidebar-text shrink-0 text-xs font-medium text-muted-foreground">v1.0.0</span>
     </div>
 
     <!-- Profile — dashed box like Simple; avatar always visible (text hides when collapsed) -->
@@ -990,20 +1009,18 @@
         <div class="relative">
           <button type="button" class="dropdown-btn relative rounded-md p-2 text-muted-foreground hover:bg-accent" data-dropdown="dd-notify">
             <i data-lucide="bell" class="h-5 w-5"></i>
-            <span class="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary ring-2 ring-card"></span>
+            <span id="notif-dot" class="absolute right-1 top-1 hidden h-2 w-2 rounded-full bg-primary ring-2 ring-card"></span>
+            <span id="notif-badge" class="absolute -right-0.5 -top-0.5 hidden min-w-[1rem] rounded-full bg-primary px-1 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground"></span>
           </button>
           <div id="dd-notify" class="dropdown-panel absolute right-0 z-50 mt-2 hidden w-80 max-h-96 overflow-y-auto rounded-xl border border-border bg-card shadow-lg">
             <div class="flex items-center justify-between border-b border-border p-3">
               <h3 class="text-sm font-semibold text-foreground">Notifications</h3>
-              <span class="text-xs text-muted-foreground">New</span>
+              <span id="notif-head-count" class="text-xs text-muted-foreground">0 new</span>
             </div>
-            <ul class="divide-y divide-border text-sm">
-              <li class="p-3 hover:bg-accent transition-colors">
-                <p class="font-medium text-foreground">Welcome to WA Automation</p>
-                <p class="text-xs text-muted-foreground mt-0.5">Just now</p>
-              </li>
+            <ul id="notif-list" class="divide-y divide-border text-sm">
+              <li class="p-3 text-xs text-muted-foreground">Loading...</li>
             </ul>
-            <a class="block border-t border-border p-3 text-center text-sm font-medium text-primary hover:bg-accent" href="#">View All</a>
+            <a class="block border-t border-border p-3 text-center text-sm font-medium text-primary hover:bg-accent" href="{% url 'notification:list' %}">View All</a>
           </div>
         </div>
 
@@ -1296,6 +1313,93 @@
   });
   document.getElementById('customizer-light')?.addEventListener('click',function(){ setDark(false); });
   document.getElementById('customizer-dark')?.addEventListener('click',function(){ setDark(true); });
+
+  // ── Notifications: live inbox + sound ─────────────────────────────────────
+  var notifList = document.getElementById('notif-list');
+  var notifDot = document.getElementById('notif-dot');
+  var notifBadge = document.getElementById('notif-badge');
+  var notifHeadCount = document.getElementById('notif-head-count');
+  var notifLastSeenId = 0;
+
+  function escHtml(v){
+    var d=document.createElement('div');
+    d.textContent = v || '';
+    return d.innerHTML;
+  }
+
+  function notifySound(){
+    try{
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return;
+      var ctx = new Ctx();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    }catch(e){}
+  }
+
+  function applyUnread(unread){
+    var n = Number(unread || 0);
+    if(notifDot) notifDot.classList.toggle('hidden', n <= 0);
+    if(notifBadge){
+      notifBadge.classList.toggle('hidden', n <= 0);
+      notifBadge.textContent = n > 99 ? '99+' : String(n);
+    }
+    if(notifHeadCount) notifHeadCount.textContent = n + ' new';
+  }
+
+  function renderNotifRows(rows){
+    if(!notifList) return;
+    if(!rows || !rows.length){
+      notifList.innerHTML = '<li class="p-3 text-xs text-muted-foreground">No notifications.</li>';
+      return;
+    }
+    notifList.innerHTML = rows.map(function(n){
+      var when = '';
+      try{ when = new Date(n.created_at).toLocaleString(); }catch(e){ when = n.created_at || ''; }
+      var open = n.link_url ? ('<a href="'+escHtml(n.link_url)+'" class="text-primary hover:underline">Open</a>') : '';
+      return (
+        '<li class="p-3 transition-colors hover:bg-accent '+(n.read ? '' : 'bg-primary/5')+'">' +
+          '<p class="font-medium text-foreground">' + escHtml(n.title) + '</p>' +
+          (n.body ? '<p class="mt-0.5 text-xs text-muted-foreground">' + escHtml(n.body) + '</p>' : '') +
+          '<div class="mt-1.5 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">' +
+            '<span>' + escHtml(when) + '</span>' +
+            open +
+          '</div>' +
+        '</li>'
+      );
+    }).join('');
+  }
+
+  function pollNotifications(){
+    fetch('{% url "notification:api_unread_count" %}', {credentials:'same-origin'})
+      .then(function(r){ return r.ok ? r.json() : {}; })
+      .then(function(d){ applyUnread(d.unread || 0); })
+      .catch(function(){});
+    fetch('{% url "notification:api_inbox" %}?limit=8', {credentials:'same-origin'})
+      .then(function(r){ return r.ok ? r.json() : {}; })
+      .then(function(d){
+        var rows = (d && d.results) || [];
+        renderNotifRows(rows);
+        if(rows.length){
+          var topId = Number(rows[0].id || 0);
+          if(notifLastSeenId && topId > notifLastSeenId){
+            notifySound();
+          }
+          notifLastSeenId = Math.max(notifLastSeenId, topId);
+        }
+      })
+      .catch(function(){});
+  }
+  pollNotifications();
+  setInterval(pollNotifications, 12000);
 
   if(window.lucide) lucide.createIcons();
 })();
