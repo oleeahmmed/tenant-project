@@ -1,58 +1,41 @@
 from django.contrib import messages
 from django.shortcuts import redirect
 
-from foundation.mixins import FoundationAdminMixin, FoundationDashboardAccessMixin
+from auth_tenants.mixins import TenantMixin, DashboardMixin, PageContextMixin
 
 
-class SupportModuleAdminMixin(FoundationAdminMixin):
-    permission_codename_read = "support.view"
-    permission_codename_write = "support.manage"
-    permission_codename_delete = "support.delete"
-
-    def dispatch(self, request, *args, **kwargs):
-        tenant = getattr(request, "hrm_tenant", None)
-        if tenant is not None and not tenant.is_module_enabled("support"):
-            messages.error(request, "Support module is disabled for this tenant.")
-            return redirect("dashboard")
-        return super().dispatch(request, *args, **kwargs)
-
-    def handle_no_permission(self):
-        messages.error(self.request, "You do not have permission for this Support action.")
-        return redirect("dashboard")
+class SupportModuleAdminMixin(TenantMixin):
+    """🎯 UNIFIED SUPPORT ADMIN MIXIN"""
+    module_code = "support"
+    required_permission = "support.view"
 
 
-class SupportDashboardAccessMixin(FoundationDashboardAccessMixin):
-    """Logged-in users with a workspace tenant may open Support (stricter actions use SupportModuleAdminMixin)."""
-
-    def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        tenant = getattr(request, "hrm_tenant", None)
-        if tenant is not None and not tenant.is_module_enabled("support"):
-            messages.error(request, "Support module is disabled for this tenant.")
-            return redirect("dashboard")
-        return response
-
+class SupportDashboardAccessMixin(DashboardMixin):
+    """🎯 UNIFIED SUPPORT DASHBOARD MIXIN"""
+    
     def test_func(self):
+        """Dashboard access with support module check"""
         if not super().test_func():
             return False
-        u = self.request.user
-        if u.role == "super_admin":
+        
+        user = self.request.user
+        
+        # Super admin can always access
+        if user.role == "super_admin":
             return True
-        t = getattr(self.request, "hrm_tenant", None)
-        if t is None:
+        
+        tenant = getattr(self.request, "tenant", None)
+        if not tenant:
             return False
-        if u.role in ("staff", "tenant_admin") and not u.has_tenant_permission("support.view"):
+        
+        # Check support module access
+        if not tenant.can_access_module("support"):
             return False
-        return True
+        
+        # Check basic support permission
+        return user.has_tenant_permission("support.view")
 
 
-class SupportPageContextMixin:
+class SupportPageContextMixin(PageContextMixin):
+    """Support page context"""
     active_page = "support"
-    page_title = ""
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["active_page"] = self.active_page
-        if getattr(self, "page_title", None):
-            ctx.setdefault("page_title", self.page_title)
-        return ctx

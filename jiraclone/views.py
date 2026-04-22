@@ -10,7 +10,7 @@ from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from foundation.models import Customer
-from hrm.tenant_scope import get_hrm_tenant
+from auth_tenants.permissions import get_tenant
 
 from .forms import (
     IssueCommentForm,
@@ -42,7 +42,7 @@ def ensure_request_tenant(request):
     """Foundation mixins set this in dispatch; IssueCreateView called get_project before super()."""
     t = getattr(request, "hrm_tenant", None)
     if t is None:
-        t = get_hrm_tenant(request)
+        t = get_tenant(request)
         request.hrm_tenant = t
     return t
 

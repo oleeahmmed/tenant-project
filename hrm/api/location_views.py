@@ -11,7 +11,7 @@ from hrm.services.location_checkin import (
     process_mobile_checkin,
     sync_daily_record_from_log,
 )
-from hrm.tenant_scope import get_hrm_tenant
+from auth_tenants.permissions import get_tenant
 
 from .location_serializers import MobileCheckinSerializer
 
@@ -26,7 +26,7 @@ class EmployeeMobileCheckinView(APIView):
 
     def post(self, request):
         user = request.user
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"success": False, "message": "No tenant assigned."},
@@ -109,7 +109,7 @@ class LocationPolicyInfoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response({"detail": "No tenant"}, status=403)
         p = get_or_create_location_policy(tenant)

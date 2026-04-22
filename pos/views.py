@@ -12,7 +12,7 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
 
 from foundation.models import Customer, PaymentMethod, Warehouse
-from hrm.tenant_scope import get_hrm_tenant
+from auth_tenants.permissions import get_tenant
 
 from .forms import CloseSessionForm, OpenSessionForm, POSRegisterForm
 from .mixins import POSAdminMixin, POSDashboardAccessMixin, POSPageContextMixin
@@ -203,7 +203,7 @@ class CashierView(POSAdminMixin, POSPageContextMixin, TemplateView):
     def dispatch(self, request, *args, **kwargs):
         # Must run before using request.hrm_tenant; this view's dispatch runs before
         # FoundationAdminMixin.dispatch (super()) attaches the tenant.
-        request.hrm_tenant = get_hrm_tenant(request)
+        request.hrm_tenant = get_tenant(request)
         sid = request.session.get(SESSION_POS_KEY)
         if not sid:
             messages.warning(request, "Open a POS session first.")

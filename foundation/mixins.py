@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.shortcuts import redirect
 
 from hrm.mixins import WorkspaceTenantDashboardMixin
-from hrm.tenant_scope import get_hrm_tenant, user_belongs_to_workspace_tenant
+from auth_tenants.permissions import get_tenant, TenantManager
 
 
 class FoundationAdminMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -47,7 +47,7 @@ class FoundationAdminMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.permission_codename_read
 
     def dispatch(self, request, *args, **kwargs):
-        request.hrm_tenant = get_hrm_tenant(request)
+        request.hrm_tenant = get_tenant(request)
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):

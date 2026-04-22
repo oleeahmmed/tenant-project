@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from auth_tenants.models import User
-from hrm.tenant_scope import get_hrm_tenant, user_belongs_to_workspace_tenant
+from auth_tenants.permissions import get_tenant, TenantManager
 from jiraclone.models import JiraProject
 from screenhot.models import AttendanceRecord, ScreenshotRecord, VideoJob
 from screenhot.tasks import enqueue_video_job
@@ -32,9 +32,9 @@ class ScreenhotTenantScopedAPIView(APIView):
         if hasattr(self, "_screenhot_tenant"):
             return self._screenhot_tenant
 
-        tenant = get_hrm_tenant(self.request)
+        tenant = get_tenant(self.request)
         user = self.request.user
-        if tenant is None or not user_belongs_to_workspace_tenant(user, tenant):
+        if tenant is None or not TenantManager.user_belongs_to_tenant(user, tenant):
             self.permission_denied(self.request, message="No workspace tenant scope.")
         if not tenant.is_module_enabled("screenhot"):
             self.permission_denied(self.request, message="Screenhot module is disabled.")

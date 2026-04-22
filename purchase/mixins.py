@@ -1,49 +1,42 @@
 from django.contrib import messages
 from django.shortcuts import redirect
 
-from foundation.mixins import FoundationAdminMixin, FoundationDashboardAccessMixin
+from auth_tenants.mixins import TenantMixin, DashboardMixin, PageContextMixin
 
 
-class PurchaseAdminMixin(FoundationAdminMixin):
-    """Purchase follows the same tenant and role rules as Foundation."""
-    permission_codename_read = "purchase.view"
-    permission_codename_write = "purchase.manage"
-    permission_codename_delete = "purchase.delete"
-
-    def dispatch(self, request, *args, **kwargs):
-        tenant = getattr(request, "hrm_tenant", None)
-        if tenant is not None and not tenant.is_module_enabled("purchase"):
-            messages.error(request, "Purchase module is disabled for this tenant.")
-            return redirect("dashboard")
-        return super().dispatch(request, *args, **kwargs)
+class PurchaseAdminMixin(TenantMixin):
+    """🎯 UNIFIED PURCHASE ADMIN MIXIN"""
+    module_code = "purchase"
+    required_permission = "purchase.view"
 
 
-class PurchaseDashboardAccessMixin(FoundationDashboardAccessMixin):
-    """Purchase dashboard access mirrors other tenant apps."""
+class PurchaseDashboardAccessMixin(DashboardMixin):
+    """🎯 UNIFIED PURCHASE DASHBOARD MIXIN"""
+    
+    def test_func(self):
+        """Dashboard access with purchase module check"""
+        if not super().test_func():
+            return False
+        
+        user = self.request.user
+        
+        # Super admin can always access
+        if user.role == "super_admin":
+            return True
+        
+        tenant = getattr(self.request, "tenant", None)
+        if not tenant:
+            return False
+        
+        # Check purchase module access
+        if not tenant.can_access_module("purchase"):
+            return False
+        
+        # Check basic purchase permission
+        return user.has_tenant_permission("purchase.view")
 
-    def dispatch(self, request, *args, **kwargs):
-        tenant = getattr(request, "hrm_tenant", None)
-        if tenant is not None and not tenant.is_module_enabled("purchase"):
-            messages.error(request, "Purchase module is disabled for this tenant.")
-            return redirect("dashboard")
-        if (
-            getattr(request.user, "role", None) in ("staff", "tenant_admin")
-            and tenant is not None
-            and not request.user.has_tenant_permission("purchase.view")
-        ):
-            messages.error(request, "You do not have permission for this Purchase action.")
-            return redirect("dashboard")
-        return super().dispatch(request, *args, **kwargs)
 
-
-class PurchasePageContextMixin:
+class PurchasePageContextMixin(PageContextMixin):
+    """Purchase page context"""
     active_page = "purchase"
-    page_title = ""
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["active_page"] = self.active_page
-        if self.page_title:
-            ctx.setdefault("page_title", self.page_title)
-        return ctx
 

@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from hrm.tenant_scope import get_hrm_tenant
+from auth_tenants.permissions import get_tenant
 
 from auth_tenants.models import Tenant, Role, Invitation, Permission
 from .serializers import (
@@ -14,7 +14,7 @@ from .serializers import (
     InvitationCreateSerializer, InvitationSerializer,
     PermissionSerializer, MemberPermissionSerializer,
 )
-from .permissions import IsSuperAdmin, IsTenantAdmin
+from auth_tenants.permissions import IsSuperAdmin, IsTenantAdmin
 
 User = get_user_model()
 
@@ -89,13 +89,53 @@ class MeView(APIView):
     def get(self, request):
         return Response(UserSerializer(request.user).data)
 
+    def patch(self, request):
+        user = request.user
+        name = (request.data.get("name") or "").strip()
+        if name:
+            user.name = name[:255]
+        avatar = request.FILES.get("avatar")
+        if avatar:
+            user.avatar = avatar
+        notif_sound = request.FILES.get("notification_sound")
+        if notif_sound:
+            user.notification_sound = notif_sound
+        if str(request.data.get("reset_notification_sound") or "").lower() in ("1", "true", "yes"):
+            if user.notification_sound:
+                user.notification_sound.delete(save=False)
+            user.notification_sound = None
+        user.save()
+        return Response(UserSerializer(user).data)
+
+
+class WorkspaceContextView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        tenant = get_tenant(request)
+        if tenant is None:
+            return Response(
+                {
+                    "tenant": None,
+                    "user": UserSerializer(request.user).data,
+                    "permissions": [],
+                }
+            )
+        return Response(
+            {
+                "tenant": TenantSerializer(tenant).data,
+                "user": UserSerializer(request.user).data,
+                "permissions": sorted(request.user.get_all_permissions_set()) if request.user.role == "staff" else "__all__",
+            }
+        )
+
 
 # ── Tenant Profile ────────────────────────────────────────────────────────────
 class TenantMeView(APIView):
     permission_classes = [IsTenantAdmin]
 
     def get(self, request):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -104,7 +144,7 @@ class TenantMeView(APIView):
         return Response(TenantSerializer(tenant).data)
 
     def patch(self, request):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -114,6 +154,44 @@ class TenantMeView(APIView):
         s.is_valid(raise_exception=True)
         s.save()
         return Response(s.data)
+
+
+class TenantCompanySettingsApiView(APIView):
+    permission_classes = [IsTenantAdmin]
+
+    def get(self, request):
+        tenant = get_tenant(request)
+        if tenant is None:
+            return Response({"detail": "No workspace tenant resolved for this account."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {
+                "id": tenant.id,
+                "name": tenant.name,
+                "slug": tenant.slug,
+                "logo_url": request.build_absolute_uri(tenant.logo.url) if tenant.logo else None,
+                "notification_sound_default_url": request.build_absolute_uri(tenant.notification_sound_default.url) if tenant.notification_sound_default else None,
+            }
+        )
+
+    def patch(self, request):
+        tenant = get_tenant(request)
+        if tenant is None:
+            return Response({"detail": "No workspace tenant resolved for this account."}, status=status.HTTP_400_BAD_REQUEST)
+        name = (request.data.get("name") or "").strip()
+        if name:
+            tenant.name = name[:255]
+        logo = request.FILES.get("logo")
+        if logo:
+            tenant.logo = logo
+        snd = request.FILES.get("notification_sound_default")
+        if snd:
+            tenant.notification_sound_default = snd
+        if str(request.data.get("reset_notification_sound_default") or "").lower() in ("1", "true", "yes"):
+            if tenant.notification_sound_default:
+                tenant.notification_sound_default.delete(save=False)
+            tenant.notification_sound_default = None
+        tenant.save()
+        return self.get(request)
 
 
 # ── Permission Master List (Super Admin) ──────────────────────────────────────
@@ -174,7 +252,7 @@ class RoleListView(APIView):
     permission_classes = [IsTenantAdmin]
 
     def get(self, request):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -184,7 +262,7 @@ class RoleListView(APIView):
         return Response(RoleSerializer(roles, many=True).data)
 
     def post(self, request):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -206,7 +284,7 @@ class RoleDetailView(APIView):
             return None
 
     def get(self, request, pk):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -218,7 +296,7 @@ class RoleDetailView(APIView):
         return Response(RoleSerializer(role).data)
 
     def patch(self, request, pk):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -233,7 +311,7 @@ class RoleDetailView(APIView):
         return Response(s.data)
 
     def delete(self, request, pk):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -251,7 +329,7 @@ class InvitationListView(APIView):
     permission_classes = [IsTenantAdmin]
 
     def get(self, request):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -261,7 +339,7 @@ class InvitationListView(APIView):
         return Response(InvitationSerializer(invites, many=True).data)
 
     def post(self, request):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -280,7 +358,7 @@ class InvitationCancelView(APIView):
     permission_classes = [IsTenantAdmin]
 
     def delete(self, request, pk):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -299,7 +377,7 @@ class MemberListView(APIView):
     permission_classes = [IsTenantAdmin]
 
     def get(self, request):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -324,7 +402,7 @@ class MemberDetailView(APIView):
 
     def patch(self, request, pk):
         """Member এর role পরিবর্তন করো"""
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -347,7 +425,7 @@ class MemberDetailView(APIView):
         return Response(UserSerializer(member).data)
 
     def delete(self, request, pk):
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -377,7 +455,7 @@ class MemberPermissionView(APIView):
 
     def get(self, request, pk):
         """Member এর current extra permissions দেখো"""
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},
@@ -401,7 +479,7 @@ class MemberPermissionView(APIView):
 
     def post(self, request, pk):
         """Extra permission add ও remove করো একসাথে"""
-        tenant = get_hrm_tenant(request)
+        tenant = get_tenant(request)
         if tenant is None:
             return Response(
                 {"detail": "No workspace tenant resolved for this account."},

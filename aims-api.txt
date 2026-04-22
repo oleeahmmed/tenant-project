@@ -1,0 +1,3871 @@
+================================================================
+AIMS ADMIN DASHBOARD - COMPLETE API REFERENCE
+Django REST Framework + JWT Authentication
+================================================================
+
+
+MODULE: AUTHENTICATION
+
+[POST] /api/auth/register
+Access: Admin Only
+Auth: Public
+Description: Register a new admin or user account
+Request:
+- first_name (string, required)
+- last_name (string, required)
+- email (string, required)
+- password (string, required)
+- password_confirm (string, required)
+- role (string, required) [admin, manager, employee]
+Response:
+- id
+- email
+- role
+- access_token
+- refresh_token
+
+[POST] /api/auth/login
+Access: Mixed
+Auth: Public
+Description: Authenticate user and return JWT tokens
+Request:
+- email (string, required)
+- password (string, required)
+Response:
+- access_token
+- refresh_token
+- user.id
+- user.email
+- user.role
+- user.full_name
+- user.avatar
+
+[POST] /api/auth/token/refresh
+Access: Mixed
+Auth: Public
+Description: Refresh access token using refresh token
+Request:
+- refresh (string, required)
+Response:
+- access
+- refresh
+
+[POST] /api/auth/logout
+Access: Mixed
+Auth: JWT
+Description: Blacklist the refresh token to invalidate session
+Request:
+- refresh (string, required)
+Response:
+- detail
+
+[POST] /api/auth/forgot-password
+Access: Mixed
+Auth: Public
+Description: Send password reset link to user email
+Request:
+- email (string, required)
+Response:
+- detail
+
+[POST] /api/auth/forgot-password/verify
+Access: Mixed
+Auth: Public
+Description: Verify the password reset token is valid
+Request:
+- token (string, required)
+- uid (string, required)
+Response:
+- valid (boolean)
+
+[POST] /api/auth/reset-password
+Access: Mixed
+Auth: Public
+Description: Reset user password using token and uid
+Request:
+- uid (string, required)
+- token (string, required)
+- new_password (string, required)
+- new_password_confirm (string, required)
+Response:
+- detail
+
+[POST] /api/auth/change-password
+Access: Mixed
+Auth: JWT
+Description: Change password for currently authenticated user
+Request:
+- old_password (string, required)
+- new_password (string, required)
+- new_password_confirm (string, required)
+Response:
+- detail
+
+[GET] /api/auth/me
+Access: Mixed
+Auth: JWT
+Description: Get profile of the currently authenticated user
+Request: none
+Response:
+- id
+- email
+- first_name
+- last_name
+- role
+- avatar
+- phone
+- department
+- date_joined
+- is_active
+
+[PATCH] /api/auth/me
+Access: Mixed
+Auth: JWT
+Description: Update profile of the currently authenticated user
+Request:
+- first_name (string, optional)
+- last_name (string, optional)
+- phone (string, optional)
+- avatar (file, optional)
+Response:
+- id
+- email
+- first_name
+- last_name
+- phone
+- avatar
+
+[POST] /api/auth/me/avatar
+Access: Mixed
+Auth: JWT
+Description: Upload or replace avatar for current user
+Request:
+- avatar (file, required)
+Response:
+- avatar_url
+
+[POST] /api/auth/verify-email
+Access: Mixed
+Auth: Public
+Description: Verify user email address via token
+Request:
+- token (string, required)
+Response:
+- detail
+
+[POST] /api/auth/resend-verification
+Access: Mixed
+Auth: Public
+Description: Resend email verification link
+Request:
+- email (string, required)
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: TWO-FACTOR AUTHENTICATION
+----------------------------------------------------------------
+
+[POST] /api/auth/2fa/enable
+Access: Mixed
+Auth: JWT
+Description: Initialize 2FA setup and return QR code URI
+Request: none
+Response:
+- otpauth_url
+- secret
+- qr_code_base64
+
+[POST] /api/auth/2fa/confirm
+Access: Mixed
+Auth: JWT
+Description: Confirm and activate 2FA using TOTP code
+Request:
+- code (string, required)
+Response:
+- detail
+- backup_codes[]
+
+[POST] /api/auth/2fa/disable
+Access: Mixed
+Auth: JWT
+Description: Disable 2FA for the authenticated user
+Request:
+- code (string, required)
+Response:
+- detail
+
+[POST] /api/auth/2fa/verify
+Access: Mixed
+Auth: Public
+Description: Verify TOTP code after initial login when 2FA is enabled
+Request:
+- temp_token (string, required)
+- code (string, required)
+Response:
+- access_token
+- refresh_token
+
+[POST] /api/auth/2fa/backup
+Access: Mixed
+Auth: Public
+Description: Use a backup code to authenticate when TOTP device is unavailable
+Request:
+- backup_code (string, required)
+Response:
+- access_token
+- refresh_token
+
+[GET] /api/auth/2fa/backup-codes
+Access: Mixed
+Auth: JWT
+Description: List remaining valid backup codes (masked)
+Request: none
+Response:
+- remaining_count
+- codes[]
+
+[POST] /api/auth/2fa/backup-codes/regenerate
+Access: Mixed
+Auth: JWT
+Description: Regenerate a fresh set of backup codes, invalidating old ones
+Request:
+- code (string, required)
+Response:
+- backup_codes[]
+
+
+----------------------------------------------------------------
+MODULE: USERS
+----------------------------------------------------------------
+
+[GET] /api/users
+Access: Admin Only
+Auth: JWT
+Description: List all users with filtering, search, and pagination
+Request (query params):
+- search (string, optional)
+- role (string, optional) [admin, manager, employee]
+- is_active (boolean, optional)
+- department (integer, optional)
+- ordering (string, optional)
+- page (integer, optional)
+- page_size (integer, optional)
+Response:
+- count
+- next
+- previous
+- results[].id
+- results[].full_name
+- results[].email
+- results[].role
+- results[].department
+- results[].avatar
+- results[].is_active
+- results[].date_joined
+
+[POST] /api/users
+Access: Admin Only
+Auth: JWT
+Description: Create a new user account
+Request:
+- first_name (string, required)
+- last_name (string, required)
+- email (string, required)
+- password (string, required)
+- role (string, required)
+- department_id (integer, optional)
+- phone (string, optional)
+- designation (string, optional)
+Response:
+- id
+- full_name
+- email
+- role
+- department
+- is_active
+
+[GET] /api/users/{id}
+Access: Admin Only
+Auth: JWT
+Description: Retrieve full profile of a specific user
+Request: none
+Response:
+- id
+- full_name
+- email
+- role
+- department
+- phone
+- designation
+- avatar
+- is_active
+- date_joined
+- projects_count
+- tasks_count
+- tasks_completed
+- last_login
+
+[PATCH] /api/users/{id}
+Access: Admin Only
+Auth: JWT
+Description: Partially update a user profile
+Request:
+- first_name (string, optional)
+- last_name (string, optional)
+- role (string, optional)
+- department_id (integer, optional)
+- phone (string, optional)
+- designation (string, optional)
+- is_active (boolean, optional)
+Response:
+- id
+- full_name
+- role
+- department
+- is_active
+
+[DELETE] /api/users/{id}
+Access: Admin Only
+Auth: JWT
+Description: Soft-delete or deactivate a user account
+Request: none
+Response:
+- detail
+
+[POST] /api/users/{id}/activate
+Access: Admin Only
+Auth: JWT
+Description: Reactivate a previously deactivated user
+Request: none
+Response:
+- detail
+
+[POST] /api/users/{id}/deactivate
+Access: Admin Only
+Auth: JWT
+Description: Deactivate a user without deleting
+Request: none
+Response:
+- detail
+
+[POST] /api/users/{id}/reset-password
+Access: Admin Only
+Auth: JWT
+Description: Admin-initiated password reset for a specific user
+Request:
+- new_password (string, required)
+Response:
+- detail
+
+[POST] /api/users/{id}/change-role
+Access: Admin Only
+Auth: JWT
+Description: Change the role of a specific user
+Request:
+- role (string, required)
+Response:
+- id
+- role
+
+[GET] /api/users/{id}/activity
+Access: Admin Only
+Auth: JWT
+Description: Retrieve activity log history for a specific user
+Request (query params):
+- page (integer, optional)
+- page_size (integer, optional)
+- action (string, optional)
+- date_from (date, optional)
+- date_to (date, optional)
+Response:
+- count
+- next
+- previous
+- results[].id
+- results[].action
+- results[].description
+- results[].timestamp
+- results[].ip_address
+
+[GET] /api/users/{id}/projects
+Access: Admin Only
+Auth: JWT
+Description: List all projects assigned to a specific user
+Request (query params):
+- status (string, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].name
+- results[].status
+- results[].role_in_project
+
+[GET] /api/users/{id}/tasks
+Access: Admin Only
+Auth: JWT
+Description: List all tasks assigned to a specific user
+Request (query params):
+- status (string, optional)
+- priority (string, optional)
+- project_id (integer, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].title
+- results[].status
+- results[].priority
+- results[].due_date
+- results[].project
+
+[POST] /api/users/bulk-import
+Access: Admin Only
+Auth: JWT
+Description: Bulk create users via CSV upload
+Request:
+- file (file, required, CSV)
+Response:
+- created_count
+- failed_count
+- errors[]
+
+
+----------------------------------------------------------------
+MODULE: ROLES & PERMISSIONS
+----------------------------------------------------------------
+
+[GET] /api/roles
+Access: Admin Only
+Auth: JWT
+Description: List all available roles in the system
+Request: none
+Response:
+- results[].id
+- results[].name
+- results[].permissions[]
+
+[POST] /api/roles
+Access: Admin Only
+Auth: JWT
+Description: Create a custom role with specific permissions
+Request:
+- name (string, required)
+- permissions[] (array, required)
+Response:
+- id
+- name
+- permissions[]
+
+[GET] /api/roles/{id}
+Access: Admin Only
+Auth: JWT
+Description: Retrieve details of a specific role
+Request: none
+Response:
+- id
+- name
+- permissions[]
+- users_count
+
+[PATCH] /api/roles/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update permissions of an existing role
+Request:
+- name (string, optional)
+- permissions[] (array, optional)
+Response:
+- id
+- name
+- permissions[]
+
+[DELETE] /api/roles/{id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a custom role
+Request: none
+Response:
+- detail
+
+[GET] /api/permissions
+Access: Admin Only
+Auth: JWT
+Description: List all available system permissions
+Request: none
+Response:
+- results[].codename
+- results[].name
+- results[].module
+
+
+----------------------------------------------------------------
+MODULE: DASHBOARD
+----------------------------------------------------------------
+
+[GET] /api/dashboard/summary
+Access: Admin Only
+Auth: JWT
+Description: Retrieve high-level KPI summary cards for the dashboard
+Request: none
+Response:
+- total_users
+- active_users
+- total_projects
+- active_projects
+- total_tasks
+- completed_tasks
+- overdue_tasks
+- total_customers
+- revenue_this_month
+- open_tickets
+
+[GET] /api/dashboard/project-stats
+Access: Admin Only
+Auth: JWT
+Description: Project breakdown by status for charts
+Request (query params):
+- date_from (date, optional)
+- date_to (date, optional)
+Response:
+- planning
+- active
+- on_hold
+- completed
+- cancelled
+
+[GET] /api/dashboard/task-stats
+Access: Admin Only
+Auth: JWT
+Description: Task completion statistics over time
+Request (query params):
+- period (string, optional) [week, month, quarter, year]
+Response:
+- labels[]
+- completed[]
+- created[]
+- overdue[]
+
+[GET] /api/dashboard/user-activity
+Access: Admin Only
+Auth: JWT
+Description: Recent user login and activity summary
+Request (query params):
+- limit (integer, optional, default 10)
+Response:
+- results[].user_id
+- results[].full_name
+- results[].avatar
+- results[].last_action
+- results[].timestamp
+
+[GET] /api/dashboard/recent-projects
+Access: Admin Only
+Auth: JWT
+Description: Most recently updated or created projects
+Request (query params):
+- limit (integer, optional, default 5)
+Response:
+- results[].id
+- results[].name
+- results[].status
+- results[].progress
+- results[].due_date
+
+[GET] /api/dashboard/recent-tasks
+Access: Admin Only
+Auth: JWT
+Description: Recently created or updated tasks across all projects
+Request (query params):
+- limit (integer, optional, default 10)
+Response:
+- results[].id
+- results[].title
+- results[].status
+- results[].priority
+- results[].project
+- results[].assignee
+
+[GET] /api/dashboard/overdue-tasks
+Access: Admin Only
+Auth: JWT
+Description: List all tasks that have passed their due date
+Request (query params):
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].title
+- results[].due_date
+- results[].assignee
+- results[].project
+
+[GET] /api/dashboard/revenue-chart
+Access: Admin Only
+Auth: JWT
+Description: Revenue data grouped by period for charts
+Request (query params):
+- period (string, optional) [week, month, quarter, year]
+Response:
+- labels[]
+- revenue[]
+- expenses[]
+
+[GET] /api/dashboard/team-performance
+Access: Admin Only
+Auth: JWT
+Description: Per-user performance metrics including task completion rates
+Request (query params):
+- period (string, optional)
+- department_id (integer, optional)
+Response:
+- results[].user_id
+- results[].full_name
+- results[].tasks_assigned
+- results[].tasks_completed
+- results[].completion_rate
+- results[].avg_completion_days
+
+[GET] /api/dashboard/notifications-summary
+Access: Mixed
+Auth: JWT
+Description: Count of unread notifications for the authenticated user
+Request: none
+Response:
+- unread_count
+- latest[].id
+- latest[].message
+- latest[].type
+- latest[].created_at
+
+
+----------------------------------------------------------------
+MODULE: CUSTOMERS
+----------------------------------------------------------------
+
+[GET] /api/customers
+Access: Admin Only
+Auth: JWT
+Description: List all customers with search, filter, and pagination
+Request (query params):
+- search (string, optional)
+- status (string, optional) [active, inactive, prospect]
+- ordering (string, optional)
+- page (integer, optional)
+- page_size (integer, optional)
+Response:
+- count
+- next
+- previous
+- results[].id
+- results[].name
+- results[].email
+- results[].company
+- results[].status
+- results[].projects_count
+- results[].created_at
+
+[POST] /api/customers
+Access: Admin Only
+Auth: JWT
+Description: Create a new customer record
+Request:
+- name (string, required)
+- email (string, required)
+- company (string, required)
+- phone (string, optional)
+- address (string, optional)
+- status (string, optional)
+- industry (string, optional)
+- notes (string, optional)
+Response:
+- id
+- name
+- email
+- company
+- status
+
+[GET] /api/customers/{id}
+Access: Admin Only
+Auth: JWT
+Description: Retrieve full detail profile of a specific customer
+Request: none
+Response:
+- id
+- name
+- email
+- company
+- phone
+- address
+- industry
+- status
+- notes
+- projects_count
+- total_invoiced
+- total_paid
+- open_tickets
+- created_at
+- updated_at
+
+[PATCH] /api/customers/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update a customer record
+Request:
+- name (string, optional)
+- email (string, optional)
+- company (string, optional)
+- phone (string, optional)
+- address (string, optional)
+- status (string, optional)
+- industry (string, optional)
+- notes (string, optional)
+Response:
+- id
+- name
+- email
+- status
+
+[DELETE] /api/customers/{id}
+Access: Admin Only
+Auth: JWT
+Description: Soft-delete a customer record
+Request: none
+Response:
+- detail
+
+[GET] /api/customers/{id}/projects
+Access: Admin Only
+Auth: JWT
+Description: List all projects belonging to a specific customer
+Request (query params):
+- status (string, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].name
+- results[].status
+- results[].progress
+- results[].due_date
+
+[GET] /api/customers/{id}/invoices
+Access: Admin Only
+Auth: JWT
+Description: List all invoices for a specific customer
+Request (query params):
+- status (string, optional) [draft, sent, paid, overdue]
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].invoice_number
+- results[].amount
+- results[].status
+- results[].due_date
+- results[].issued_at
+
+[GET] /api/customers/{id}/tickets
+Access: Admin Only
+Auth: JWT
+Description: List all support tickets for a specific customer
+Request (query params):
+- status (string, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].subject
+- results[].status
+- results[].priority
+- results[].created_at
+
+[GET] /api/customers/{id}/activity
+Access: Admin Only
+Auth: JWT
+Description: Full activity log for a specific customer
+Request (query params):
+- page (integer, optional)
+Response:
+- count
+- results[].action
+- results[].description
+- results[].timestamp
+- results[].performed_by
+
+[POST] /api/customers/{id}/notes
+Access: Admin Only
+Auth: JWT
+Description: Add a note to a customer record
+Request:
+- content (string, required)
+Response:
+- id
+- content
+- created_by
+- created_at
+
+[GET] /api/customers/{id}/notes
+Access: Admin Only
+Auth: JWT
+Description: List all notes for a specific customer
+Request (query params):
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].content
+- results[].created_by
+- results[].created_at
+
+[DELETE] /api/customers/{id}/notes/{note_id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a specific note from a customer
+Request: none
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: PROJECTS
+----------------------------------------------------------------
+
+[GET] /api/projects
+Access: Mixed
+Auth: JWT
+Description: List all projects with filtering, search, and pagination
+Request (query params):
+- search (string, optional)
+- status (string, optional) [planning, active, on_hold, completed, cancelled]
+- customer_id (integer, optional)
+- assigned_user_id (integer, optional)
+- department_id (integer, optional)
+- priority (string, optional)
+- ordering (string, optional)
+- page (integer, optional)
+- page_size (integer, optional)
+Response:
+- count
+- next
+- previous
+- results[].id
+- results[].name
+- results[].status
+- results[].priority
+- results[].customer
+- results[].progress
+- results[].start_date
+- results[].due_date
+- results[].members_count
+- results[].tasks_count
+
+[POST] /api/projects
+Access: Admin Only
+Auth: JWT
+Description: Create a new project
+Request:
+- name (string, required)
+- description (string, optional)
+- customer_id (integer, optional)
+- status (string, optional)
+- priority (string, optional)
+- start_date (date, optional)
+- due_date (date, optional)
+- budget (decimal, optional)
+- member_ids[] (array of integers, optional)
+- department_ids[] (array of integers, optional)
+Response:
+- id
+- name
+- status
+- priority
+- due_date
+
+[GET] /api/projects/{id}
+Access: Mixed
+Auth: JWT
+Description: Retrieve full detail of a specific project
+Request: none
+Response:
+- id
+- name
+- description
+- status
+- priority
+- customer
+- start_date
+- due_date
+- budget
+- spent
+- progress
+- stages[]
+- members[]
+- departments[]
+- tasks_count
+- completed_tasks_count
+- created_at
+- updated_at
+
+[PATCH] /api/projects/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update a project record
+Request:
+- name (string, optional)
+- description (string, optional)
+- status (string, optional)
+- priority (string, optional)
+- start_date (date, optional)
+- due_date (date, optional)
+- budget (decimal, optional)
+Response:
+- id
+- name
+- status
+- priority
+
+[DELETE] /api/projects/{id}
+Access: Admin Only
+Auth: JWT
+Description: Soft-delete a project and all associated records
+Request: none
+Response:
+- detail
+
+[POST] /api/projects/{id}/archive
+Access: Admin Only
+Auth: JWT
+Description: Archive a completed or inactive project
+Request: none
+Response:
+- id
+- status
+
+[POST] /api/projects/{id}/restore
+Access: Admin Only
+Auth: JWT
+Description: Restore an archived project
+Request: none
+Response:
+- id
+- status
+
+[GET] /api/projects/{id}/members
+Access: Mixed
+Auth: JWT
+Description: List all members assigned to a project
+Request: none
+Response:
+- results[].user_id
+- results[].full_name
+- results[].role_in_project
+- results[].avatar
+- results[].joined_at
+
+[POST] /api/projects/{id}/members
+Access: Admin Only
+Auth: JWT
+Description: Add one or more members to a project
+Request:
+- user_ids[] (array of integers, required)
+- role_in_project (string, optional)
+Response:
+- added_count
+- members[]
+
+[DELETE] /api/projects/{id}/members/{user_id}
+Access: Admin Only
+Auth: JWT
+Description: Remove a member from a project
+Request: none
+Response:
+- detail
+
+[GET] /api/projects/{id}/departments
+Access: Mixed
+Auth: JWT
+Description: List all departments assigned to a project
+Request: none
+Response:
+- results[].id
+- results[].name
+- results[].head
+- results[].members_count
+
+[POST] /api/projects/{id}/departments
+Access: Admin Only
+Auth: JWT
+Description: Assign departments to a project
+Request:
+- department_ids[] (array of integers, required)
+Response:
+- assigned_count
+
+[DELETE] /api/projects/{id}/departments/{dept_id}
+Access: Admin Only
+Auth: JWT
+Description: Remove a department from a project
+Request: none
+Response:
+- detail
+
+[GET] /api/projects/{id}/activity
+Access: Mixed
+Auth: JWT
+Description: Full activity log for a specific project
+Request (query params):
+- page (integer, optional)
+Response:
+- count
+- results[].action
+- results[].description
+- results[].performed_by
+- results[].timestamp
+
+[GET] /api/projects/{id}/stats
+Access: Mixed
+Auth: JWT
+Description: Aggregated statistics for a project
+Request: none
+Response:
+- total_tasks
+- completed_tasks
+- overdue_tasks
+- progress_percentage
+- members_count
+- days_remaining
+- budget_spent_percentage
+
+
+----------------------------------------------------------------
+MODULE: PROJECT STAGES
+----------------------------------------------------------------
+
+[GET] /api/projects/{id}/stages
+Access: Mixed
+Auth: JWT
+Description: List all kanban stages for a project in order
+Request: none
+Response:
+- results[].id
+- results[].name
+- results[].color
+- results[].order
+- results[].tasks_count
+- results[].wip_limit
+
+[POST] /api/projects/{id}/stages
+Access: Admin Only
+Auth: JWT
+Description: Create a new stage for a project
+Request:
+- name (string, required)
+- color (string, optional)
+- order (integer, optional)
+- wip_limit (integer, optional)
+Response:
+- id
+- name
+- color
+- order
+
+[PATCH] /api/projects/{id}/stages/{stage_id}
+Access: Admin Only
+Auth: JWT
+Description: Update a stage name, color, or wip limit
+Request:
+- name (string, optional)
+- color (string, optional)
+- wip_limit (integer, optional)
+Response:
+- id
+- name
+- color
+- wip_limit
+
+[DELETE] /api/projects/{id}/stages/{stage_id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a stage and optionally move tasks to another stage
+Request:
+- move_tasks_to_stage_id (integer, optional)
+Response:
+- detail
+
+[POST] /api/projects/{id}/stages/reorder
+Access: Admin Only
+Auth: JWT
+Description: Reorder stages via drag-and-drop
+Request:
+- ordered_ids[] (array of integers, required)
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: PROJECT MILESTONES
+----------------------------------------------------------------
+
+[GET] /api/projects/{id}/milestones
+Access: Mixed
+Auth: JWT
+Description: List all milestones for a project in chronological order
+Request (query params):
+- status (string, optional) [pending, in_progress, completed, missed]
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].title
+- results[].description
+- results[].due_date
+- results[].status
+- results[].completion_percentage
+- results[].tasks_count
+- results[].created_at
+
+[POST] /api/projects/{id}/milestones
+Access: Admin Only
+Auth: JWT
+Description: Create a new milestone for a project
+Request:
+- title (string, required)
+- description (string, optional)
+- due_date (date, required)
+- task_ids[] (array, optional)
+Response:
+- id
+- title
+- due_date
+- status
+
+[GET] /api/projects/{id}/milestones/{milestone_id}
+Access: Mixed
+Auth: JWT
+Description: Retrieve full milestone detail including linked tasks
+Request: none
+Response:
+- id
+- title
+- description
+- due_date
+- status
+- completion_percentage
+- tasks[]
+- created_by
+- created_at
+
+[PATCH] /api/projects/{id}/milestones/{milestone_id}
+Access: Admin Only
+Auth: JWT
+Description: Update a milestone
+Request:
+- title (string, optional)
+- description (string, optional)
+- due_date (date, optional)
+- status (string, optional)
+- task_ids[] (array, optional)
+Response:
+- id
+- title
+- due_date
+- status
+
+[DELETE] /api/projects/{id}/milestones/{milestone_id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a milestone
+Request: none
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: PROJECT VAULT
+----------------------------------------------------------------
+
+[GET] /api/projects/{id}/vault
+Access: Mixed
+Auth: JWT
+Description: List all secure vault entries for a project
+Request (query params):
+- search (string, optional)
+- category (string, optional) [credential, key, note, certificate, token]
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].title
+- results[].category
+- results[].username
+- results[].url
+- results[].created_by
+- results[].created_at
+
+[POST] /api/projects/{id}/vault
+Access: Mixed
+Auth: JWT
+Description: Create a new vault entry for a project
+Request:
+- title (string, required)
+- category (string, required)
+- username (string, optional)
+- password (string, optional)
+- url (string, optional)
+- notes (string, optional)
+- key_value_pairs[] (array, optional)
+Response:
+- id
+- title
+- category
+- created_at
+
+[GET] /api/projects/{id}/vault/{entry_id}
+Access: Mixed
+Auth: JWT
+Description: Retrieve a vault entry including decrypted sensitive fields
+Request: none
+Response:
+- id
+- title
+- category
+- username
+- password
+- url
+- notes
+- key_value_pairs[]
+- created_by
+- last_accessed_at
+
+[PATCH] /api/projects/{id}/vault/{entry_id}
+Access: Mixed
+Auth: JWT
+Description: Update a vault entry
+Request:
+- title (string, optional)
+- username (string, optional)
+- password (string, optional)
+- url (string, optional)
+- notes (string, optional)
+Response:
+- id
+- title
+- updated_at
+
+[DELETE] /api/projects/{id}/vault/{entry_id}
+Access: Mixed
+Auth: JWT
+Description: Delete a vault entry permanently
+Request: none
+Response:
+- detail
+
+[POST] /api/projects/{id}/vault/{entry_id}/reveal
+Access: Mixed
+Auth: JWT
+Description: Log a reveal event when a sensitive field is viewed
+Request: none
+Response:
+- detail
+- revealed_at
+
+
+----------------------------------------------------------------
+MODULE: BUDGET TRACKING
+----------------------------------------------------------------
+
+[GET] /api/projects/{id}/budget
+Access: Admin Only
+Auth: JWT
+Description: Retrieve detailed budget breakdown for a project
+Request: none
+Response:
+- total_budget
+- spent
+- remaining
+- percentage_used
+- forecast_to_complete
+- is_over_budget
+- breakdown[].category
+- breakdown[].budgeted
+- breakdown[].actual
+- breakdown[].variance
+
+[POST] /api/projects/{id}/budget/entries
+Access: Admin Only
+Auth: JWT
+Description: Log a budget expense entry for a project
+Request:
+- category (string, required) [labour, software, hardware, operations, other]
+- amount (decimal, required)
+- description (string, optional)
+- date (date, required)
+- transaction_id (integer, optional)
+Response:
+- id
+- category
+- amount
+- date
+
+[GET] /api/projects/{id}/budget/entries
+Access: Admin Only
+Auth: JWT
+Description: List all budget expense entries for a project
+Request (query params):
+- category (string, optional)
+- date_from (date, optional)
+- date_to (date, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].category
+- results[].amount
+- results[].description
+- results[].date
+- results[].logged_by
+
+[DELETE] /api/projects/{id}/budget/entries/{entry_id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a budget entry
+Request: none
+Response:
+- detail
+
+[GET] /api/projects/{id}/budget/forecast
+Access: Admin Only
+Auth: JWT
+Description: EAC and ETC budget forecast based on current burn rate
+Request: none
+Response:
+- budget_at_completion
+- estimate_at_completion
+- estimate_to_complete
+- cost_performance_index
+- schedule_performance_index
+- variance_at_completion
+
+
+----------------------------------------------------------------
+MODULE: TASKS
+----------------------------------------------------------------
+
+[GET] /api/tasks
+Access: Mixed
+Auth: JWT
+Description: List all tasks across projects with filtering and pagination
+Request (query params):
+- search (string, optional)
+- project_id (integer, optional)
+- stage_id (integer, optional)
+- assignee_id (integer, optional)
+- status (string, optional)
+- priority (string, optional) [low, medium, high, critical]
+- due_date_from (date, optional)
+- due_date_to (date, optional)
+- is_overdue (boolean, optional)
+- ordering (string, optional)
+- page (integer, optional)
+- page_size (integer, optional)
+Response:
+- count
+- next
+- previous
+- results[].id
+- results[].title
+- results[].status
+- results[].priority
+- results[].project
+- results[].stage
+- results[].assignee
+- results[].due_date
+- results[].created_at
+
+[POST] /api/tasks
+Access: Mixed
+Auth: JWT
+Description: Create a new task
+Request:
+- title (string, required)
+- description (string, optional)
+- project_id (integer, required)
+- stage_id (integer, required)
+- assignee_ids[] (array of integers, optional)
+- priority (string, optional)
+- due_date (date, optional)
+- estimated_hours (decimal, optional)
+- labels[] (array of strings, optional)
+- attachments[] (files, optional)
+Response:
+- id
+- title
+- status
+- priority
+- stage
+- assignees[]
+
+[GET] /api/tasks/{id}
+Access: Mixed
+Auth: JWT
+Description: Retrieve full task detail including comments and attachments
+Request: none
+Response:
+- id
+- title
+- description
+- status
+- priority
+- project
+- stage
+- assignees[]
+- due_date
+- estimated_hours
+- logged_hours
+- labels[]
+- attachments[]
+- comments[]
+- created_by
+- created_at
+- updated_at
+
+[PATCH] /api/tasks/{id}
+Access: Mixed
+Auth: JWT
+Description: Update a task
+Request:
+- title (string, optional)
+- description (string, optional)
+- stage_id (integer, optional)
+- priority (string, optional)
+- due_date (date, optional)
+- estimated_hours (decimal, optional)
+- labels[] (array, optional)
+Response:
+- id
+- title
+- status
+- priority
+- stage
+
+[DELETE] /api/tasks/{id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a task permanently
+Request: none
+Response:
+- detail
+
+[POST] /api/tasks/{id}/move
+Access: Mixed
+Auth: JWT
+Description: Move a task to a different stage (kanban drag-drop)
+Request:
+- stage_id (integer, required)
+- order (integer, optional)
+Response:
+- id
+- stage_id
+- order
+
+[POST] /api/tasks/{id}/assign
+Access: Mixed
+Auth: JWT
+Description: Assign or reassign users to a task
+Request:
+- user_ids[] (array of integers, required)
+Response:
+- assignees[]
+
+[DELETE] /api/tasks/{id}/assign/{user_id}
+Access: Mixed
+Auth: JWT
+Description: Remove a user from a task's assignees
+Request: none
+Response:
+- detail
+
+[POST] /api/tasks/{id}/attachments
+Access: Mixed
+Auth: JWT
+Description: Upload one or more files to a task
+Request:
+- files[] (files, required)
+Response:
+- attachments[].id
+- attachments[].name
+- attachments[].url
+- attachments[].size
+- attachments[].uploaded_by
+
+[DELETE] /api/tasks/{id}/attachments/{attachment_id}
+Access: Mixed
+Auth: JWT
+Description: Delete a specific attachment from a task
+Request: none
+Response:
+- detail
+
+[GET] /api/tasks/{id}/comments
+Access: Mixed
+Auth: JWT
+Description: List all comments on a task
+Request (query params):
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].content
+- results[].author
+- results[].created_at
+- results[].updated_at
+
+[POST] /api/tasks/{id}/comments
+Access: Mixed
+Auth: JWT
+Description: Add a comment to a task
+Request:
+- content (string, required)
+- attachments[] (files, optional)
+Response:
+- id
+- content
+- author
+- created_at
+
+[PATCH] /api/tasks/{id}/comments/{comment_id}
+Access: Mixed
+Auth: JWT
+Description: Edit a comment (author or admin only)
+Request:
+- content (string, required)
+Response:
+- id
+- content
+- updated_at
+
+[DELETE] /api/tasks/{id}/comments/{comment_id}
+Access: Mixed
+Auth: JWT
+Description: Delete a comment
+Request: none
+Response:
+- detail
+
+[POST] /api/tasks/{id}/log-time
+Access: Mixed
+Auth: JWT
+Description: Log hours worked on a task
+Request:
+- hours (decimal, required)
+- description (string, optional)
+- date (date, optional)
+Response:
+- id
+- hours
+- total_logged_hours
+
+[GET] /api/tasks/{id}/time-logs
+Access: Mixed
+Auth: JWT
+Description: List all time log entries for a task
+Request: none
+Response:
+- results[].id
+- results[].user
+- results[].hours
+- results[].description
+- results[].date
+
+[GET] /api/projects/{id}/tasks
+Access: Mixed
+Auth: JWT
+Description: List all tasks belonging to a specific project
+Request (query params):
+- stage_id (integer, optional)
+- assignee_id (integer, optional)
+- priority (string, optional)
+- status (string, optional)
+- search (string, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].title
+- results[].status
+- results[].priority
+- results[].stage
+- results[].assignees[]
+- results[].due_date
+
+[POST] /api/tasks/bulk-update
+Access: Admin Only
+Auth: JWT
+Description: Bulk update status or assignee for multiple tasks
+Request:
+- task_ids[] (array, required)
+- status (string, optional)
+- assignee_id (integer, optional)
+- priority (string, optional)
+Response:
+- updated_count
+
+
+----------------------------------------------------------------
+MODULE: TASK DEPENDENCIES
+----------------------------------------------------------------
+
+[GET] /api/tasks/{id}/dependencies
+Access: Mixed
+Auth: JWT
+Description: List all dependencies for a task (blocked by and blocking)
+Request: none
+Response:
+- blocked_by[].id
+- blocked_by[].title
+- blocked_by[].status
+- blocking[].id
+- blocking[].title
+- blocking[].status
+
+[POST] /api/tasks/{id}/dependencies
+Access: Mixed
+Auth: JWT
+Description: Add a dependency relationship between tasks
+Request:
+- depends_on_task_id (integer, required)
+- type (string, optional) [finish_to_start, start_to_start, finish_to_finish]
+Response:
+- id
+- task
+- depends_on
+- type
+
+[DELETE] /api/tasks/{id}/dependencies/{dependency_id}
+Access: Mixed
+Auth: JWT
+Description: Remove a dependency between tasks
+Request: none
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: SUBTASKS
+----------------------------------------------------------------
+
+[GET] /api/tasks/{id}/subtasks
+Access: Mixed
+Auth: JWT
+Description: List all subtasks under a parent task
+Request: none
+Response:
+- results[].id
+- results[].title
+- results[].is_completed
+- results[].assignee
+- results[].due_date
+- results[].order
+
+[POST] /api/tasks/{id}/subtasks
+Access: Mixed
+Auth: JWT
+Description: Create a subtask under a parent task
+Request:
+- title (string, required)
+- assignee_id (integer, optional)
+- due_date (date, optional)
+Response:
+- id
+- title
+- is_completed
+- assignee
+
+[PATCH] /api/tasks/{id}/subtasks/{subtask_id}
+Access: Mixed
+Auth: JWT
+Description: Update a subtask
+Request:
+- title (string, optional)
+- is_completed (boolean, optional)
+- assignee_id (integer, optional)
+- due_date (date, optional)
+Response:
+- id
+- title
+- is_completed
+
+[DELETE] /api/tasks/{id}/subtasks/{subtask_id}
+Access: Mixed
+Auth: JWT
+Description: Delete a subtask
+Request: none
+Response:
+- detail
+
+[POST] /api/tasks/{id}/subtasks/reorder
+Access: Mixed
+Auth: JWT
+Description: Reorder subtasks within a parent task
+Request:
+- ordered_ids[] (array of integers, required)
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: RECURRING TASKS
+----------------------------------------------------------------
+
+[GET] /api/recurring-tasks
+Access: Admin Only
+Auth: JWT
+Description: List all recurring task templates
+Request (query params):
+- project_id (integer, optional)
+- is_active (boolean, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].title
+- results[].project
+- results[].recurrence_rule
+- results[].next_occurrence
+- results[].is_active
+- results[].created_at
+
+[POST] /api/recurring-tasks
+Access: Admin Only
+Auth: JWT
+Description: Create a recurring task template
+Request:
+- title (string, required)
+- description (string, optional)
+- project_id (integer, required)
+- stage_id (integer, required)
+- assignee_ids[] (array, optional)
+- priority (string, optional)
+- recurrence_rule (string, required) [daily, weekly, biweekly, monthly]
+- recurrence_day (integer, optional)
+- start_date (date, required)
+- end_date (date, optional)
+- estimated_hours (decimal, optional)
+Response:
+- id
+- title
+- recurrence_rule
+- next_occurrence
+- is_active
+
+[PATCH] /api/recurring-tasks/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update a recurring task template
+Request:
+- title (string, optional)
+- assignee_ids[] (array, optional)
+- priority (string, optional)
+- recurrence_rule (string, optional)
+- end_date (date, optional)
+- is_active (boolean, optional)
+Response:
+- id
+- title
+- is_active
+- next_occurrence
+
+[DELETE] /api/recurring-tasks/{id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a recurring task template and stop future generations
+Request: none
+Response:
+- detail
+
+[GET] /api/recurring-tasks/{id}/history
+Access: Admin Only
+Auth: JWT
+Description: List all task instances generated from a recurring template
+Request (query params):
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].title
+- results[].status
+- results[].created_at
+- results[].due_date
+
+
+----------------------------------------------------------------
+MODULE: TASK TEMPLATES
+----------------------------------------------------------------
+
+[GET] /api/task-templates
+Access: Admin Only
+Auth: JWT
+Description: List reusable task templates
+Request (query params):
+- search (string, optional)
+- project_id (integer, optional)
+Response:
+- results[].id
+- results[].title
+- results[].description_preview
+- results[].priority
+- results[].estimated_hours
+- results[].subtasks_count
+- results[].created_by
+
+[POST] /api/task-templates
+Access: Admin Only
+Auth: JWT
+Description: Create a new task template
+Request:
+- title (string, required)
+- description (string, optional)
+- priority (string, optional)
+- estimated_hours (decimal, optional)
+- labels[] (array, optional)
+- subtasks[] (array, optional)
+  - title (string, required)
+Response:
+- id
+- title
+- priority
+
+[GET] /api/task-templates/{id}
+Access: Admin Only
+Auth: JWT
+Description: Retrieve a task template with all subtasks
+Request: none
+Response:
+- id
+- title
+- description
+- priority
+- estimated_hours
+- labels[]
+- subtasks[]
+- created_by
+- created_at
+
+[PATCH] /api/task-templates/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update a task template
+Request:
+- title (string, optional)
+- description (string, optional)
+- priority (string, optional)
+- estimated_hours (decimal, optional)
+- labels[] (array, optional)
+- subtasks[] (array, optional)
+Response:
+- id
+- title
+
+[DELETE] /api/task-templates/{id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a task template
+Request: none
+Response:
+- detail
+
+[POST] /api/task-templates/{id}/apply
+Access: Mixed
+Auth: JWT
+Description: Create a task from a template inside a project stage
+Request:
+- project_id (integer, required)
+- stage_id (integer, required)
+- assignee_ids[] (array, optional)
+- due_date (date, optional)
+Response:
+- id
+- title
+- stage
+- assignees[]
+
+
+----------------------------------------------------------------
+MODULE: PROJECT TEMPLATES
+----------------------------------------------------------------
+
+[GET] /api/project-templates
+Access: Admin Only
+Auth: JWT
+Description: List all reusable project templates
+Request (query params):
+- search (string, optional)
+Response:
+- results[].id
+- results[].name
+- results[].stages_count
+- results[].tasks_count
+- results[].created_by
+- results[].created_at
+
+[POST] /api/project-templates
+Access: Admin Only
+Auth: JWT
+Description: Create a project template with predefined stages and tasks
+Request:
+- name (string, required)
+- description (string, optional)
+- stages[] (array, required)
+  - name (string, required)
+  - color (string, optional)
+  - order (integer, optional)
+  - tasks[] (array, optional)
+    - title (string, required)
+    - priority (string, optional)
+    - estimated_hours (decimal, optional)
+Response:
+- id
+- name
+- stages_count
+
+[GET] /api/project-templates/{id}
+Access: Admin Only
+Auth: JWT
+Description: Retrieve a project template with full structure
+Request: none
+Response:
+- id
+- name
+- description
+- stages[]
+  - id
+  - name
+  - color
+  - order
+  - tasks[]
+- created_by
+- created_at
+
+[PATCH] /api/project-templates/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update a project template
+Request:
+- name (string, optional)
+- description (string, optional)
+- stages[] (array, optional)
+Response:
+- id
+- name
+
+[DELETE] /api/project-templates/{id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a project template
+Request: none
+Response:
+- detail
+
+[POST] /api/project-templates/{id}/apply
+Access: Admin Only
+Auth: JWT
+Description: Create a new project from a template
+Request:
+- name (string, required)
+- customer_id (integer, optional)
+- start_date (date, optional)
+- due_date (date, optional)
+- member_ids[] (array, optional)
+Response:
+- id
+- name
+- status
+- stages[]
+
+
+----------------------------------------------------------------
+MODULE: SPRINTS
+----------------------------------------------------------------
+
+[GET] /api/projects/{id}/sprints
+Access: Mixed
+Auth: JWT
+Description: List all sprints for a project in reverse chronological order
+Request (query params):
+- status (string, optional) [planned, active, completed]
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].name
+- results[].goal
+- results[].start_date
+- results[].end_date
+- results[].status
+- results[].tasks_count
+- results[].completed_tasks_count
+- results[].velocity
+
+[POST] /api/projects/{id}/sprints
+Access: Admin Only
+Auth: JWT
+Description: Create a new sprint for a project
+Request:
+- name (string, required)
+- goal (string, optional)
+- start_date (date, required)
+- end_date (date, required)
+Response:
+- id
+- name
+- start_date
+- end_date
+- status
+
+[GET] /api/projects/{id}/sprints/{sprint_id}
+Access: Mixed
+Auth: JWT
+Description: Retrieve full sprint detail including all assigned tasks
+Request: none
+Response:
+- id
+- name
+- goal
+- start_date
+- end_date
+- status
+- tasks[]
+- velocity
+- burndown_data[]
+- created_at
+
+[PATCH] /api/projects/{id}/sprints/{sprint_id}
+Access: Admin Only
+Auth: JWT
+Description: Update sprint details
+Request:
+- name (string, optional)
+- goal (string, optional)
+- start_date (date, optional)
+- end_date (date, optional)
+Response:
+- id
+- name
+- start_date
+- end_date
+
+[POST] /api/projects/{id}/sprints/{sprint_id}/start
+Access: Admin Only
+Auth: JWT
+Description: Start a planned sprint and set it as the active sprint
+Request: none
+Response:
+- id
+- status
+- start_date
+
+[POST] /api/projects/{id}/sprints/{sprint_id}/complete
+Access: Admin Only
+Auth: JWT
+Description: Complete active sprint and move incomplete tasks to backlog or next sprint
+Request:
+- move_incomplete_to_sprint_id (integer, optional)
+Response:
+- id
+- status
+- completed_tasks_count
+- moved_tasks_count
+
+[POST] /api/projects/{id}/sprints/{sprint_id}/tasks
+Access: Mixed
+Auth: JWT
+Description: Add tasks to a sprint
+Request:
+- task_ids[] (array, required)
+Response:
+- added_count
+
+[DELETE] /api/projects/{id}/sprints/{sprint_id}/tasks/{task_id}
+Access: Mixed
+Auth: JWT
+Description: Remove a task from a sprint and return it to backlog
+Request: none
+Response:
+- detail
+
+[GET] /api/projects/{id}/sprints/{sprint_id}/burndown
+Access: Mixed
+Auth: JWT
+Description: Burndown chart data for a sprint
+Request: none
+Response:
+- labels[]
+- ideal[]
+- actual[]
+- scope_changes[]
+
+[GET] /api/projects/{id}/backlog
+Access: Mixed
+Auth: JWT
+Description: List all tasks not assigned to any sprint
+Request (query params):
+- priority (string, optional)
+- assignee_id (integer, optional)
+- search (string, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].title
+- results[].priority
+- results[].assignees[]
+- results[].story_points
+- results[].labels[]
+
+
+----------------------------------------------------------------
+MODULE: DEPARTMENTS
+----------------------------------------------------------------
+
+[GET] /api/departments
+Access: Admin Only
+Auth: JWT
+Description: List all departments with member counts
+Request (query params):
+- search (string, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].name
+- results[].head
+- results[].members_count
+- results[].projects_count
+- results[].description
+
+[POST] /api/departments
+Access: Admin Only
+Auth: JWT
+Description: Create a new department
+Request:
+- name (string, required)
+- description (string, optional)
+- head_user_id (integer, optional)
+Response:
+- id
+- name
+- description
+- head
+
+[GET] /api/departments/{id}
+Access: Admin Only
+Auth: JWT
+Description: Retrieve full detail of a department including members
+Request: none
+Response:
+- id
+- name
+- description
+- head
+- members[]
+- projects_count
+- created_at
+
+[PATCH] /api/departments/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update a department
+Request:
+- name (string, optional)
+- description (string, optional)
+- head_user_id (integer, optional)
+Response:
+- id
+- name
+- head
+
+[DELETE] /api/departments/{id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a department
+Request: none
+Response:
+- detail
+
+[GET] /api/departments/{id}/members
+Access: Admin Only
+Auth: JWT
+Description: List all members of a department
+Request (query params):
+- search (string, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].user_id
+- results[].full_name
+- results[].designation
+- results[].avatar
+
+[POST] /api/departments/{id}/members
+Access: Admin Only
+Auth: JWT
+Description: Add users to a department
+Request:
+- user_ids[] (array of integers, required)
+Response:
+- added_count
+
+[DELETE] /api/departments/{id}/members/{user_id}
+Access: Admin Only
+Auth: JWT
+Description: Remove a user from a department
+Request: none
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: TEAMS
+----------------------------------------------------------------
+
+[GET] /api/teams
+Access: Admin Only
+Auth: JWT
+Description: List all teams in the organization
+Request (query params):
+- search (string, optional)
+- department_id (integer, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].name
+- results[].lead
+- results[].members_count
+- results[].department
+- results[].active_projects_count
+
+[POST] /api/teams
+Access: Admin Only
+Auth: JWT
+Description: Create a new team
+Request:
+- name (string, required)
+- description (string, optional)
+- lead_id (integer, optional)
+- department_id (integer, optional)
+- member_ids[] (array, optional)
+Response:
+- id
+- name
+- lead
+- members_count
+
+[GET] /api/teams/{id}
+Access: Admin Only
+Auth: JWT
+Description: Retrieve full team detail including members and assigned projects
+Request: none
+Response:
+- id
+- name
+- description
+- lead
+- department
+- members[]
+- active_projects[]
+- created_at
+
+[PATCH] /api/teams/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update team information
+Request:
+- name (string, optional)
+- description (string, optional)
+- lead_id (integer, optional)
+- department_id (integer, optional)
+Response:
+- id
+- name
+- lead
+
+[DELETE] /api/teams/{id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a team
+Request: none
+Response:
+- detail
+
+[GET] /api/teams/{id}/members
+Access: Admin Only
+Auth: JWT
+Description: List all members of a team
+Request (query params):
+- search (string, optional)
+Response:
+- results[].user_id
+- results[].full_name
+- results[].designation
+- results[].avatar
+- results[].joined_at
+
+[POST] /api/teams/{id}/members
+Access: Admin Only
+Auth: JWT
+Description: Add users to a team
+Request:
+- user_ids[] (array, required)
+Response:
+- added_count
+
+[DELETE] /api/teams/{id}/members/{user_id}
+Access: Admin Only
+Auth: JWT
+Description: Remove a member from a team
+Request: none
+Response:
+- detail
+
+[GET] /api/teams/{id}/projects
+Access: Admin Only
+Auth: JWT
+Description: List all projects assigned to a team
+Request (query params):
+- status (string, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].name
+- results[].status
+- results[].progress
+- results[].due_date
+
+
+----------------------------------------------------------------
+MODULE: ATTENDANCE
+----------------------------------------------------------------
+
+[GET] /api/attendance
+Access: Admin Only
+Auth: JWT
+Description: List attendance records with filtering and pagination
+Request (query params):
+- user_id (integer, optional)
+- date (date, optional)
+- date_from (date, optional)
+- date_to (date, optional)
+- status (string, optional) [present, absent, late, half_day, leave]
+- department_id (integer, optional)
+- page (integer, optional)
+Response:
+- count
+- next
+- previous
+- results[].id
+- results[].user
+- results[].date
+- results[].check_in
+- results[].check_out
+- results[].status
+- results[].hours_worked
+- results[].notes
+
+[POST] /api/attendance/check-in
+Access: Mixed
+Auth: JWT
+Description: Record check-in for the authenticated user
+Request:
+- notes (string, optional)
+- location (string, optional)
+Response:
+- id
+- check_in
+- status
+
+[POST] /api/attendance/check-out
+Access: Mixed
+Auth: JWT
+Description: Record check-out for the authenticated user
+Request:
+- notes (string, optional)
+Response:
+- id
+- check_out
+- hours_worked
+
+[GET] /api/attendance/today
+Access: Mixed
+Auth: JWT
+Description: Get today's attendance record for the authenticated user
+Request: none
+Response:
+- id
+- check_in
+- check_out
+- status
+- hours_worked
+
+[POST] /api/attendance
+Access: Admin Only
+Auth: JWT
+Description: Manually create or override an attendance record
+Request:
+- user_id (integer, required)
+- date (date, required)
+- check_in (time, optional)
+- check_out (time, optional)
+- status (string, required)
+- notes (string, optional)
+Response:
+- id
+- user
+- date
+- status
+
+[PATCH] /api/attendance/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update an attendance record
+Request:
+- check_in (time, optional)
+- check_out (time, optional)
+- status (string, optional)
+- notes (string, optional)
+Response:
+- id
+- status
+- hours_worked
+
+[DELETE] /api/attendance/{id}
+Access: Admin Only
+Auth: JWT
+Description: Delete an attendance record
+Request: none
+Response:
+- detail
+
+[GET] /api/attendance/summary
+Access: Admin Only
+Auth: JWT
+Description: Monthly attendance summary per employee
+Request (query params):
+- month (integer, required)
+- year (integer, required)
+- department_id (integer, optional)
+Response:
+- results[].user_id
+- results[].full_name
+- results[].present_days
+- results[].absent_days
+- results[].late_days
+- results[].leave_days
+- results[].total_hours
+
+[GET] /api/attendance/my-summary
+Access: Mixed
+Auth: JWT
+Description: Monthly attendance summary for the authenticated user
+Request (query params):
+- month (integer, required)
+- year (integer, required)
+Response:
+- present_days
+- absent_days
+- late_days
+- leave_days
+- total_hours
+- records[]
+
+[GET] /api/attendance/export
+Access: Admin Only
+Auth: JWT
+Description: Export attendance records to CSV or Excel
+Request (query params):
+- date_from (date, required)
+- date_to (date, required)
+- department_id (integer, optional)
+- format (string, optional) [csv, xlsx]
+Response:
+- file (binary download)
+
+[POST] /api/attendance/leave-request
+Access: Mixed
+Auth: JWT
+Description: Submit a leave request
+Request:
+- leave_type (string, required) [annual, sick, unpaid, maternity, paternity]
+- date_from (date, required)
+- date_to (date, required)
+- reason (string, optional)
+Response:
+- id
+- status
+- date_from
+- date_to
+
+[GET] /api/attendance/leave-requests
+Access: Admin Only
+Auth: JWT
+Description: List all leave requests with filtering
+Request (query params):
+- user_id (integer, optional)
+- status (string, optional) [pending, approved, rejected]
+- date_from (date, optional)
+- date_to (date, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].user
+- results[].leave_type
+- results[].date_from
+- results[].date_to
+- results[].status
+- results[].reason
+- results[].applied_at
+
+[POST] /api/attendance/leave-requests/{id}/approve
+Access: Admin Only
+Auth: JWT
+Description: Approve a leave request
+Request:
+- notes (string, optional)
+Response:
+- id
+- status
+
+[POST] /api/attendance/leave-requests/{id}/reject
+Access: Admin Only
+Auth: JWT
+Description: Reject a leave request
+Request:
+- reason (string, required)
+Response:
+- id
+- status
+
+[GET] /api/attendance/my-leave-requests
+Access: Mixed
+Auth: JWT
+Description: List leave requests for the authenticated user
+Request (query params):
+- status (string, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].leave_type
+- results[].date_from
+- results[].date_to
+- results[].status
+- results[].reason
+
+
+----------------------------------------------------------------
+MODULE: CHAT SYSTEM
+----------------------------------------------------------------
+
+[GET] /api/chat/rooms
+Access: Mixed
+Auth: JWT
+Description: List all chat rooms the authenticated user belongs to
+Request (query params):
+- type (string, optional) [direct, group, project]
+- search (string, optional)
+Response:
+- results[].id
+- results[].name
+- results[].type
+- results[].last_message
+- results[].last_message_at
+- results[].unread_count
+- results[].members[]
+
+[POST] /api/chat/rooms
+Access: Mixed
+Auth: JWT
+Description: Create a new chat room (direct or group)
+Request:
+- name (string, optional, required for group)
+- type (string, required) [direct, group]
+- member_ids[] (array, required)
+- project_id (integer, optional)
+Response:
+- id
+- name
+- type
+- members[]
+
+[GET] /api/chat/rooms/{room_id}
+Access: Mixed
+Auth: JWT
+Description: Retrieve details of a specific chat room
+Request: none
+Response:
+- id
+- name
+- type
+- members[]
+- created_at
+- project
+
+[PATCH] /api/chat/rooms/{room_id}
+Access: Mixed
+Auth: JWT
+Description: Update a group chat room name or members
+Request:
+- name (string, optional)
+- member_ids[] (array, optional)
+Response:
+- id
+- name
+- members[]
+
+[DELETE] /api/chat/rooms/{room_id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a chat room and all messages
+Request: none
+Response:
+- detail
+
+[GET] /api/chat/rooms/{room_id}/messages
+Access: Mixed
+Auth: JWT
+Description: List paginated messages for a chat room
+Request (query params):
+- before (integer, message id cursor, optional)
+- limit (integer, optional, default 50)
+Response:
+- results[].id
+- results[].content
+- results[].sender
+- results[].message_type
+- results[].file_url
+- results[].is_edited
+- results[].created_at
+
+[POST] /api/chat/rooms/{room_id}/messages
+Access: Mixed
+Auth: JWT
+Description: Send a message in a chat room (REST fallback, WebSocket preferred)
+Request:
+- content (string, required unless file)
+- file (file, optional)
+- message_type (string, optional) [text, image, file]
+- reply_to_id (integer, optional)
+Response:
+- id
+- content
+- sender
+- created_at
+
+[PATCH] /api/chat/rooms/{room_id}/messages/{message_id}
+Access: Mixed
+Auth: JWT
+Description: Edit a sent message (sender only)
+Request:
+- content (string, required)
+Response:
+- id
+- content
+- is_edited
+- updated_at
+
+[DELETE] /api/chat/rooms/{room_id}/messages/{message_id}
+Access: Mixed
+Auth: JWT
+Description: Delete a message
+Request: none
+Response:
+- detail
+
+[POST] /api/chat/rooms/{room_id}/read
+Access: Mixed
+Auth: JWT
+Description: Mark all messages in a room as read
+Request: none
+Response:
+- detail
+
+[POST] /api/chat/rooms/{room_id}/members
+Access: Mixed
+Auth: JWT
+Description: Add members to a group chat room
+Request:
+- user_ids[] (array, required)
+Response:
+- added_count
+
+[DELETE] /api/chat/rooms/{room_id}/members/{user_id}
+Access: Mixed
+Auth: JWT
+Description: Remove a member from a group chat room
+Request: none
+Response:
+- detail
+
+[GET] /api/chat/rooms/{room_id}/members
+Access: Mixed
+Auth: JWT
+Description: List all members of a chat room
+Request: none
+Response:
+- results[].user_id
+- results[].full_name
+- results[].avatar
+- results[].online_status
+
+[POST] /api/chat/rooms/{room_id}/messages/{message_id}/reactions
+Access: Mixed
+Auth: JWT
+Description: Add an emoji reaction to a message
+Request:
+- emoji (string, required)
+Response:
+- id
+- emoji
+- user
+
+[DELETE] /api/chat/rooms/{room_id}/messages/{message_id}/reactions/{emoji}
+Access: Mixed
+Auth: JWT
+Description: Remove your reaction from a message
+Request: none
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: WEBSOCKET ENDPOINTS
+----------------------------------------------------------------
+
+WS /ws/chat/{room_id}/
+Access: Mixed
+Auth: JWT (token in query param or header)
+Description: Real-time bidirectional chat messaging for a room
+Client sends events:
+- type: "send_message", content, message_type, reply_to_id
+- type: "typing_start"
+- type: "typing_stop"
+- type: "mark_read"
+- type: "delete_message", message_id
+- type: "edit_message", message_id, content
+Server sends events:
+- type: "new_message", id, content, sender, created_at
+- type: "user_typing", user_id, full_name
+- type: "user_stopped_typing", user_id
+- type: "message_deleted", message_id
+- type: "message_edited", message_id, content
+- type: "message_read", user_id, last_read_at
+- type: "error", detail
+
+WS /ws/notifications/
+Access: Mixed
+Auth: JWT (token in query param or header)
+Description: Real-time push notifications for the authenticated user
+Server sends events:
+- type: "new_notification", id, message, notification_type, link, created_at
+- type: "unread_count", count
+
+WS /ws/presence/
+Access: Mixed
+Auth: JWT (token in query param or header)
+Description: Track online/offline/away status for users
+Client sends events:
+- type: "heartbeat"
+- type: "set_status", status [online, away, busy, offline]
+Server sends events:
+- type: "user_online", user_id
+- type: "user_offline", user_id
+- type: "user_status_changed", user_id, status
+
+WS /ws/live-monitor/
+Access: Admin Only
+Auth: JWT (token in query param or header)
+Description: Real-time employee activity stream for admin monitor view
+Server sends events:
+- type: "activity_event", user_id, full_name, action, project, task, timestamp
+- type: "user_joined", user_id
+- type: "user_left", user_id
+
+
+----------------------------------------------------------------
+MODULE: NOTIFICATIONS
+----------------------------------------------------------------
+
+[GET] /api/notifications
+Access: Mixed
+Auth: JWT
+Description: List all notifications for the authenticated user
+Request (query params):
+- is_read (boolean, optional)
+- type (string, optional)
+- page (integer, optional)
+- page_size (integer, optional)
+Response:
+- count
+- next
+- previous
+- results[].id
+- results[].message
+- results[].type
+- results[].is_read
+- results[].link
+- results[].created_at
+
+[POST] /api/notifications/{id}/read
+Access: Mixed
+Auth: JWT
+Description: Mark a single notification as read
+Request: none
+Response:
+- id
+- is_read
+
+[POST] /api/notifications/read-all
+Access: Mixed
+Auth: JWT
+Description: Mark all notifications as read for authenticated user
+Request: none
+Response:
+- updated_count
+
+[DELETE] /api/notifications/{id}
+Access: Mixed
+Auth: JWT
+Description: Delete a specific notification
+Request: none
+Response:
+- detail
+
+[DELETE] /api/notifications/clear-all
+Access: Mixed
+Auth: JWT
+Description: Delete all notifications for the authenticated user
+Request: none
+Response:
+- deleted_count
+
+[POST] /api/notifications/send
+Access: Admin Only
+Auth: JWT
+Description: Admin sends a system notification to one or all users
+Request:
+- recipient_ids[] (array, optional, omit to send to all)
+- message (string, required)
+- type (string, optional) [info, warning, success, error]
+- link (string, optional)
+Response:
+- sent_count
+
+
+----------------------------------------------------------------
+MODULE: MENTIONS
+----------------------------------------------------------------
+
+[GET] /api/mentions
+Access: Mixed
+Auth: JWT
+Description: List all @mention notifications for the authenticated user
+Request (query params):
+- is_read (boolean, optional)
+- context_type (string, optional) [task_comment, chat_message, ticket_reply]
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].mentioned_by
+- results[].context_type
+- results[].context_id
+- results[].excerpt
+- results[].is_read
+- results[].created_at
+
+[POST] /api/mentions/{id}/read
+Access: Mixed
+Auth: JWT
+Description: Mark a mention notification as read
+Request: none
+Response:
+- detail
+
+[GET] /api/mentionable-users
+Access: Mixed
+Auth: JWT
+Description: Search users available to be @mentioned in a given context
+Request (query params):
+- q (string, required)
+- context_type (string, optional) [project, task, ticket]
+- context_id (integer, optional)
+- limit (integer, optional, default 10)
+Response:
+- results[].id
+- results[].full_name
+- results[].avatar
+- results[].role
+
+
+
+----------------------------------------------------------------
+
+----------------------------------------------------------------
+MODULE: CALENDAR / EVENTS
+----------------------------------------------------------------
+
+[GET] /api/calendar/events
+Access: Mixed
+Auth: JWT
+Description: List all calendar events with date range filtering
+Request (query params):
+- date_from (date, optional)
+- date_to (date, optional)
+- type (string, optional) [task_due, project_milestone, meeting, reminder, holiday]
+- project_id (integer, optional)
+- assignee_id (integer, optional)
+Response:
+- results[].id
+- results[].title
+- results[].type
+- results[].start_date
+- results[].end_date
+- results[].all_day
+- results[].color
+- results[].project
+- results[].assignees[]
+- results[].description
+
+[POST] /api/calendar/events
+Access: Mixed
+Auth: JWT
+Description: Create a new calendar event or milestone
+Request:
+- title (string, required)
+- type (string, required)
+- start_date (datetime, required)
+- end_date (datetime, optional)
+- all_day (boolean, optional)
+- description (string, optional)
+- project_id (integer, optional)
+- assignee_ids[] (array, optional)
+- color (string, optional)
+- recurrence (string, optional) [none, daily, weekly, monthly]
+Response:
+- id
+- title
+- type
+- start_date
+- end_date
+
+[GET] /api/calendar/events/{id}
+Access: Mixed
+Auth: JWT
+Description: Retrieve full detail of a calendar event
+Request: none
+Response:
+- id
+- title
+- type
+- start_date
+- end_date
+- all_day
+- description
+- project
+- assignees[]
+- color
+- recurrence
+- created_by
+- created_at
+
+[PATCH] /api/calendar/events/{id}
+Access: Mixed
+Auth: JWT
+Description: Update a calendar event
+Request:
+- title (string, optional)
+- start_date (datetime, optional)
+- end_date (datetime, optional)
+- description (string, optional)
+- color (string, optional)
+- assignee_ids[] (array, optional)
+Response:
+- id
+- title
+- start_date
+- end_date
+
+[DELETE] /api/calendar/events/{id}
+Access: Mixed
+Auth: JWT
+Description: Delete a calendar event
+Request: none
+Response:
+- detail
+
+[GET] /api/calendar/events/upcoming
+Access: Mixed
+Auth: JWT
+Description: List upcoming events within the next N days for the current user
+Request (query params):
+- days (integer, optional, default 7)
+- limit (integer, optional, default 10)
+Response:
+- results[].id
+- results[].title
+- results[].type
+- results[].start_date
+- results[].project
+
+[GET] /api/calendar/project-timeline
+Access: Mixed
+Auth: JWT
+Description: Gantt-style timeline data for projects and milestones
+Request (query params):
+- project_id (integer, optional)
+- date_from (date, optional)
+- date_to (date, optional)
+Response:
+- results[].id
+- results[].name
+- results[].type
+- results[].start_date
+- results[].end_date
+- results[].progress
+- results[].dependencies[]
+- results[].assignees[]
+
+
+----------------------------------------------------------------
+MODULE: LABELS / TAGS
+----------------------------------------------------------------
+
+[GET] /api/labels
+Access: Mixed
+Auth: JWT
+Description: List all task labels available in the system
+Request (query params):
+- search (string, optional)
+Response:
+- results[].id
+- results[].name
+- results[].color
+- results[].usage_count
+
+[POST] /api/labels
+Access: Admin Only
+Auth: JWT
+Description: Create a new label
+Request:
+- name (string, required)
+- color (string, required)
+Response:
+- id
+- name
+- color
+
+[PATCH] /api/labels/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update a label name or color
+Request:
+- name (string, optional)
+- color (string, optional)
+Response:
+- id
+- name
+- color
+
+[DELETE] /api/labels/{id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a label and remove it from all tasks
+Request: none
+Response:
+- detail
+- removed_from_tasks_count
+
+
+----------------------------------------------------------------
+MODULE: TIME TRACKING
+----------------------------------------------------------------
+
+[GET] /api/time-logs
+Access: Admin Only
+Auth: JWT
+Description: List all time log entries across tasks and users
+Request (query params):
+- user_id (integer, optional)
+- project_id (integer, optional)
+- task_id (integer, optional)
+- date_from (date, optional)
+- date_to (date, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].user
+- results[].task
+- results[].project
+- results[].hours
+- results[].description
+- results[].date
+
+[GET] /api/time-logs/my-logs
+Access: Mixed
+Auth: JWT
+Description: List all time logs for the authenticated user
+Request (query params):
+- project_id (integer, optional)
+- date_from (date, optional)
+- date_to (date, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].task
+- results[].project
+- results[].hours
+- results[].description
+- results[].date
+
+[GET] /api/time-logs/summary
+Access: Admin Only
+Auth: JWT
+Description: Aggregated time tracking summary by user or project
+Request (query params):
+- group_by (string, required) [user, project, task]
+- date_from (date, optional)
+- date_to (date, optional)
+Response:
+- results[].entity
+- results[].total_hours
+- results[].billable_hours
+- results[].non_billable_hours
+
+[PATCH] /api/time-logs/{id}
+Access: Mixed
+Auth: JWT
+Description: Update a time log entry
+Request:
+- hours (decimal, optional)
+- description (string, optional)
+- date (date, optional)
+Response:
+- id
+- hours
+- date
+
+[DELETE] /api/time-logs/{id}
+Access: Mixed
+Auth: JWT
+Description: Delete a time log entry
+Request: none
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: RESOURCE MANAGEMENT
+----------------------------------------------------------------
+
+[GET] /api/resources/capacity
+Access: Admin Only
+Auth: JWT
+Description: View team capacity and workload allocation across active projects
+Request (query params):
+- date_from (date, optional)
+- date_to (date, optional)
+- department_id (integer, optional)
+- team_id (integer, optional)
+Response:
+- results[].user_id
+- results[].full_name
+- results[].capacity_hours
+- results[].allocated_hours
+- results[].available_hours
+- results[].utilization_percentage
+- results[].projects[]
+
+[GET] /api/resources/availability
+Access: Admin Only
+Auth: JWT
+Description: Check user availability for a given date range
+Request (query params):
+- user_id (integer, optional)
+- date_from (date, required)
+- date_to (date, required)
+Response:
+- results[].user_id
+- results[].full_name
+- results[].available_days[]
+- results[].leave_days[]
+- results[].allocated_hours_per_day[]
+
+[POST] /api/resources/allocate
+Access: Admin Only
+Auth: JWT
+Description: Allocate a user to a project for a specific period and capacity
+Request:
+- user_id (integer, required)
+- project_id (integer, required)
+- date_from (date, required)
+- date_to (date, required)
+- hours_per_day (decimal, required)
+Response:
+- id
+- user
+- project
+- hours_per_day
+- total_hours
+
+[GET] /api/resources/allocations
+Access: Admin Only
+Auth: JWT
+Description: List all resource allocations with filtering
+Request (query params):
+- user_id (integer, optional)
+- project_id (integer, optional)
+- date_from (date, optional)
+- date_to (date, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].user
+- results[].project
+- results[].date_from
+- results[].date_to
+- results[].hours_per_day
+
+[PATCH] /api/resources/allocations/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update an existing resource allocation
+Request:
+- date_from (date, optional)
+- date_to (date, optional)
+- hours_per_day (decimal, optional)
+Response:
+- id
+- hours_per_day
+- total_hours
+
+[DELETE] /api/resources/allocations/{id}
+Access: Admin Only
+Auth: JWT
+Description: Remove a resource allocation
+Request: none
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: GOALS / OKRs
+----------------------------------------------------------------
+
+[GET] /api/goals
+Access: Admin Only
+Auth: JWT
+Description: List all organizational or team goals
+Request (query params):
+- type (string, optional) [company, team, individual]
+- status (string, optional) [active, completed, cancelled]
+- owner_id (integer, optional)
+- period (string, optional) [Q1, Q2, Q3, Q4, annual]
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].title
+- results[].type
+- results[].owner
+- results[].progress
+- results[].status
+- results[].due_date
+
+[POST] /api/goals
+Access: Admin Only
+Auth: JWT
+Description: Create a new goal or objective
+Request:
+- title (string, required)
+- description (string, optional)
+- type (string, required) [company, team, individual]
+- owner_id (integer, optional)
+- due_date (date, optional)
+- period (string, optional)
+Response:
+- id
+- title
+- type
+- status
+
+[GET] /api/goals/{id}
+Access: Admin Only
+Auth: JWT
+Description: Retrieve a goal with its key results
+Request: none
+Response:
+- id
+- title
+- description
+- type
+- owner
+- progress
+- status
+- due_date
+- key_results[]
+- created_at
+
+[PATCH] /api/goals/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update a goal
+Request:
+- title (string, optional)
+- description (string, optional)
+- status (string, optional)
+- due_date (date, optional)
+Response:
+- id
+- title
+- status
+
+[DELETE] /api/goals/{id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a goal and all its key results
+Request: none
+Response:
+- detail
+
+[POST] /api/goals/{id}/key-results
+Access: Admin Only
+Auth: JWT
+Description: Add a key result to a goal
+Request:
+- title (string, required)
+- target_value (decimal, required)
+- current_value (decimal, optional)
+- unit (string, optional) [percentage, number, currency, boolean]
+Response:
+- id
+- title
+- target_value
+- current_value
+- progress
+
+[PATCH] /api/goals/{id}/key-results/{kr_id}
+Access: Admin Only
+Auth: JWT
+Description: Update progress on a key result
+Request:
+- current_value (decimal, optional)
+- title (string, optional)
+Response:
+- id
+- current_value
+- progress
+
+[DELETE] /api/goals/{id}/key-results/{kr_id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a key result
+Request: none
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: CUSTOM FIELDS
+----------------------------------------------------------------
+
+[GET] /api/custom-fields
+Access: Admin Only
+Auth: JWT
+Description: List all custom field definitions for entities
+Request (query params):
+- entity_type (string, optional) [project, task, customer, user]
+Response:
+- results[].id
+- results[].name
+- results[].field_type
+- results[].entity_type
+- results[].options[]
+- results[].is_required
+- results[].is_active
+
+[POST] /api/custom-fields
+Access: Admin Only
+Auth: JWT
+Description: Create a new custom field definition
+Request:
+- name (string, required)
+- field_type (string, required) [text, number, date, dropdown, checkbox, url, multi_select]
+- entity_type (string, required) [project, task, customer, user]
+- options[] (array, optional, required for dropdown/multi_select)
+- is_required (boolean, optional)
+- default_value (string, optional)
+Response:
+- id
+- name
+- field_type
+- entity_type
+
+[PATCH] /api/custom-fields/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update a custom field definition
+Request:
+- name (string, optional)
+- options[] (array, optional)
+- is_required (boolean, optional)
+- is_active (boolean, optional)
+Response:
+- id
+- name
+- is_active
+
+[DELETE] /api/custom-fields/{id}
+Access: Admin Only
+Auth: JWT
+Description: Delete a custom field and remove all stored values
+Request: none
+Response:
+- detail
+
+[GET] /api/{entity_type}/{entity_id}/custom-field-values
+Access: Mixed
+Auth: JWT
+Description: Get all custom field values for a specific entity instance
+Request: none
+Response:
+- results[].field_id
+- results[].field_name
+- results[].field_type
+- results[].value
+
+[POST] /api/{entity_type}/{entity_id}/custom-field-values
+Access: Mixed
+Auth: JWT
+Description: Set or update custom field values for a specific entity instance
+Request:
+- values[] (array, required)
+  - field_id (integer, required)
+  - value (string/number/boolean, required)
+Response:
+- updated_count
+
+
+----------------------------------------------------------------
+MODULE: ANNOUNCEMENTS
+----------------------------------------------------------------
+
+[GET] /api/announcements
+Access: Mixed
+Auth: JWT
+Description: List all announcements visible to the authenticated user
+Request (query params):
+- is_pinned (boolean, optional)
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].title
+- results[].content
+- results[].author
+- results[].is_pinned
+- results[].audience
+- results[].created_at
+
+[POST] /api/announcements
+Access: Admin Only
+Auth: JWT
+Description: Create a system-wide or targeted announcement
+Request:
+- title (string, required)
+- content (string, required)
+- audience (string, optional) [all, admins, managers, employees]
+- department_ids[] (array, optional)
+- is_pinned (boolean, optional)
+- expires_at (datetime, optional)
+Response:
+- id
+- title
+- audience
+- is_pinned
+
+[PATCH] /api/announcements/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update an announcement
+Request:
+- title (string, optional)
+- content (string, optional)
+- is_pinned (boolean, optional)
+- expires_at (datetime, optional)
+Response:
+- id
+- title
+- is_pinned
+
+[DELETE] /api/announcements/{id}
+Access: Admin Only
+Auth: JWT
+Description: Delete an announcement
+Request: none
+Response:
+- detail
+
+[POST] /api/announcements/{id}/read
+Access: Mixed
+Auth: JWT
+Description: Mark an announcement as read for the authenticated user
+Request: none
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: BOOKMARKS / FAVORITES
+----------------------------------------------------------------
+
+[GET] /api/bookmarks
+Access: Mixed
+Auth: JWT
+Description: List all bookmarked items for the authenticated user
+Request (query params):
+- entity_type (string, optional) [project, task, customer, user]
+Response:
+- results[].id
+- results[].entity_type
+- results[].entity_id
+- results[].entity_name
+- results[].entity_url
+- results[].created_at
+
+[POST] /api/bookmarks
+Access: Mixed
+Auth: JWT
+Description: Add an item to bookmarks
+Request:
+- entity_type (string, required) [project, task, customer, user]
+- entity_id (integer, required)
+Response:
+- id
+- entity_type
+- entity_id
+- created_at
+
+[DELETE] /api/bookmarks/{id}
+Access: Mixed
+Auth: JWT
+Description: Remove an item from bookmarks
+Request: none
+Response:
+- detail
+
+[DELETE] /api/bookmarks/clear
+Access: Mixed
+Auth: JWT
+Description: Clear all bookmarks for the authenticated user
+Request: none
+Response:
+- deleted_count
+
+
+----------------------------------------------------------------
+MODULE: USER PREFERENCES
+----------------------------------------------------------------
+
+[GET] /api/preferences
+Access: Mixed
+Auth: JWT
+Description: Retrieve UI and behavioral preferences for the authenticated user
+Request: none
+Response:
+- theme
+- language
+- timezone
+- date_format
+- time_format
+- default_project_view
+- sidebar_collapsed
+- tasks_per_page
+- dashboard_widgets[]
+- notification_sound
+- compact_mode
+
+[PATCH] /api/preferences
+Access: Mixed
+Auth: JWT
+Description: Update UI preferences for the authenticated user
+Request:
+- theme (string, optional) [light, dark, system]
+- language (string, optional)
+- timezone (string, optional)
+- date_format (string, optional)
+- time_format (string, optional) [12h, 24h]
+- default_project_view (string, optional) [kanban, list, calendar]
+- sidebar_collapsed (boolean, optional)
+- tasks_per_page (integer, optional)
+- notification_sound (boolean, optional)
+- compact_mode (boolean, optional)
+Response:
+- updated preferences
+
+[PATCH] /api/preferences/dashboard
+Access: Mixed
+Auth: JWT
+Description: Save dashboard widget layout and visibility configuration
+Request:
+- widgets[] (array, required)
+  - id (string, required)
+  - visible (boolean, required)
+  - position (integer, required)
+  - size (string, optional) [small, medium, large]
+Response:
+- widgets[]
+
+
+----------------------------------------------------------------
+MODULE: FILE STORAGE
+----------------------------------------------------------------
+
+[POST] /api/files/upload
+Access: Mixed
+Auth: JWT
+Description: Generic file upload endpoint returning a stored URL
+Request:
+- file (file, required)
+- context (string, optional) [task, message, profile, project]
+Response:
+- id
+- url
+- name
+- size
+- mime_type
+- uploaded_by
+- created_at
+
+[DELETE] /api/files/{id}
+Access: Mixed
+Auth: JWT
+Description: Delete an uploaded file
+Request: none
+Response:
+- detail
+
+[GET] /api/projects/{id}/files
+Access: Mixed
+Auth: JWT
+Description: List all files uploaded within a project across tasks and messages
+Request (query params):
+- page (integer, optional)
+Response:
+- count
+- results[].id
+- results[].name
+- results[].url
+- results[].size
+- results[].mime_type
+- results[].uploaded_by
+- results[].context
+- results[].created_at
+
+
+
+
+----------------------------------------------------------------
+MODULE: SETTINGS
+----------------------------------------------------------------
+
+[GET] /api/settings/company
+Access: Admin Only
+Auth: JWT
+Description: Retrieve company-level settings and branding
+Request: none
+Response:
+- company_name
+- logo_url
+- address
+- phone
+- email
+- timezone
+- currency
+- date_format
+- fiscal_year_start
+
+[PATCH] /api/settings/company
+Access: Admin Only
+Auth: JWT
+Description: Update company settings
+Request:
+- company_name (string, optional)
+- logo (file, optional)
+- address (string, optional)
+- phone (string, optional)
+- timezone (string, optional)
+- currency (string, optional)
+- date_format (string, optional)
+Response:
+- company_name
+- logo_url
+- timezone
+- currency
+
+[GET] /api/settings/notifications
+Access: Mixed
+Auth: JWT
+Description: Get notification preferences for the authenticated user
+Request: none
+Response:
+- email_on_task_assigned
+- email_on_comment
+- email_on_project_update
+- push_enabled
+- notification_types[]
+
+[PATCH] /api/settings/notifications
+Access: Mixed
+Auth: JWT
+Description: Update notification preferences for the authenticated user
+Request:
+- email_on_task_assigned (boolean, optional)
+- email_on_comment (boolean, optional)
+- email_on_project_update (boolean, optional)
+- push_enabled (boolean, optional)
+Response:
+- updated preferences
+
+[GET] /api/settings/integrations
+Access: Admin Only
+Auth: JWT
+Description: List configured third-party integrations
+Request: none
+Response:
+- results[].name
+- results[].enabled
+- results[].configured_at
+- results[].status
+
+[POST] /api/settings/integrations/{name}/connect
+Access: Admin Only
+Auth: JWT
+Description: Connect or configure a third-party integration
+Request:
+- api_key (string, optional)
+- webhook_url (string, optional)
+- config (object, optional)
+Response:
+- name
+- enabled
+- status
+
+[DELETE] /api/settings/integrations/{name}
+Access: Admin Only
+Auth: JWT
+Description: Disconnect a third-party integration
+Request: none
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: EMAIL TEMPLATES
+----------------------------------------------------------------
+
+[GET] /api/email-templates
+Access: Admin Only
+Auth: JWT
+Description: List all configurable system email templates
+Request: none
+Response:
+- results[].id
+- results[].name
+- results[].subject
+- results[].trigger_event
+- results[].is_active
+- results[].updated_at
+
+[GET] /api/email-templates/{id}
+Access: Admin Only
+Auth: JWT
+Description: Retrieve full content of an email template
+Request: none
+Response:
+- id
+- name
+- subject
+- body_html
+- body_text
+- trigger_event
+- available_variables[]
+- is_active
+
+[PATCH] /api/email-templates/{id}
+Access: Admin Only
+Auth: JWT
+Description: Update the subject or body of an email template
+Request:
+- subject (string, optional)
+- body_html (string, optional)
+- body_text (string, optional)
+- is_active (boolean, optional)
+Response:
+- id
+- name
+- subject
+- updated_at
+
+[POST] /api/email-templates/{id}/preview
+Access: Admin Only
+Auth: JWT
+Description: Render a preview of the template with sample data
+Request:
+- variables (object, optional)
+Response:
+- subject
+- body_html
+- body_text
+
+[POST] /api/email-templates/{id}/send-test
+Access: Admin Only
+Auth: JWT
+Description: Send a test email using the template to a specified address
+Request:
+- to_email (string, required)
+Response:
+- detail
+
+
+----------------------------------------------------------------
+MODULE: RATE LIMITING
+----------------------------------------------------------------
+
+[GET] /api/rate-limits
+Access: Mixed
+Auth: JWT
+Description: Retrieve current rate limit status for the authenticated client
+Request: none
+Response:
+- limit
+- remaining
+- reset_at
+- window_seconds
+- endpoints[].path
+- endpoints[].limit
+- endpoints[].remaining
+- endpoints[].reset_at
+
+
+
+================================================================
+END OF API REFERENCE
+================================================================

@@ -1,43 +1,41 @@
 from django.contrib import messages
 from django.shortcuts import redirect
 
-from foundation.mixins import FoundationAdminMixin, FoundationDashboardAccessMixin
+from auth_tenants.mixins import TenantMixin, DashboardMixin, PageContextMixin
 
 
-class ScreenhotModuleAdminMixin(FoundationAdminMixin):
-    permission_codename_read = "screenhot.view"
-    permission_codename_write = "screenhot.manage"
-    permission_codename_delete = "screenhot.delete"
-
-    def dispatch(self, request, *args, **kwargs):
-        tenant = getattr(request, "hrm_tenant", None)
-        if tenant is not None and not tenant.is_module_enabled("screenhot"):
-            messages.error(request, "Screenhot module is disabled for this tenant.")
-            return redirect("dashboard")
-        return super().dispatch(request, *args, **kwargs)
-
-    def handle_no_permission(self):
-        messages.error(self.request, "You do not have permission for this Screenhot action.")
-        return redirect("dashboard")
+class ScreenhotModuleAdminMixin(TenantMixin):
+    """🎯 UNIFIED SCREENHOT ADMIN MIXIN"""
+    module_code = "screenhot"
+    required_permission = "screenhot.view"
 
 
-class ScreenhotDashboardAccessMixin(FoundationDashboardAccessMixin):
-    def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        tenant = getattr(request, "hrm_tenant", None)
-        if tenant is not None and not tenant.is_module_enabled("screenhot"):
-            messages.error(request, "Screenhot module is disabled for this tenant.")
-            return redirect("dashboard")
-        return response
+class ScreenhotDashboardAccessMixin(DashboardMixin):
+    """🎯 UNIFIED SCREENHOT DASHBOARD MIXIN"""
+    
+    def test_func(self):
+        """Dashboard access with screenhot module check"""
+        if not super().test_func():
+            return False
+        
+        user = self.request.user
+        
+        # Super admin can always access
+        if user.role == "super_admin":
+            return True
+        
+        tenant = getattr(self.request, "tenant", None)
+        if not tenant:
+            return False
+        
+        # Check screenhot module access
+        if not tenant.can_access_module("screenhot"):
+            return False
+        
+        # Check basic screenhot permission
+        return user.has_tenant_permission("screenhot.view")
 
 
-class ScreenhotPageContextMixin:
+class ScreenhotPageContextMixin(PageContextMixin):
+    """Screenhot page context"""
     active_page = "screenhot"
-    page_title = ""
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["active_page"] = self.active_page
-        if getattr(self, "page_title", None):
-            ctx.setdefault("page_title", self.page_title)
-        return ctx

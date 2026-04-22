@@ -1,0 +1,44 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}School guide{% endblock %}
+{% block page_title %}School · Guide (বাংলা){% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">স্কুল ম্যানেজমেন্ট — কীভাবে কাজ করবেন</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">ধাপে ধাপে গাইড ও দ্রুত লিঙ্ক।</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a href="{% url 'school:dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+          </a>
+          <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">Workspace</a>
+        </div>
+      </div>
+      <div class="space-y-5 p-5 md:p-6">
+        <div class="space-y-3 text-sm text-muted-foreground">
+          <p><b>ধাপ ১:</b> Academic Setup করুন: Academic year → Classes → Sections → Subjects।</p>
+          <p><b>ধাপ ২:</b> Staff যোগ করুন (Principal/Teacher/Accountant ইত্যাদি)।</p>
+          <p><b>ধাপ ৩:</b> Students ভর্তি করুন (Class/Section assign)।</p>
+          <p><b>ধাপ ৪:</b> Attendance daily mark করুন (Student/Staff)।</p>
+          <p><b>ধাপ ৫:</b> Exam তৈরি করুন, তারপর result entry/publish (API/UI আস্তে আস্তে extend হবে)।</p>
+          <p><b>ধাপ ৬:</b> Fee category/structure সেট করুন, তারপর monthly fee collection করুন।</p>
+          <p><b>ধাপ ৭:</b> SMS logs/Reports দেখে audit করুন।</p>
+        </div>
+        <div class="card-actions card-actions--flush">
+          <a class="card-act card-act--muted card-act--lg" href="{% url 'school:academic_year_list' %}">Academic years</a>
+          <a class="card-act card-act--muted card-act--lg" href="{% url 'school:class_list' %}">Classes</a>
+          <a class="card-act card-act--muted card-act--lg" href="{% url 'school:section_list' %}">Sections</a>
+          <a class="card-act card-act--muted card-act--lg" href="{% url 'school:subject_list' %}">Subjects</a>
+          <a class="card-act card-act--muted card-act--lg" href="{% url 'school:student_list' %}">Students</a>
+          <a class="card-act card-act--muted card-act--lg" href="{% url 'school:staff_list' %}">Staff</a>
+          <a class="card-act card-act--muted card-act--lg" href="{% url 'school:fee_structure_list' %}">Fee structures</a>
+          <a class="card-act card-act--muted card-act--lg" href="{% url 'school:fee_collection_list' %}">Fee collections</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

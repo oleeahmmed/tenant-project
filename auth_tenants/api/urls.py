@@ -1,13 +1,17 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 from .views import (
-    RegisterView, VerifyOTPView, AcceptInvitationView, MeView,
-    TenantMeView,
+    RegisterView, VerifyOTPView, AcceptInvitationView, MeView, WorkspaceContextView,
+    TenantMeView, TenantCompanySettingsApiView,
     PermissionListView, PermissionDetailView,
     RoleListView, RoleDetailView,
     InvitationListView, InvitationCancelView,
     MemberListView, MemberDetailView, MemberPermissionView,
     TenantListView,
+)
+from .subscription_views import (
+    SubscriptionPlansView, TenantSubscriptionView, SubscriptionUsageView,
+    PaymentProcessView, PaymentHistoryView
 )
 
 urlpatterns = [
@@ -18,12 +22,14 @@ urlpatterns = [
     path("token/refresh/",         TokenRefreshView.as_view()),
     path("logout/",                TokenBlacklistView.as_view()),
     path("me/",                    MeView.as_view()),
+    path("workspace/context/",     WorkspaceContextView.as_view()),
 
     # ── Invitation (public) ───────────────────────────────────────────────────
     path("invite/<uuid:token>/",   AcceptInvitationView.as_view()),
 
     # ── Tenant ────────────────────────────────────────────────────────────────
     path("tenant/me/",             TenantMeView.as_view()),
+    path("tenant/company-settings/", TenantCompanySettingsApiView.as_view()),
 
     # ── Permission Master List (GET: tenant admin, POST/PATCH/DELETE: super admin)
     path("permissions/",               PermissionListView.as_view()),
@@ -44,4 +50,12 @@ urlpatterns = [
 
     # ── Super Admin ───────────────────────────────────────────────────────────
     path("tenants/",               TenantListView.as_view()),
+    
+    # ── Subscription Management ───────────────────────────────────────────────
+    path("subscription/plans/",           SubscriptionPlansView.as_view()),
+    path("subscription/current/",         TenantSubscriptionView.as_view()),
+    path("subscription/upgrade/",         TenantSubscriptionView.as_view()),
+    path("subscription/usage/",           SubscriptionUsageView.as_view()),
+    path("subscription/payment/",         PaymentProcessView.as_view()),
+    path("subscription/payment-history/", PaymentHistoryView.as_view()),
 ]

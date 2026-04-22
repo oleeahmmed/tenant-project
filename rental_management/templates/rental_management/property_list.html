@@ -1,0 +1,94 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Properties{% endblock %}
+{% block page_title %}Rental · Properties{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  {% if messages %}
+  <ul class="rounded-lg border border-border bg-card p-3 text-sm">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">Properties</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">Search, filter, and manage rental units.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a href="{% url 'rental_management:dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+          </a>
+          <a href="{% url 'rental_management:property_create' %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+            <i data-lucide="plus" class="h-4 w-4"></i> Add property
+          </a>
+        </div>
+      </div>
+
+      <form method="get" class="inv-list-filter px-4 py-4">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <input type="text" name="q" value="{{ selected.q }}" placeholder="Search number…" class="inv-list-control" />
+          <select name="property_type" class="inv-list-control">
+            <option value="">All types</option>
+            {% for val, label in type_choices %}<option value="{{ val }}" {% if selected.property_type == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+          <select name="status" class="inv-list-control">
+            <option value="">All status</option>
+            {% for val, label in status_choices %}<option value="{{ val }}" {% if selected.status == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+          <div class="flex items-end gap-2">
+            <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 md:w-auto">
+              <i data-lucide="search" class="h-4 w-4"></i> Apply
+            </button>
+          </div>
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <a href="{% url 'rental_management:property_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent">
+            <i data-lucide="rotate-ccw" class="h-4 w-4"></i> Reset
+          </a>
+        </div>
+      </form>
+
+      <div class="ui-table-wrap overflow-x-auto border-t border-border/50 bg-card">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-border bg-muted/40">
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Number</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Type</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Rent</th>
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            {% for row in rows %}
+            <tr class="hover:bg-accent/40 transition-colors">
+              <td class="px-4 py-3 font-medium">{{ row.property_number }}</td>
+              <td class="px-4 py-3 text-muted-foreground">{{ row.get_property_type_display }}</td>
+              <td class="px-4 py-3"><span class="rounded-full bg-muted px-2 py-0.5 text-xs">{{ row.get_status_display }}</span></td>
+              <td class="px-4 py-3 text-right">{{ row.monthly_rent }}</td>
+              <td class="px-4 py-3 text-right whitespace-nowrap">
+                <a href="{% url 'rental_management:property_detail' row.pk %}" class="text-sm font-medium text-primary hover:underline">View</a>
+                <span class="text-muted-foreground">·</span>
+                <a href="{% url 'rental_management:property_update' row.pk %}" class="text-sm font-medium text-primary hover:underline">Edit</a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="px-4 py-8 text-center text-muted-foreground">No properties found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if is_paginated %}
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border/50 bg-card px-4 py-3 text-sm">
+        <p class="text-muted-foreground">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</p>
+        <div class="flex gap-2">
+          {% if page_obj.has_previous %}<a href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}page={{ page_obj.previous_page_number }}" class="rounded-md border border-border px-3 py-1.5 hover:bg-accent">Previous</a>{% endif %}
+          {% if page_obj.has_next %}<a href="?{% if qs_no_page %}{{ qs_no_page }}&{% endif %}page={{ page_obj.next_page_number }}" class="rounded-md border border-border px-3 py-1.5 hover:bg-accent">Next</a>{% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

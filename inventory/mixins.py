@@ -2,27 +2,28 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect
 
-from hrm.tenant_scope import get_hrm_tenant, user_belongs_to_workspace_tenant
+from auth_tenants.permissions import get_tenant, TenantManager
+from auth_tenants.mixins import TenantMixin, DashboardMixin, PageContextMixin
 
 
-class InventoryAdminMixin(LoginRequiredMixin, UserPassesTestMixin):
-    """Same tenant gate as Foundation / HRM admin."""
-    permission_codename = ""
-    permission_codename_read = "inventory.view"
-    permission_codename_write = "inventory.manage"
-    permission_codename_delete = "inventory.delete"
-
+class InventoryAdminMixin(TenantMixin):
+    """🎯 UNIFIED INVENTORY ADMIN MIXIN"""
+    module_code = "inventory"
+    
     def _resolve_permission_codename(self):
+        """Auto-resolve permission based on view and method"""
         explicit = getattr(self, "permission_codename", "") or ""
         if explicit:
             return explicit
 
         method = (self.request.method or "GET").upper()
         model = getattr(self, "model", None)
+        
         if model is not None and hasattr(model, "_meta"):
             app_label = model._meta.app_label
             model_name = model._meta.model_name
             action = "view"
+            
             if method == "DELETE":
                 action = "delete"
             elif method in ("POST", "PUT", "PATCH"):
@@ -34,92 +35,50 @@ class InventoryAdminMixin(LoginRequiredMixin, UserPassesTestMixin):
                     action = "change"
                 else:
                     action = "change"
+            
             return f"{app_label}.{model_name}.{action}"
 
+        # Fallback to module permissions
         if method == "DELETE":
-            return self.permission_codename_delete
-        if method in ("POST", "PUT", "PATCH"):
-            return self.permission_codename_write
-        return self.permission_codename_read
-
-    def dispatch(self, request, *args, **kwargs):
-        request.hrm_tenant = get_hrm_tenant(request)
-        tenant = getattr(request, "hrm_tenant", None)
-        if (
-            tenant is not None
-            and getattr(request.user, "role", None) != "super_admin"
-            and not tenant.is_module_enabled("inventory")
-        ):
-            messages.error(request, "Inventory module is disabled for this tenant.")
-            return redirect("dashboard")
-        return super().dispatch(request, *args, **kwargs)
-
-    def test_func(self):
-        u = self.request.user
-        t = getattr(self.request, "hrm_tenant", None)
-        if not u.is_authenticated or t is None:
-            return False
-        if u.role == "super_admin":
-            return True
-        if not user_belongs_to_workspace_tenant(u, t):
-            return False
-        if u.role not in ("tenant_admin", "staff"):
-            return False
-
-        perm = self._resolve_permission_codename()
-        return bool(perm) and u.has_tenant_permission(perm)
-
-    def handle_no_permission(self):
-        u = self.request.user
-        if (
-            u.is_authenticated
-            and getattr(u, "role", None) == "super_admin"
-            and getattr(self.request, "hrm_tenant", None) is None
-        ):
-            messages.warning(
-                self.request,
-                "Choose a workspace tenant on the HRM dashboard before opening this page.",
-            )
+            return "inventory.delete"
+        elif method in ("POST", "PUT", "PATCH"):
+            return "inventory.manage"
         else:
-            messages.error(self.request, "No tenant is assigned to your account.")
-        return redirect("dashboard")
+            return "inventory.view"
+    
+    def test_func(self):
+        """Enhanced permission check with auto-resolved permissions"""
+        # Set required_permission dynamically
+        self.required_permission = self._resolve_permission_codename()
+        return super().test_func()
 
 
-class InventoryPageContextMixin:
+class InventoryPageContextMixin(PageContextMixin):
+    """Inventory page context"""
     active_page = "inventory"
 
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["active_page"] = self.active_page
-        if getattr(self, "page_title", None):
-            ctx.setdefault("page_title", self.page_title)
-        return ctx
 
-
-class InventoryDashboardAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
-    """Dashboard: super_admin may open without tenant (pick workspace)."""
-
-    def dispatch(self, request, *args, **kwargs):
-        request.hrm_tenant = get_hrm_tenant(request)
-        return super().dispatch(request, *args, **kwargs)
-
+class InventoryDashboardAccessMixin(DashboardMixin):
+    """🎯 UNIFIED INVENTORY DASHBOARD MIXIN"""
+    
     def test_func(self):
-        u = self.request.user
-        if not u.is_authenticated:
+        """Dashboard access with inventory module check"""
+        if not super().test_func():
             return False
-        if u.role == "super_admin":
+        
+        user = self.request.user
+        
+        # Super admin can always access
+        if user.role == "super_admin":
             return True
-        t = getattr(self.request, "hrm_tenant", None)
-        if t is None:
+        
+        tenant = getattr(self.request, "tenant", None)
+        if not tenant:
             return False
-        if not t.is_module_enabled("inventory"):
+        
+        # Check inventory module access
+        if not tenant.can_access_module("inventory"):
             return False
-        if not user_belongs_to_workspace_tenant(u, t):
-            return False
-        if u.role not in ("tenant_admin", "staff"):
-            return False
-        return u.has_tenant_permission("inventory.view")
-
-    def handle_no_permission(self):
-        messages.error(self.request, "No tenant is assigned to your account.")
-        return redirect("dashboard")
+        
+        # Check basic inventory permission
+        return user.has_tenant_permission("inventory.view")

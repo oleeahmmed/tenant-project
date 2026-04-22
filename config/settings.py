@@ -39,36 +39,57 @@ if _extra_csrf:
     _csrf_origins.extend([x.strip() for x in _extra_csrf.split(",") if x.strip()])
 CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(_csrf_origins))
 
-INSTALLED_APPS = [
-    "daphne",
+# ── Django Apps Organization ─────────────────────────────────────────────────
+
+# Django built-in apps (staticfiles must come after daphne)
+DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+]
+
+# Third-party apps (daphne must come before staticfiles)
+THIRD_PARTY_APPS = [
+    "daphne",
     "corsheaders",
     "rest_framework",
+    "drf_spectacular", 
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
-    "auth_tenants",
-    "notification",
-    "hrm",
-    "recruitment",
-    "foundation",
-    "inventory",
-    "finance",
-    "purchase",
-    "sales",
-    "production",
-    "jiraclone",
-    "vault",
     "channels",
-    "chat",
-    "pos",
-    "support",
-    "screenhot",
 ]
+
+# Local apps (your custom modules)
+LOCAL_APPS = [
+    "auth_tenants",      # Core tenant & auth system
+    "foundation",        # Base models (Customer, Product, etc.)
+    "notification",      # Notification system
+    "chat",             # Chat & messaging
+    
+    # Business modules
+    "hrm",              # Human Resource Management
+    "recruitment",      # Recruitment & hiring
+    "inventory",        # Inventory management
+    "finance",          # Financial management
+    "purchase",         # Purchase management
+    "sales",            # Sales management
+    "production",       # Production management
+    "pos",              # Point of Sale
+    "rental_management", # Rental management
+    "school",           # School management
+    
+    # Utility modules
+    "jiraclone",        # Project management
+    "vault",            # Secure storage
+    "support",          # Support system
+    "screenhot",        # Screen monitoring
+]
+
+# Combine all apps (daphne must be first, before staticfiles)
+INSTALLED_APPS = THIRD_PARTY_APPS + DJANGO_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -79,6 +100,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "auth_tenants.middleware.SubscriptionMiddleware",  # Subscription access control
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -159,6 +181,14 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "WA Automotion API",
+    "DESCRIPTION": "Tenant-scoped API for auth, chat, jira clone, screenhot and related modules.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 # ── JWT ───────────────────────────────────────────────────────────────────────
@@ -185,3 +215,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:5173",
 ]
+
+
+# ── SMS Gateway (Rental Management) ───────────────────────────────────────────
+SMS_GATEWAY_URL = os.getenv("SMS_GATEWAY_URL", "")
+SMS_API_KEY = os.getenv("SMS_API_KEY", "")
+SMS_SENDER_ID = os.getenv("SMS_SENDER_ID", "")

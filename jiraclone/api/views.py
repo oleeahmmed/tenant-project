@@ -4,14 +4,25 @@ import json
 from datetime import datetime
 
 from django.http import JsonResponse
+from django.db.models import Count, Q
 from django.utils import timezone
 from django.views import View
+from rest_framework import status
+from rest_framework.response import Response
 
+from auth_tenants.permissions import TenantAPIView
 from auth_tenants.models import User
+from foundation.models import Customer
 from hrm.models import Department
-from jiraclone.api.serializers import BoardIssueSerializer, ProjectDepartmentAssignmentSerializer
+from jiraclone.api.serializers import (
+    BoardIssueSerializer,
+    JiraIssueCreateSerializer,
+    JiraOnboardingCustomerSerializer,
+    JiraProjectSerializer,
+    ProjectDepartmentAssignmentSerializer,
+)
 from jiraclone.mixins import JiraCloneAdminMixin, JiraCloneDashboardAccessMixin
-from jiraclone.models import Issue, IssueComment, IssueType, ProjectDepartmentAssignment
+from jiraclone.models import Issue, IssueComment, IssueType, JiraProject, ProjectDepartmentAssignment
 from jiraclone.services.assignees import assignable_users_for_project
 from jiraclone.services.board import move_board_issue
 from jiraclone.views import ensure_request_tenant, get_project_or_404
@@ -19,6 +30,28 @@ from jiraclone.views import ensure_request_tenant, get_project_or_404
 
 def _json_error(msg, status=400):
     return JsonResponse({"ok": False, "error": msg}, status=status)
+
+
+def _project_open_issue_count(project):
+    return (
+        Issue.objects.filter(project=project, parent__isnull=True)
+        .exclude(status__category="done")
+        .count()
+    )
+
+
+def _project_membership_q(user):
+    return (
+        Q(lead=user)
+        | Q(teams__members=user)
+        | Q(department_assignments__users=user)
+        | Q(issues__assignees=user)
+        | Q(issues__reporter=user)
+    )
+
+
+def _user_project_queryset(tenant, user):
+    return JiraProject.objects.filter(tenant=tenant, is_active=True).filter(_project_membership_q(user)).distinct()
 
 
 class BoardMoveApiView(JiraCloneAdminMixin, View):
@@ -152,6 +185,19 @@ class SubtaskCreateApiView(JiraCloneAdminMixin, View):
             return _json_error("Sub-task setup missing", 400)
         issue = Issue(project=project, issue_type=st_type, status=default_status, summary=summary[:500], reporter=request.user, parent=parent)
         issue.save()
+        raw_ids = data.get("assignee_ids") or []
+        if isinstance(raw_ids, list):
+            allowed_ids = set(assignable_users_for_project(project).values_list("pk", flat=True))
+            use_ids = []
+            for x in raw_ids:
+                try:
+                    uid = int(x)
+                except (TypeError, ValueError):
+                    continue
+                if uid in allowed_ids:
+                    use_ids.append(uid)
+            if use_ids:
+                issue.assignees.set(use_ids)
         return JsonResponse({"ok": True, "issue": BoardIssueSerializer(issue).data})
 
 
@@ -391,3 +437,248 @@ class DepartmentAssignmentDetailApiView(JiraCloneAdminMixin, View):
             return _json_error("Department assignment not found", 404)
         row.delete()
         return JsonResponse({"ok": True})
+
+
+class JiraApiBase(TenantAPIView):
+    module_code = "jiraclone"
+    required_permission = "jiraclone.view"
+
+
+class JiraProjectListApiView(JiraApiBase):
+    def get(self, request):
+        tenant = self.get_tenant()
+        qs = (
+            _user_project_queryset(tenant, request.user)
+            .annotate(
+                open_issue_count=Count(
+                    "issues",
+                    filter=Q(issues__parent__isnull=True) & ~Q(issues__status__category="done"),
+                    distinct=True,
+                )
+            )
+            .order_by("key")
+        )
+        data = []
+        for p in qs:
+            row = JiraProjectSerializer(p).data
+            row["open_issue_count"] = int(getattr(p, "open_issue_count", 0) or 0)
+            row["is_closed"] = row["open_issue_count"] == 0
+            data.append(row)
+        data.sort(key=lambda x: (x["is_closed"], x["key"]))
+        return self.success_response(data)
+
+
+class JiraOnboardingCustomerListApiView(JiraApiBase):
+    def get(self, request):
+        tenant = self.get_tenant()
+        q = (request.GET.get("q") or "").strip()
+        projects = _user_project_queryset(tenant, request.user).exclude(customer__isnull=True).select_related("customer").order_by("key")
+        if q:
+            projects = projects.filter(
+                Q(customer__name__icontains=q)
+                | Q(customer__customer_code__icontains=q)
+                | Q(customer__email__icontains=q)
+                | Q(customer__phone__icontains=q)
+            )
+        by_customer = {}
+        for p in projects:
+            if not p.customer_id:
+                continue
+            row = by_customer.setdefault(
+                p.customer_id,
+                {
+                    "customer": p.customer,
+                    "projects": [],
+                },
+            )
+            open_count = _project_open_issue_count(p)
+            row["projects"].append(
+                {
+                    "key": p.key,
+                    "name": p.name,
+                    "open_issue_count": open_count,
+                    "is_closed": open_count == 0,
+                }
+            )
+        results = []
+        for payload in by_customer.values():
+            customer = payload["customer"]
+            customer_data = JiraOnboardingCustomerSerializer(customer).data
+            projects_data = sorted(payload["projects"], key=lambda x: (x["is_closed"], x["key"]))
+            customer_data["projects"] = projects_data
+            customer_data["project_count"] = len(projects_data)
+            customer_data["first_project_key"] = projects_data[0]["key"] if projects_data else ""
+            customer_data["open_project_count"] = sum(1 for p in projects_data if not p["is_closed"])
+            results.append(customer_data)
+        results.sort(key=lambda x: ((x.get("open_project_count", 0) == 0), x.get("name", "").lower()))
+        return self.success_response(results)
+
+
+class JiraOnboardingCustomerDetailApiView(JiraApiBase):
+    def get(self, request, customer_id):
+        tenant = self.get_tenant()
+        customer = Customer.objects.filter(tenant=tenant, is_active=True, pk=customer_id).first()
+        if not customer:
+            return self.error_response("Customer not found.", status.HTTP_404_NOT_FOUND)
+        # Match web CustomerOnboardDetailView: all Jira projects for this customer (not membership-filtered).
+        projects = JiraProject.objects.filter(tenant=tenant, customer=customer).order_by("key")
+        q = (request.GET.get("q") or "").strip()
+        if q:
+            projects = projects.filter(Q(key__icontains=q) | Q(name__icontains=q))
+        rows = []
+        for p in projects:
+            assignments = p.department_assignments.prefetch_related("employees")
+            department_total = assignments.count()
+            department_with_employees = sum(1 for row in assignments if row.employees.exists())
+            employee_total = sum(row.employees.count() for row in assignments)
+            percent = int((department_with_employees / department_total) * 100) if department_total else 0
+            open_count = _project_open_issue_count(p)
+            rows.append(
+                {
+                    "project": JiraProjectSerializer(p).data,
+                    "progress": {
+                        "department_total": department_total,
+                        "department_with_employees": department_with_employees,
+                        "employee_total": employee_total,
+                        "percent": percent,
+                    },
+                    "open_issue_count": open_count,
+                    "is_closed": open_count == 0,
+                }
+            )
+        rows.sort(key=lambda x: (x["is_closed"], x["project"]["key"]))
+        return self.success_response(
+            {
+                "customer": JiraOnboardingCustomerSerializer(customer).data,
+                "project_rows": rows,
+            }
+        )
+
+
+class JiraFoundationCustomerListApiView(JiraApiBase):
+    """
+    Same behaviour as GET /api/foundation/customers/ (CustomerListView) for mobile JWT clients.
+    Web uses session + Foundation permission; this uses jiraclone.view.
+    """
+
+    def get(self, request):
+        tenant = self.get_tenant()
+        q = request.GET.get("q", "").strip()
+        show_all = (request.GET.get("show_all") or "").strip() == "1"
+        try:
+            limit = min(max(int(request.GET.get("limit", 40)), 1), 200)
+        except (TypeError, ValueError):
+            limit = 40
+        qs = Customer.objects.filter(tenant=tenant, is_active=True).only(
+            "id",
+            "customer_code",
+            "name",
+            "email",
+            "phone",
+            "city",
+            "country",
+        )
+        if q:
+            qs = qs.filter(name__icontains=q)
+        elif not show_all:
+            qs = qs.none()
+        qs = qs.order_by("name")[:limit]
+        customer_ids = [c.id for c in qs]
+        first_project_by_customer = {}
+        if customer_ids:
+            project_rows = (
+                JiraProject.objects.filter(tenant=tenant, customer_id__in=customer_ids, is_active=True)
+                .only("key", "customer_id")
+                .order_by("customer_id", "key")
+            )
+            for p in project_rows:
+                if p.customer_id not in first_project_by_customer:
+                    first_project_by_customer[p.customer_id] = p.key
+        results = [
+            {
+                "id": c.id,
+                "label": f"{c.customer_code} — {c.name}",
+                "code": c.customer_code,
+                "name": c.name,
+                "email": c.email or "",
+                "phone": c.phone or "",
+                "city": c.city or "",
+                "country": c.country or "",
+                "first_project_key": first_project_by_customer.get(c.id) or "",
+            }
+            for c in qs
+        ]
+        return self.success_response({"results": results})
+
+
+class JiraProjectDetailApiView(JiraApiBase):
+    def get(self, request, project_key):
+        tenant = self.get_tenant()
+        project = JiraProject.objects.filter(tenant=tenant, key=project_key.strip().upper()).first()
+        if not project:
+            return self.error_response("Project not found.", status.HTTP_404_NOT_FOUND)
+        return self.success_response(JiraProjectSerializer(project).data)
+
+
+class JiraProjectBoardApiView(JiraApiBase):
+    def get(self, request, project_key):
+        tenant = self.get_tenant()
+        project = JiraProject.objects.filter(tenant=tenant, key=project_key.strip().upper()).first()
+        if not project:
+            return self.error_response("Project not found.", status.HTTP_404_NOT_FOUND)
+        statuses = list(project.issue_statuses.order_by("order"))
+        issues = (
+            Issue.objects.filter(project=project, parent__isnull=True)
+            .select_related("issue_type", "status")
+            .prefetch_related("assignees")
+            .order_by("board_order", "number")
+        )
+        by_status = {s.id: [] for s in statuses}
+        for issue in issues:
+            if issue.status_id in by_status:
+                by_status[issue.status_id].append(BoardIssueSerializer(issue).data)
+        payload = {
+            "project": JiraProjectSerializer(project).data,
+            "statuses": [{"id": s.id, "name": s.name, "category": s.category} for s in statuses],
+            "columns": [{"status_id": s.id, "status_name": s.name, "issues": by_status.get(s.id, [])} for s in statuses],
+        }
+        return self.success_response(payload)
+
+
+class JiraIssueListCreateApiView(JiraApiBase):
+    def get(self, request, project_key):
+        tenant = self.get_tenant()
+        project = JiraProject.objects.filter(tenant=tenant, key=project_key.strip().upper()).first()
+        if not project:
+            return self.error_response("Project not found.", status.HTTP_404_NOT_FOUND)
+        qs = (
+            Issue.objects.filter(project=project)
+            .select_related("issue_type", "status")
+            .prefetch_related("assignees")
+            .order_by("-created_at")
+        )
+        limit = min(max(int(request.GET.get("limit", 100)), 1), 300)
+        return self.success_response(BoardIssueSerializer(qs[:limit], many=True).data)
+
+    def post(self, request, project_key):
+        self.required_permission = "jiraclone.manage"
+        tenant = self.get_tenant()
+        project = JiraProject.objects.filter(tenant=tenant, key=project_key.strip().upper()).first()
+        if not project:
+            return self.error_response("Project not found.", status.HTTP_404_NOT_FOUND)
+        serializer = JiraIssueCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        issue = Issue.objects.create(
+            project=project,
+            issue_type=data["issue_type"],
+            status=data["status"],
+            priority=data.get("priority", Issue.Priority.MEDIUM),
+            summary=data["summary"],
+            description=data.get("description", ""),
+            reporter=request.user,
+            due_date=data.get("due_date"),
+            parent=data.get("parent"),
+        )
+        issue.assignees.set(User.objects.filter(id__in=data.get("assignee_ids", []), tenant=tenant, is_active=True))
+        return self.success_response(BoardIssueSerializer(issue).data, code=status.HTTP_201_CREATED)

@@ -1,0 +1,1363 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   বিদ্যুৎ সংযোগের আবেদন - REB PBS
+  </title>
+  <style>
+   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap');
+
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: 'Noto Sans Bengali', 'SolaimanLipi', 'Arial', sans-serif;
+        font-size: 13.5px;
+        background: linear-gradient(160deg, #e8f5f5 0%, #c5e8e8 40%, #2e5f5f 100%);
+        min-height: 100vh;
+        padding: 20px 10px 40px;
+        color: #2d3748;
+      }
+
+      .page-wrapper {
+        max-width: 1020px;
+        margin: 0 auto;
+      }
+
+      .header-banner {
+        background: linear-gradient(135deg, #1a4a6b 0%, #0d2d45 100%);
+        border-radius: 12px 12px 0 0;
+        padding: 16px 24px 12px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .header-banner .brand-text {
+        color: #fff;
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1.4;
+      }
+      .header-banner .brand-sub {
+        color: #90cdf4;
+        font-size: 12px;
+        font-weight: 400;
+        margin-top: 2px;
+      }
+      .header-logo {
+        width: 56px;
+        height: 56px;
+        background: #ffffff22;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        flex-shrink: 0;
+      }
+
+      .notice-bar {
+        background: #1e3a5f;
+        padding: 8px 20px;
+        overflow: hidden;
+      }
+      .notice-bar marquee { color: #fcd34d; font-size: 13px; font-weight: 600; }
+
+      .form-card {
+        background: #fff;
+        border-radius: 0 0 12px 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        overflow: hidden;
+      }
+
+      .form-body { padding: 20px 24px 28px; }
+
+      .page-title {
+        text-align: center;
+        color: #c53030;
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 18px;
+        padding: 8px 16px;
+        background: #fff5f5;
+        border: 1px solid #fed7d7;
+        border-radius: 6px;
+      }
+      .page-title span { color: #c53030; font-weight: 700; }
+
+      fieldset {
+        border: 1.5px solid #cbd5e0;
+        border-radius: 8px;
+        padding: 12px 16px 14px;
+        margin-bottom: 14px;
+        background: #f7fafc;
+      }
+      legend {
+        font-size: 13px;
+        font-weight: 700;
+        color: #2b6cb0;
+        background: #ebf8ff;
+        border: 1px solid #bee3f8;
+        padding: 3px 12px;
+        border-radius: 20px;
+        letter-spacing: 0.03em;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 1px;
+        background: #e2e8f0;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-top: 10px;
+      }
+      .form-grid-4 {
+        grid-template-columns: 180px 1fr 180px 1fr;
+      }
+      .form-grid-6 {
+        grid-template-columns: repeat(6, 1fr);
+      }
+
+      .form-label {
+        background: #edf2f7;
+        padding: 8px 12px;
+        font-weight: 500;
+        color: #4a5568;
+        display: flex;
+        align-items: center;
+        font-size: 12.5px;
+        line-height: 1.4;
+      }
+      .form-label .req { color: #e53e3e; margin-left: 3px; font-weight: 700; }
+
+      .form-field {
+        background: #fff;
+        padding: 6px 8px;
+        display: flex;
+        align-items: center;
+      }
+
+      input[type="text"],
+      input[type="email"],
+      textarea,
+      select {
+        width: 100%;
+        padding: 6px 10px;
+        border: 1.5px solid #cbd5e0;
+        border-radius: 5px;
+        font-family: inherit;
+        font-size: 13px;
+        color: #2d3748;
+        background: #fff;
+        transition: border-color 0.18s, box-shadow 0.18s;
+        outline: none;
+      }
+      input[type="text"]:focus,
+      input[type="email"]:focus,
+      textarea:focus,
+      select:focus {
+        border-color: #3182ce;
+        box-shadow: 0 0 0 3px rgba(49,130,206,0.15);
+      }
+      select { cursor: pointer; }
+      textarea { resize: vertical; min-height: 60px; }
+
+      input[type="file"] {
+        font-family: inherit;
+        font-size: 12.5px;
+        color: #4a5568;
+      }
+
+      .form-row-sep {
+        grid-column: 1 / -1;
+        height: 1px;
+        background: #e2e8f0;
+      }
+
+      .info-notes {
+        background: #ebf8ff;
+        border: 1px solid #bee3f8;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-bottom: 10px;
+        color: #2b6cb0;
+        font-size: 12.5px;
+        line-height: 1.8;
+        font-weight: 600;
+      }
+
+      .load-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+        margin-top: 8px;
+      }
+      .load-table thead tr {
+        background: linear-gradient(135deg, #3182ce, #2c5282);
+        color: #fff;
+      }
+      .load-table th {
+        padding: 8px 10px;
+        text-align: center;
+        font-weight: 600;
+        white-space: nowrap;
+        border: 1px solid #2c5282;
+      }
+      .load-table tbody tr { background: #f7fafc; }
+      .load-table tbody td {
+        padding: 6px 8px;
+        border: 1px solid #e2e8f0;
+        vertical-align: middle;
+      }
+      .load-table select,
+      .load-table input[type="text"] { font-size: 12px; }
+
+      .load-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 10px;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .load-total-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #2d3748;
+      }
+      .load-total-row input { width: 140px; }
+
+      .terms-box {
+        background: #faf5ff;
+        border: 1.5px solid #d6bcfa;
+        border-radius: 8px;
+        padding: 14px 18px;
+        margin-bottom: 16px;
+        font-size: 12.5px;
+        color: #553c9a;
+        line-height: 2;
+      }
+      .terms-box label { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+      .terms-box input[type="checkbox"] { margin-top: 4px; flex-shrink: 0; width: 15px; height: 15px; accent-color: #6b46c1; }
+      .terms-box strong { font-weight: 600; }
+
+      .captcha-box {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 14px 18px;
+        background: #f7fafc;
+        display: inline-block;
+        margin-bottom: 18px;
+      }
+      .captcha-box legend { font-size: 12.5px; }
+      .captcha-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .captcha-row img { border-radius: 4px; border: 1px solid #cbd5e0; }
+      .captcha-refresh {
+        background: none;
+        border: 1px solid #3182ce;
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 2px 6px;
+        color: #3182ce;
+        font-size: 16px;
+        line-height: 1;
+      }
+      .captcha-label { font-size: 12.5px; color: #4a5568; margin-bottom: 6px; display: block; }
+      .captcha-box input[type="text"] { width: 160px; }
+
+      .addr-same {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #f0fff4;
+        border: 1px solid #9ae6b4;
+        border-radius: 6px;
+        padding: 8px 14px;
+        margin-bottom: 14px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #276749;
+        cursor: pointer;
+      }
+      .addr-same input[type="checkbox"] { width: 15px; height: 15px; accent-color: #38a169; }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 22px;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all 0.18s;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #2b6cb0, #1a4a6b);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(43,108,176,0.3);
+      }
+      .btn-primary:hover { background: linear-gradient(135deg, #2c5282, #1a365d); transform: translateY(-1px); }
+      .btn-secondary {
+        background: linear-gradient(135deg, #718096, #4a5568);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(74,85,104,0.3);
+      }
+      .btn-secondary:hover { background: linear-gradient(135deg, #4a5568, #2d3748); transform: translateY(-1px); }
+      .btn-success {
+        background: linear-gradient(135deg, #38a169, #276749);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(56,161,105,0.3);
+      }
+      .btn-success:hover { background: linear-gradient(135deg, #2f855a, #22543d); transform: translateY(-1px); }
+
+      .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+      .upload-grid {
+        display: grid;
+        grid-template-columns: 120px 1fr auto;
+        gap: 1px;
+        background: #e2e8f0;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-top: 10px;
+      }
+      .upload-grid .form-label { font-size: 12.5px; }
+      .upload-hint { font-size: 11.5px; color: #2b6cb0; background: #ebf8ff; padding: 6px 10px; display: flex; align-items: center; }
+
+      .form-footer {
+        background: #edf2f7;
+        text-align: center;
+        padding: 12px;
+        font-size: 12px;
+        color: #718096;
+        border-top: 1px solid #e2e8f0;
+        border-radius: 0 0 12px 12px;
+      }
+
+      .section-gap { height: 6px; }
+  </style>
+  <script src="/load.js">
+  </script>
+  <script src="/static/anima.min.js" type="module">
+  </script>
+ </head>
+ <body>
+  <div class="page-wrapper">
+   <form name="aspnetForm">
+    <div class="header-banner">
+     <div class="header-logo">
+      ⚡
+     </div>
+     <div>
+      <div class="brand-text">
+       বাংলাদেশ পল্লী বিদ্যুতায়ন বোর্ড
+      </div>
+      <div class="brand-sub">
+       Rural Electrification Board — Online New Connection Application
+      </div>
+     </div>
+    </div>
+    <div class="notice-bar">
+     <marquee>
+      ঘোষনাঃ গত ০৭/০১/২০২৬ ইং তারিখ হতে রকেটের মাধ্যমে পরিশোধকৃত আবেদন ফি ও জামানতের টাকা ওয়েবসাইটের মাধ্যমে নিশ্চিত করার প্রয়োজন নাই, বিষয়টি অটোমেটিক করা হয়েছে।
+     </marquee>
+    </div>
+    <div class="form-card">
+     <div class="form-body">
+      <div class="page-title">
+       <span>
+        লাল (*) চিহ্ণিত ক্ষেত্রগুলো অবশ্যই পূরনীয়।
+       </span>
+      </div>
+      <fieldset>
+       <legend>
+        বিদ্যুৎ অফিসের বিবরণ
+       </legend>
+       <div class="form-grid" style="grid-template-columns:200px 1fr 200px 1fr; margin-top:10px;">
+        <div class="form-label">
+         সমিতির নাম
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$DropDownListPBS">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+          <option value="01">
+           ঢাকা পল্লী বিদ্যুৎ সমিতি - ১
+          </option>
+          <option value="02">
+           টাঙ্গাইল পল্লী বিদ্যুৎ সমিতি
+          </option>
+          <option value="03">
+           কুমিল্লা পল্লী বিদ্যুৎ সমিতি-১
+          </option>
+          <option value="04">
+           চাদঁপুর পল্লী বিদ্যুৎ সমিতি-১
+          </option>
+          <option value="05">
+           হবিগঞ্জ পল্লী বিদ্যুৎ সমিতি
+          </option>
+          <option value="06">
+           মৌলভীবাজার পল্লী বিদ্যুৎ সমিতি
+          </option>
+          <option value="07">
+           পাবনা পল্লী বিদ্যুৎ সমিতি-১
+          </option>
+          <option value="10">
+           যশোর পল্লী বিদ্যুৎ সমিতি-১
+          </option>
+          <option value="14">
+           রংপুর পল্লী বিদ্যুৎ সমিতি-১
+          </option>
+          <option value="19">
+           কুষ্টিয়া পল্লী বিদ্যুৎ সমিতি
+          </option>
+          <option value="24">
+           চট্টগ্রাম পল্লী বিদ্যুৎ সমিতি-১
+          </option>
+          <option value="37">
+           সিলেট পল্লী বিদ্যুৎ সমিতি-১
+          </option>
+          <option value="49">
+           রাজশাহী পবিস
+          </option>
+          <option value="52">
+           ব্রাহ্মণবাড়িয়া পল্লী বিদ্যুৎ সমিতি
+          </option>
+          <option value="65">
+           গাইবান্ধা পল্লী বিদ্যুৎ সমিতি
+          </option>
+          <option value="76">
+           কুমিল্লা পল্লী বিদ্যুৎ সমিতি-৪
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         জোনাল অফিস
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$DropDownListZonal">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+         </select>
+        </div>
+       </div>
+      </fieldset>
+      <fieldset>
+       <legend>
+        সংযোগ
+       </legend>
+       <div class="form-grid" style="grid-template-columns:200px 1fr; margin-top:10px;">
+        <div class="form-label">
+         সংযোগের ট্যারিফ
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlTariff">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+          <option value="6">
+           এলটি-এ (আবাসিক)
+          </option>
+          <option value="7">
+           এলটি-ই (বাণিজ্যিক)
+          </option>
+          <option value="8">
+           এলটি-ডি১ (দাতব্য প্রতিষ্ঠান)
+          </option>
+          <option value="12">
+           এলটি-ডি২ (রাস্তার বাতি/ পানির পাম্প)
+          </option>
+          <option value="13">
+           সোলার
+          </option>
+          <option value="14">
+           রিসেল
+          </option>
+          <option value="15">
+           অফিস
+          </option>
+          <option value="16">
+           এলটি-সি২ (নির্মাণ)
+          </option>
+          <option value="17">
+           এলটি-টি (অস্থায়ী)
+          </option>
+          <option value="18">
+           এমটি-১ (আবাসিক)
+          </option>
+          <option value="19">
+           এমটি-২ (বাণিজ্যিক)
+          </option>
+          <option value="41">
+           এলটি-বি (সেচ)
+          </option>
+          <option value="47">
+           এলটি-ডি৩ (ব্যাটারী চার্জিং স্টেশন)
+          </option>
+         </select>
+        </div>
+       </div>
+      </fieldset>
+      <fieldset>
+       <legend>
+        আবেদনকারীর বিবরণ
+       </legend>
+       <div class="form-grid form-grid-4" style="margin-top:10px;">
+        <div class="form-label">
+         আবেদনকারীর নাম (বাংলা)
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txt_authorisedPerson" placeholder="আবেদনকারীর পুরো নাম" type="text"/>
+        </div>
+        <div class="form-label">
+         পিতার নাম (বাংলা)
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txt_fatherName" placeholder="পিতার নাম" type="text"/>
+        </div>
+        <div class="form-label">
+         মাতার নাম (বাংলা)
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txt_motherName" placeholder="মাতার নাম" type="text"/>
+        </div>
+        <div class="form-label">
+         স্বামী/স্ত্রীর নাম (বাংলা)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txt_husbandName" placeholder="প্রযোজ্য হলে" type="text"/>
+        </div>
+        <div class="form-label">
+         জন্ম তারিখ (ইংরেজি)
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txtBirthDate1" placeholder="DD/MM/YYYY" style="width:150px;" type="text"/>
+        </div>
+        <div class="form-label">
+         জাতীয়তা
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddl_Nationality">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+          <option value="1">
+           বাংলাদেশী
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         জাতীয় পরিচয় পত্র নম্বর (ইংরেজি)
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txt_nid" placeholder="NID নম্বর" type="text"/>
+        </div>
+        <div class="form-label">
+         পাসপোর্ট (ইংরেজি)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txt_passport" placeholder="পাসপোর্ট নম্বর (যদি থাকে)" type="text"/>
+        </div>
+        <div class="form-label">
+         মোবাইল নম্বর (ইংরেজি)
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txt_mobilePhone" placeholder="01XXXXXXXXX" type="text"/>
+        </div>
+        <div class="form-label">
+         ফোন নম্বর (ইংরেজি)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txt_Phone" placeholder="ফোন নম্বর" type="text"/>
+        </div>
+        <div class="form-label">
+         ইমেইল (ইংরেজি)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txt_email" placeholder="example@email.com" type="text"/>
+        </div>
+        <div class="form-label">
+         লিঙ্গ
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$DropDown_gender">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+          <option value="Male">
+           পুরুষ
+          </option>
+          <option value="Female">
+           মহিলা
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         টিআইএন নম্বর (TIN) (যদি থাকে)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txt_tin" placeholder="আবেদনের শর্তাবলীর ঙ নং দেখুন" type="text"/>
+        </div>
+        <div class="form-label">
+        </div>
+        <div class="form-field">
+        </div>
+       </div>
+      </fieldset>
+      <fieldset>
+       <legend>
+        ওয়্যারিং সংক্রান্ত তথ্য
+       </legend>
+       <div class="form-grid" style="grid-template-columns:240px 1fr; margin-top:10px;">
+        <div class="form-label">
+         হাউজ ওয়্যারিং নিশ্চিত করুন
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlWiYesNo" style="max-width:280px;">
+          <option value="0">
+           হাউজ ওয়্যারিং করি নাই..
+          </option>
+          <option value="1">
+           হাউজ ওয়্যারিং সম্পন্ন হয়েছে..
+          </option>
+         </select>
+        </div>
+       </div>
+      </fieldset>
+      <fieldset>
+       <legend>
+        স্থায়ী ঠিকানা
+       </legend>
+       <div class="form-grid form-grid-6" style="margin-top:10px;">
+        <div class="form-label">
+         জেলা
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlPermanentDist">
+          <option value="162">
+           ঢাকা
+          </option>
+          <option value="161">
+           টাঙ্গাইল
+          </option>
+          <option value="163">
+           গাজীপুর
+          </option>
+          <option value="141">
+           যশোর
+          </option>
+          <option value="243">
+           কুষ্টিয়া
+          </option>
+          <option value="334">
+           রাজশাহী
+          </option>
+          <option value="354">
+           রংপুর
+          </option>
+          <option value="305">
+           সিলেট
+          </option>
+          <option value="323">
+           কুমিল্লা
+          </option>
+          <option value="329">
+           চট্টগ্রাম
+          </option>
+          <option value="342">
+           বরিশাল
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         উপজেলা
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlPerUpazilla">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         থানা
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlPerThana">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         ইউনিয়ন
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlPerUnion">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         ডাকঘর (বাংলা)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txtPerPostOffice" type="text"/>
+        </div>
+        <div class="form-label">
+         পোষ্ট কোড (ইংরেজি)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txtParPostCode" type="text"/>
+        </div>
+        <div class="form-label">
+         গ্রাম
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlPerVillage">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         মহল্লা/রোড নম্বর (বাংলা)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txtPerRoadNo" type="text"/>
+        </div>
+        <div class="form-label">
+         বাড়ীর নাম/হোল্ডিং নম্বর (বাংলা)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txtPerHoldingNo" type="text"/>
+        </div>
+       </div>
+      </fieldset>
+      <label class="addr-same">
+       <input name="ctl00$ContentPlaceHolder1$checkBoxAddressSame" type="checkbox" value="on"/>
+       প্রস্তাবিত বিদ্যুৎ সংযোগ স্থলের ঠিকানা হিসাবে ব্যবহার করুন
+      </label>
+      <fieldset>
+       <legend>
+        প্রস্তাবিত বিদ্যুৎ সংযোগ স্থলের বিবরন
+       </legend>
+       <div class="form-grid form-grid-6" style="margin-top:10px;">
+        <div class="form-label">
+         জেলা
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlConDist">
+          <option value="162">
+           ঢাকা
+          </option>
+          <option value="161">
+           টাঙ্গাইল
+          </option>
+          <option value="163">
+           গাজীপুর
+          </option>
+          <option value="141">
+           যশোর
+          </option>
+          <option value="243">
+           কুষ্টিয়া
+          </option>
+          <option value="334">
+           রাজশাহী
+          </option>
+          <option value="354">
+           রংপুর
+          </option>
+          <option value="305">
+           সিলেট
+          </option>
+          <option value="323">
+           কুমিল্লা
+          </option>
+          <option value="329">
+           চট্টগ্রাম
+          </option>
+          <option value="342">
+           বরিশাল
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         উপজেলা
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlConUpazilla">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         থানা
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlConThana">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         ইউনিয়ন
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlConUnion">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         ডাকঘর (বাংলা)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txtConPostOffice" type="text"/>
+        </div>
+        <div class="form-label">
+         পোষ্ট কোড (ইংরেজি)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txtConPostCode" type="text"/>
+        </div>
+        <div class="form-label">
+         গ্রাম/মহল্লা
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlConVillage">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         পাড়া/রোড নম্বর (বাংলা)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txtConRoadNo" type="text"/>
+        </div>
+        <div class="form-label">
+         বাড়ীর নাম/হোল্ডিং নম্বর (বাংলা)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txtConHoldingNo" type="text"/>
+        </div>
+        <div class="form-label">
+         মৌজা (বাংলা)
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txtMouza" type="text"/>
+        </div>
+        <div class="form-label">
+         দাগ নম্বর (ইংরেজি)
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txt_houseDag" type="text"/>
+        </div>
+        <div class="form-label">
+         খতিয়ান নম্বর (ইংরেজি)
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txt_plotNo" type="text"/>
+        </div>
+        <div class="form-label">
+         জমির মালিকানার ধরন
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field" style="grid-column: span 2;">
+         <select name="ctl00$ContentPlaceHolder1$ddlLandOwnerType" style="max-width:300px;">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+          <option value="1">
+           নিজ/পৈত্রিক মালিকানাধীন
+          </option>
+          <option value="2">
+           ভাড়াকৃত/লিজ (ব্যক্তি মালিকানাধীন)
+          </option>
+          <option value="3">
+           ভাড়াকৃত/লিজ (সরকারী মালিকানাধীন)
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+        </div>
+        <div class="form-field">
+        </div>
+        <div class="form-label">
+         জমির আইনগত মালিক (বাংলা)
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field" style="grid-column: span 5;">
+         <input name="ctl00$ContentPlaceHolder1$txt_landOwner" type="text"/>
+        </div>
+       </div>
+      </fieldset>
+      <fieldset>
+       <legend>
+        জিওগ্রাফিক তথ্য
+       </legend>
+       <div class="info-notes">
+        ১) নিকটবতী সার্ভিস পোল হইতে সংযোগস্থলের দূরত্বের উপর নির্ভর করে সংযোগ তারের দৈর্ঘ্য নির্ধারিত হবে।
+        <br/>
+        ২) দুরত্ব বেশি হলে প্রয়োজনে নতুন খুঁটি ও লাইন নির্মাণ করা হবে।
+        <br/>
+        ৩) অনলাইন সার্ভে করে দুরত্ব ভুল পেলে সংযোগ পেতে বিলম্ব হতে পারে।
+        <br/>
+        ৪) মিথ্যা তথ্যের জন্য অনাকাংখিত দুর্ঘটনা ঘটলে আপনি নিজেই দায়ী থাকবেন। প্রয়োজনে তদন্ত করা হবে।
+       </div>
+       <div class="form-grid" style="grid-template-columns:280px 1fr; margin-top:10px;">
+        <div class="form-label">
+         নিকটবতী সার্ভিস পোল হইতে দূরত্ব (ইংরেজি)
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field" style="gap:8px;">
+         <input name="ctl00$ContentPlaceHolder1$txtLineDistence" placeholder="দূরত্ব" style="width:160px;" type="text"/>
+         <span style="color:#4a5568; font-weight:500; white-space:nowrap;">
+          ফুট
+         </span>
+        </div>
+       </div>
+      </fieldset>
+      <fieldset>
+       <legend>
+        কানেকশন এর বিবরন
+       </legend>
+       <div class="form-grid" style="grid-template-columns:200px 1fr; margin-top:10px;">
+        <div class="form-label">
+         আবেদন প্রকৃতি
+         <span class="req">
+          *
+         </span>
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlConnectionType" style="max-width:240px;">
+          <option value="">
+           -- নির্বাচন করুন --
+          </option>
+          <option value="1">
+           স্থায়ী সংযোগ
+          </option>
+          <option value="2">
+           অস্থায়ী সংযোগ
+          </option>
+          <option value="3">
+           সাময়িক সংযোগ
+          </option>
+         </select>
+        </div>
+       </div>
+      </fieldset>
+      <fieldset>
+       <legend>
+        লোড
+       </legend>
+       <table class="load-table">
+        <thead>
+         <tr>
+          <th style="width:36px;">
+           #
+          </th>
+          <th>
+           আইটেম নাম
+          </th>
+          <th>
+           আইটেম সংখ্যা (ইংরেজি)
+          </th>
+          <th>
+           লোড/আইটেম (ওয়াট, ইংরেজি)
+          </th>
+          <th>
+           মোট লোড (ওয়াট, ইংরেজি)
+          </th>
+          <th style="width:36px;">
+          </th>
+         </tr>
+        </thead>
+        <tbody id="loadTableBody">
+         <tr>
+          <td style="text-align:center; color:#718096;">
+           ১
+          </td>
+          <td>
+           <select name="ctl00$ContentPlaceHolder1$gvCalculate$ctl02$ddItemName" style="width:100%;">
+            <option value="1">
+             লাইট (২০ ওয়াট)
+            </option>
+            <option value="24">
+             লাইট ৪০ ওয়াট
+            </option>
+            <option value="25">
+             লাইট ৬০ ওয়াট
+            </option>
+            <option value="26">
+             লাইট ১০০ ওয়াট
+            </option>
+            <option value="2">
+             ফ্যান
+            </option>
+            <option value="3">
+             টেলিভিশন
+            </option>
+            <option value="8">
+             রেফ্রিজারেটর (12 CFT)
+            </option>
+            <option value="28">
+             কম্পিউটার
+            </option>
+            <option value="17">
+             এয়ারকন্ডিশনার (১ টন)
+            </option>
+            <option value="21">
+             এয়ারকন্ডিশনার (২ টন)
+            </option>
+            <option value="5">
+             হিটার
+            </option>
+            <option value="27">
+             গিজার
+            </option>
+            <option value="6">
+             পানির পাম্প
+            </option>
+            <option value="7">
+             ওভেন
+            </option>
+            <option value="14">
+             সাধারণ সকেট
+            </option>
+            <option value="15">
+             পাওয়ার সকেট
+            </option>
+            <option value="4">
+             কুকার
+            </option>
+            <option value="12">
+             অন্যান্য
+            </option>
+           </select>
+          </td>
+          <td>
+           <input name="noofitem_1" placeholder="0" type="text"/>
+          </td>
+          <td>
+           <input name="itemload_1" placeholder="0" type="text"/>
+          </td>
+          <td>
+           <input name="totalload_1" placeholder="0" readonly="" style="background:#f7fafc;" type="text"/>
+          </td>
+          <td style="text-align:center;">
+           <button onclick="removeLoadRow(this)" style="background:#fed7d7; border:none; border-radius:4px; color:#c53030; width:26px; height:26px; cursor:pointer; font-size:16px; line-height:1;" type="button">
+            ×
+           </button>
+          </td>
+         </tr>
+        </tbody>
+       </table>
+       <div class="load-footer">
+        <div>
+         <button class="btn btn-success" onclick="addLoadRow()" style="font-size:12.5px; padding:6px 16px;" type="button">
+          + সংযোগ করুন
+         </button>
+         <button class="btn btn-secondary" onclick="clearLoadRows()" style="font-size:12.5px; padding:6px 16px; margin-left:8px;" type="button">
+          খালি করুন
+         </button>
+        </div>
+        <div class="load-total-row">
+         <span>
+          মোট লোড (ওয়াট, ইংরেজি):
+         </span>
+         <input id="totalLoadField" name="ctl00$ContentPlaceHolder1$txt_load" placeholder="0" readonly="" style="background:#f7fafc; width:140px;" type="text"/>
+        </div>
+       </div>
+      </fieldset>
+      <fieldset>
+       <legend>
+        চাহিদাকৃত লোড
+       </legend>
+       <div class="form-grid form-grid-6" style="margin-top:10px;">
+        <div class="form-label">
+         মোট লোড (কিঃওঃ)
+        </div>
+        <div class="form-field">
+         <input name="ctl00$ContentPlaceHolder1$txtPerWantedLoad" style="width:160px;" type="text"/>
+        </div>
+        <div class="form-label">
+         ফেইজ
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlPerPhase">
+          <option value="1">
+           এক ফেইজ
+          </option>
+          <option value="2">
+           তিন ফেইজ
+          </option>
+         </select>
+        </div>
+        <div class="form-label">
+         ভোল্ট
+        </div>
+        <div class="form-field">
+         <select name="ctl00$ContentPlaceHolder1$ddlPerVolt">
+          <option value="230">
+           ২৩০
+          </option>
+          <option value="400">
+           ৪০০
+          </option>
+         </select>
+        </div>
+       </div>
+      </fieldset>
+      <fieldset>
+       <legend>
+        বাড়ির/প্রতিষ্ঠানের লোকেশন এবং মন্তব্য (বাংলা)
+       </legend>
+       <div style="margin-top:10px;">
+        <textarea name="ctl00$ContentPlaceHolder1$txtRemarks" placeholder="লোকেশন বিবরণ বা মন্তব্য লিখুন..." rows="3"></textarea>
+       </div>
+      </fieldset>
+      <fieldset>
+       <legend>
+        ছবি, জাতীয় পরিচয় পত্র এবং খারিজ আপলোড করুন
+       </legend>
+       <div class="upload-grid" style="margin-top:10px;">
+        <div class="form-label">
+         ছবি
+        </div>
+        <div class="form-field">
+         <input accept="image/*" name="ctl00$ContentPlaceHolder1$fileUploadPhoto" type="file"/>
+        </div>
+        <div class="upload-hint">
+         সর্বোচ্চ সাইজ (৩০০×৩০০) ১৫০ কিলোবাইট
+        </div>
+        <div class="form-label">
+         জাতীয় পরিচয় পত্র
+        </div>
+        <div class="form-field">
+         <input accept="image/*,.pdf" name="ctl00$ContentPlaceHolder1$fileUploadNID" type="file"/>
+        </div>
+        <div class="upload-hint">
+         সর্বোচ্চ সাইজ (৬০০×৪৭৫) ৩০০ কিলোবাইট
+        </div>
+        <div class="form-label">
+         খারিজ
+        </div>
+        <div class="form-field">
+         <input accept="image/*,.pdf" name="ctl00$ContentPlaceHolder1$fileUploadKharij" type="file"/>
+        </div>
+        <div class="upload-hint">
+         সর্বোচ্চ সাইজ ৭০০ কিলোবাইট। একাধিক ডকুমেন্ট থাকলে PDF ফাইল আপলোড করুন
+        </div>
+       </div>
+      </fieldset>
+      <div class="terms-box">
+       <label>
+        <input name="ctl00$ContentPlaceHolder1$che_agree" type="checkbox" value="on"/>
+        <div>
+         <strong>
+          আমি পল্লী বিদ্যুৎ সমিতি এর নিম্নে উল্লেখ্য পরিষেবা শর্তাবলীর সাথে একমত হচ্ছি।
+         </strong>
+         <br/>
+         ক) একই পরিবার/খানা এর বিদ্যুৎ সংযোগের জন্য একাধিক আবেদন করি নাই।
+         <br/>
+         খ) অনলাইন আবেদন পত্রে আমার নিজের মোবাইল নম্বর প্রদান করেছি ও অন্যের মোবাইল নম্বর দিলে আবেদনটি বাতিল হলে আমার আপত্তি থাকবেনা।
+         <br/>
+         গ) অন্যের ঘরে সংযোগের জন্য আবেদন করি নাই।
+         <br/>
+         ঘ) সফলভাবে আবেদন সম্পন্ন হলে, সাত (৭) দিনের মধ্যে ঘর/হাউজ ওয়্যারিং এবং সোলার ইউনিট (প্রযোজ্য হলে) স্থাপন করতঃ তা অনলাইনে কর্তৃপক্ষকে অবহিত করব।
+         <br/>
+         ঙ) প্রদত্ত TIN নাম্বারটি পরবর্তীতে যাচাই বা ভেরিফিকেশনের সময় ভুল প্রমানিত হলে তার দায়-দ্বায়িত্ব আমার উপর বর্তাবে।
+         <br/>
+         চ) আমি স্বজ্ঞানে কর্তৃপক্ষকে প্রদত্ত সকল তথ্যের সত্যায়ন করছি।
+        </div>
+       </label>
+      </div>
+      <fieldset class="captcha-box" style="width:auto; display:inline-block;">
+       <legend>
+        প্রদত্ত সংখ্যা নিচে লিখুন
+       </legend>
+       <div class="captcha-row" style="margin-top:10px;">
+        <img alt="Captcha" onerror="this.style.background='#e2e8f0'; this.style.width='120px'; this.style.display='inline-block';" src="http://www.rebpbs.com/UI/CaptchaControl.aspx" style="height:40px;"/>
+        <button class="captcha-refresh" title="নতুন কোড" type="button">
+         ↻
+        </button>
+       </div>
+       <hr style="border:none; border-top:1px solid #e2e8f0; margin:8px 0;"/>
+       <span class="captcha-label">
+        নাম্বার টি লিখুন... (ইংরেজি)
+       </span>
+       <input name="ctl00$ContentPlaceHolder1$txtcaptcha" style="width:160px;" type="text"/>
+      </fieldset>
+      <div class="btn-row" style="margin-top:20px;">
+       <button class="btn btn-primary" name="ctl00$ContentPlaceHolder1$btnsubmit" type="submit">
+        💾 সংরক্ষন করুন
+       </button>
+       <button class="btn btn-secondary" name="ctl00$ContentPlaceHolder1$btnreset" type="submit">
+        ✕ বাতিল করুন
+       </button>
+      </div>
+     </div>
+     <div class="form-footer">
+      Copyright © 2017–26, ICT, BREB. All rights reserved.
+     </div>
+    </div>
+   </form>
+  </div>
+  <script>
+   let rowCount = 1;
+
+      function addLoadRow() {
+        rowCount++;
+        const tbody = document.getElementById('loadTableBody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td style="text-align:center; color:#718096;">${rowCount}</td><td><select name="itemname_${rowCount}" style="width:100%;"><option value="1">লাইট (২০ ওয়াট)</option><option value="2">ফ্যান</option><option value="3">টেলিভিশন</option><option value="8">রেফ্রিজারেটর (12 CFT)</option><option value="28">কম্পিউটার</option><option value="17">এয়ারকন্ডিশনার (১ টন)</option><option value="5">হিটার</option><option value="6">পানির পাম্প</option><option value="14">সাধারণ সকেট</option><option value="12">অন্যান্য</option></select></td><td><input type="text" name="noofitem_${rowCount}" placeholder="0" oninput="calcRow(this)" /></td><td><input type="text" name="itemload_${rowCount}" placeholder="0" oninput="calcRow(this)" /></td><td><input type="text" name="totalload_${rowCount}" placeholder="0" readonly style="background:#f7fafc;" /></td><td style="text-align:center;"><button type="button" onclick="removeLoadRow(this)" style="background:#fed7d7; border:none; border-radius:4px; color:#c53030; width:26px; height:26px; cursor:pointer; font-size:16px; line-height:1;">×</button></td>`;
+        tbody.appendChild(tr);
+      }
+
+      function removeLoadRow(btn) {
+        const row = btn.closest('tr');
+        const tbody = document.getElementById('loadTableBody');
+        if (tbody.rows.length > 1) {
+          row.remove();
+          updateGrandTotal();
+        }
+      }
+
+      function clearLoadRows() {
+        const tbody = document.getElementById('loadTableBody');
+        while (tbody.rows.length > 1) tbody.deleteRow(1);
+        const firstInputs = tbody.querySelectorAll('input[type="text"]');
+        firstInputs.forEach(i => i.value = '');
+        document.getElementById('totalLoadField').value = '';
+      }
+
+      function calcRow(input) {
+        const row = input.closest('tr');
+        const qty = parseFloat(row.querySelector('input[name^="noofitem"]').value) || 0;
+        const load = parseFloat(row.querySelector('input[name^="itemload"]').value) || 0;
+        row.querySelector('input[name^="totalload"]').value = (qty * load) || '';
+        updateGrandTotal();
+      }
+
+      function updateGrandTotal() {
+        const totals = document.querySelectorAll('input[name^="totalload"]');
+        let sum = 0;
+        totals.forEach(t => sum += parseFloat(t.value) || 0);
+        document.getElementById('totalLoadField').value = sum || '';
+      }
+
+      document.querySelectorAll('input[name="noofitem_1"], input[name="itemload_1"]').forEach(el => {
+        el.addEventListener('input', function() { calcRow(this); });
+      });
+  </script>
+ </body>
+</html>

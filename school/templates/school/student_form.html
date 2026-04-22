@@ -1,0 +1,73 @@
+{% extends "auth_tenants/base.html" %}
+{% load static %}
+{% block title %}{% if is_edit %}Edit{% else %}Add{% endif %} student{% endblock %}
+{% block page_title %}School · {% if is_edit %}Edit{% else %}Add{% endif %} student{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css" rel="stylesheet"/>
+<link href="{% static 'foundation/css/tom_select_inv.css' %}" rel="stylesheet"/>
+{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  {% if messages %}
+  <ul class="rounded-lg border border-border bg-card p-3 text-sm">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="inv-list-shell sm:p-1.5">
+      <div class="inv-list-card overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+          <div>
+            <h2 class="text-lg font-semibold text-foreground">{% if is_edit %}Edit student{% else %}New student{% endif %}</h2>
+            <p class="text-xs text-muted-foreground mt-0.5">Admission and guardian details (inventory-style form).</p>
+          </div>
+          <a href="{% url 'school:student_list' %}" class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+          </a>
+        </div>
+
+        <div class="space-y-6 px-5 py-5">
+          {% if form.errors %}
+          <div class="rounded-lg border border-destructive/40 bg-destructive/5 p-4">
+            <h3 class="text-sm font-semibold text-destructive">Could not save. Please fix the following:</h3>
+            <ul class="mt-2 list-disc space-y-1 pl-5 text-xs text-destructive">
+              {% for err in form.non_field_errors %}<li>{{ err }}</li>{% endfor %}
+              {% for field in form %}
+                {% for err in field.errors %}<li>{{ field.label }}: {{ err }}</li>{% endfor %}
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Record details</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-3">
+              {% for field in form %}
+              {% if not field.is_hidden %}
+              <div class="space-y-1 {% if field.name == 'permanent_address' or field.name == 'present_address' or field.name == 'profile_photo' or field.name == 'birth_certificate_photo' or field.name == 'previous_school' or field.name == 'transfer_certificate_number' %}lg:col-span-2{% endif %}">
+                <label for="{{ field.id_for_label }}" class="text-xs font-medium text-muted-foreground">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<p class="text-[11px] text-muted-foreground mt-0.5">{{ field.help_text }}</p>{% endif %}
+                {% for err in field.errors %}<p class="text-xs text-destructive">{{ err }}</p>{% endfor %}
+              </div>
+              {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-end gap-2 border-t border-border bg-muted/15 px-5 py-4">
+          <a href="{% url 'school:student_list' %}" class="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
+          <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script src="{% static 'foundation/js/tom_select_local.js' %}"></script>
+{% endblock %}

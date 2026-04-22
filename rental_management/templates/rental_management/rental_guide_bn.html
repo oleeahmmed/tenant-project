@@ -1,0 +1,206 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}রেন্টাল ম্যানেজমেন্ট গাইড{% endblock %}
+{% block page_title %}Rental Management · বাংলা গাইড{% endblock %}
+
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div>
+        <h2 class="text-lg font-semibold text-foreground">একটি বাড়ির রেন্টাল ব্যবসা চালানোর সহজ গল্প</h2>
+        <p class="text-xs text-muted-foreground mt-0.5">বাড়িওয়ালা ও ভাড়াটিয়া ম্যানেজমেন্টের সম্পূর্ণ ফ্লো — একটি পেজে।</p>
+      </div>
+      <a href="{% url 'rental_management:dashboard' %}" class="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        Back
+      </a>
+    </div>
+
+    <div class="p-5 space-y-6">
+      <section class="rounded-xl border border-border bg-background p-4">
+        <p class="text-xs font-semibold uppercase tracking-wide text-primary">গল্পের চরিত্র</p>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          <strong class="text-foreground">করিম সাহেব</strong> একটি বাড়ির মালিক — ৪০টি ফ্ল্যাট, ৪০টি গ্যারেজ, ১০টি দোকান আছে।
+          তিনি সব কিছু সুন্দরভাবে ম্যানেজ করতে চান। আমরা দেখব তিনি কীভাবে প্রথম দিন সেটআপ করেন, তারপর প্রতিদিন ভাড়া ট্র্যাক করেন, এবং বকেয়া ভাড়াটিয়াদের SMS পাঠান।
+        </p>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part A: প্রথম দিন কী করবেন (Setup checklist)</h3>
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">1) Tenant/Company ready</p>
+            <p class="mt-1">করিম সাহেব signup করে নিজের company/tenant তৈরি করবেন।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">2) SMS Gateway setup</p>
+            <p class="mt-1">SSL Wireless বা Bulk SMS BD এর API key সেটিংসে দিন।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">3) প্রপার্টি তৈরি</p>
+            <p class="mt-1">সব ফ্ল্যাট, গ্যারেজ, দোকান এর তথ্য এন্ট্রি করুন।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">4) পেমেন্ট মেথড</p>
+            <p class="mt-1">ক্যাশ, ব্যাংক ট্রান্সফার, মোবাইল ব্যাংকিং যোগ করুন।</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part B: প্রপার্টি সেটআপ (ফ্ল্যাট, গ্যারেজ, দোকান)</h3>
+        <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>
+            <strong class="text-foreground">প্রপার্টি টাইপ</strong>: প্রতিটি প্রপার্টি FLAT, GARAGE বা SHOP হতে পারে।
+          </li>
+          <li>
+            <strong class="text-foreground">প্রপার্টি নম্বর</strong>: ইউনিক নম্বর দিন (যেমন F-101, G-05, S-03)।
+          </li>
+          <li>
+            <strong class="text-foreground">ফ্লোর নম্বর</strong>: কোন তলায় আছে।
+          </li>
+          <li>
+            <strong class="text-foreground">সাইজ ও সুবিধা</strong>: বর্গফুট, বেডরুম, বাথরুম সংখ্যা।
+          </li>
+          <li>
+            <strong class="text-foreground">মাসিক ভাড়া</strong>: ডিফল্ট ভাড়ার পরিমাণ।
+          </li>
+          <li>
+            <strong class="text-foreground">স্ট্যাটাস</strong>: VACANT (খালি) বা OCCUPIED (ভাড়া দেওয়া)।
+          </li>
+        </ul>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part C: ভাড়াটিয়া তথ্য সংরক্ষণ</h3>
+        <p class="mt-2 text-sm text-muted-foreground">
+          প্রতিটি ভাড়াটিয়ার জন্য নিম্নলিখিত তথ্য সংরক্ষণ করুন:
+        </p>
+        <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>- <strong class="text-foreground">নাম ও মোবাইল নম্বর</strong>: SMS পাঠানোর জন্য প্রয়োজনীয়</li>
+          <li>- <strong class="text-foreground">জাতীয় পরিচয়পত্র নম্বর</strong>: যাচাইকরণের জন্য</li>
+          <li>- <strong class="text-foreground">স্থায়ী ঠিকানা</strong>: রেকর্ডের জন্য</li>
+          <li>- <strong class="text-foreground">জরুরি যোগাযোগ</strong>: সমস্যার সময় যোগাযোগের জন্য</li>
+          <li>- <strong class="text-foreground">পরিবারের সদস্য সংখ্যা</strong>: ট্র্যাকিং এর জন্য</li>
+          <li>- <strong class="text-foreground">পেশা/ব্যবসা</strong>: ভাড়াটিয়া যাচাইকরণের জন্য</li>
+          <li>- <strong class="text-foreground">ছবি ও ডকুমেন্ট</strong>: প্রোফাইল ও NID ছবি আপলোড করুন</li>
+        </ul>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part D: ভাড়া চুক্তি তৈরি করা</h3>
+        <ol class="mt-3 space-y-3 text-sm text-muted-foreground">
+          <li>
+            <strong class="text-foreground">1) চুক্তি তৈরি</strong> — Rental → Agreements → Add।
+            প্রপার্টি, ভাড়াটিয়া, শুরুর তারিখ, মেয়াদ বেছে নিন।
+          </li>
+          <li>
+            <strong class="text-foreground">2) ভাড়ার বিস্তারিত</strong>:
+            <ul class="mt-2 ml-4 space-y-1">
+              <li>- মাসিক ভাড়ার পরিমাণ</li>
+              <li>- অ্যাডভান্স টাকা (কত মাসের)</li>
+              <li>- সার্ভিস চার্জ (যদি থাকে)</li>
+              <li>- ভাড়া পরিশোধের তারিখ (প্রতি মাসে কত তারিখে)</li>
+            </ul>
+          </li>
+          <li>
+            <strong class="text-foreground">3) চুক্তি ডকুমেন্ট</strong>: PDF আপলোড করুন (অপশনাল)।
+          </li>
+          <li>
+            <strong class="text-foreground">4) সেভ করুন</strong>: চুক্তি ACTIVE স্ট্যাটাসে থাকবে।
+          </li>
+        </ol>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part E: পেমেন্ট রেকর্ড করা</h3>
+        <div class="mt-3 space-y-3 text-sm text-muted-foreground">
+          <p><strong class="text-foreground">অ্যাডভান্স পেমেন্ট</strong>: চুক্তি শুরুর সময় অ্যাডভান্স টাকা রেকর্ড করুন।</p>
+          <p><strong class="text-foreground">মাসিক ভাড়া</strong>: প্রতি মাসে ভাড়াটিয়া যখন টাকা দেয়, তখন রেকর্ড করুন।</p>
+          <p><strong class="text-foreground">পেমেন্ট মেথড</strong>: ক্যাশ, ব্যাংক ট্রান্সফার, মোবাইল ব্যাংকিং — যেটা ব্যবহার হয়েছে সেটা বেছে নিন।</p>
+          <p><strong class="text-foreground">রিসিপ্ট</strong>: সিস্টেম অটোমেটিক রিসিপ্ট নম্বর জেনারেট করবে।</p>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part F: বকেয়া ট্র্যাকিং ও SMS নোটিফিকেশন</h3>
+        <p class="mt-2 text-sm text-muted-foreground">
+          সিস্টেম অটোমেটিক্যালি প্রতিটি মাসের বকেয়া হিসাব করে। যদি কোনো ভাড়াটিয়া ভাড়া দিতে দেরি করে:
+        </p>
+        <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li>
+            <strong class="text-foreground">স্বয়ংক্রিয় SMS</strong>: ভাড়া বকেয়া হলে সিস্টেম অটোমেটিক SMS পাঠায়।
+            উদাহরণ: "আপনার ফ্ল্যাট F-101 এর ভাড়া ৫০,০০০ টাকা বকেয়া আছে। অনুগ্রহ করে দ্রুত পরিশোধ করুন।"
+          </li>
+          <li>
+            <strong class="text-foreground">রিমাইন্ডার</strong>: ভাড়া পরিশোধের ৩ দিন আগে রিমাইন্ডার SMS পাঠান।
+          </li>
+          <li>
+            <strong class="text-foreground">চুক্তি শেষ হওয়ার নোটিফিকেশন</strong>: চুক্তি শেষ হওয়ার ১ মাস আগে নোটিফিকেশন।
+          </li>
+          <li>
+            <strong class="text-foreground">ম্যানুয়াল SMS</strong>: প্রয়োজনে ম্যানুয়ালি SMS পাঠাতে পারবেন।
+          </li>
+        </ul>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part G: ড্যাশবোর্ড ও রিপোর্ট</h3>
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">মোট আয়</p>
+            <p class="mt-1">এই মাসে কত টাকা ভাড়া পেয়েছেন।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">বকেয়া টাকা</p>
+            <p class="mt-1">কত টাকা বকেয়া আছে সব ভাড়াটিয়াদের কাছ থেকে।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">খালি প্রপার্টি</p>
+            <p class="mt-1">কোন কোন প্রপার্টি এখনও খালি আছে।</p>
+          </div>
+          <div class="rounded-lg border border-border p-3">
+            <p class="font-semibold text-foreground">অকুপেন্সি রেট</p>
+            <p class="mt-1">কত শতাংশ প্রপার্টি ভাড়া দেওয়া আছে।</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part H: দৈনিক কাজের ধারা</h3>
+        <div class="mt-3 space-y-3 text-sm text-muted-foreground">
+          <p><strong class="text-foreground">সকালে</strong>: ড্যাশবোর্ড দেখে আজকের বকেয়া ভাড়াটিয়াদের তালিকা চেক করুন।</p>
+          <p><strong class="text-foreground">দুপুরে</strong>: ভাড়াটিয়া থেকে পেমেন্ট পেলে সিস্টেমে রেকর্ড করুন।</p>
+          <p><strong class="text-foreground">সন্ধ্যায়</strong>: বকেয়া ভাড়াটিয়াদের SMS পাঠান বা ফোন করুন।</p>
+          <p><strong class="text-foreground">মাস শেষে</strong>: মাসিক রিপোর্ট দেখে মোট আয় ও বকেয়া হিসাব করুন।</p>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-border bg-background p-4">
+        <h3 class="text-base font-semibold text-foreground">Part I: সমস্যা হলে কী দেখবেন</h3>
+        <ul class="mt-3 space-y-2 text-sm text-muted-foreground">
+          <li><strong class="text-foreground">"SMS পাঠানো হয়নি"</strong> — SMS Gateway API key সঠিক কিনা দেখুন।</li>
+          <li><strong class="text-foreground">"বকেয়া হিসাব ভুল"</strong> — পেমেন্ট রেকর্ড সঠিক কিনা চেক করুন।</li>
+          <li><strong class="text-foreground">"ভাড়াটিয়া খুঁজে পাচ্ছি না"</strong> — সার্চ ফিচার ব্যবহার করুন বা মোবাইল নম্বর দিয়ে খুঁজুন।</li>
+          <li><strong class="text-foreground">"প্রপার্টি ডিলিট করতে পারছি না"</strong> — প্রপার্টিতে সক্রিয় চুক্তি থাকলে ডিলিট করা যাবে না।</li>
+        </ul>
+      </section>
+
+      <section class="rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <h3 class="text-base font-semibold text-foreground">"বাচ্চাও বুঝবে" short version</h3>
+        <p class="mt-2 text-sm text-muted-foreground leading-6">
+          রেন্টাল ম্যানেজমেন্ট মানে: কার কাছে কোন প্রপার্টি ভাড়া দিয়েছেন, কত টাকা ভাড়া, কে কবে টাকা দিয়েছে, কার কত টাকা বকেয়া আছে — এসব কিছু একটা খাতায় লিখে রাখা। আর যখন কেউ ভাড়া দিতে ভুলে যায়, তখন তাকে SMS দিয়ে মনে করিয়ে দেওয়া।
+        </p>
+      </section>
+
+      <section class="flex flex-wrap gap-3 pt-1">
+        <a href="{% url 'rental_management:property_list' %}" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Step 1: প্রপার্টি তৈরি করুন</a>
+        <a href="{% url 'rental_management:tenant_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Step 2: ভাড়াটিয়া যোগ করুন</a>
+        <a href="{% url 'rental_management:agreement_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Step 3: চুক্তি তৈরি করুন</a>
+        <a href="{% url 'rental_management:payment_list' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Step 4: পেমেন্ট রেকর্ড করুন</a>
+        <a href="{% url 'rental_management:dashboard' %}" class="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent">Step 5: ড্যাশবোর্ড দেখুন</a>
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

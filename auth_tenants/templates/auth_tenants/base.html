@@ -631,6 +631,80 @@
             </ul>
           </li>
           {% endif %}
+          {% if wnav.rental %}
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if request.resolver_match and request.resolver_match.namespace == 'rental_management' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-rental">
+              <i data-lucide="home" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                Rental
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-rental" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'rental_management' %}hidden{% endif %}">
+              <li><a href="{% url 'rental_management:dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'dashboard' and request.resolver_match.namespace == 'rental_management' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a></li>
+              <li><a href="{% url 'rental_management:guide' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'guide' and request.resolver_match.namespace == 'rental_management' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Guide (বাংলা)</a></li>
+              <li><a href="{% url 'rental_management:property_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'property_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Properties</a></li>
+              <li><a href="{% url 'rental_management:tenant_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'tenant_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Tenants</a></li>
+              <li><a href="{% url 'rental_management:agreement_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'agreement_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Agreements</a></li>
+              <li><a href="{% url 'rental_management:payment_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and 'payment_' in request.resolver_match.url_name %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Payments</a></li>
+              <li><a href="{% url 'rental_management:due_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'due_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Due payments</a></li>
+              <li><a href="{% url 'rental_management:sms_log_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'sms_log_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">SMS logs</a></li>
+            </ul>
+          </li>
+          {% endif %}
+          {% if wnav.school %}
+          <li>
+            <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if request.resolver_match and request.resolver_match.namespace == 'school' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-school">
+              <i data-lucide="graduation-cap" class="h-4 w-4 shrink-0"></i>
+              <span class="sidebar-text flex min-w-0 flex-1 items-center justify-between gap-1.5">
+                School
+                <i data-lucide="chevron-down" class="h-3.5 w-3.5 shrink-0 opacity-60"></i>
+              </span>
+            </button>
+            <ul id="sub-school" class="sidebar-text mt-0.5 space-y-0.5 border-l border-border/80 pl-3 ml-3.5 {% if not request.resolver_match or request.resolver_match.namespace != 'school' %}hidden{% endif %}">
+              <li><a href="{% url 'school:dashboard' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'dashboard' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Overview</a></li>
+              <li><a href="{% url 'school:guide' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'guide' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Guide (বাংলা)</a></li>
+              <li>
+                <button type="button" class="submenu-toggle flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left {% if request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'academic_year_list' or request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'class_list' or request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'section_list' or request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'subject_list' %}font-medium text-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-school-academic">
+                  Academic setup
+                  <i data-lucide="chevron-down" class="h-3 w-3 opacity-60"></i>
+                </button>
+                <ul id="sub-school-academic" class="mt-0.5 space-y-0.5 border-l border-border/70 pl-3 ml-2 {% if not request.resolver_match %}hidden{% elif request.resolver_match.url_name != 'academic_year_list' and request.resolver_match.url_name != 'class_list' and request.resolver_match.url_name != 'section_list' and request.resolver_match.url_name != 'subject_list' %}hidden{% endif %}">
+                  <li><a href="{% url 'school:academic_year_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'academic_year_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Academic years</a></li>
+                  <li><a href="{% url 'school:class_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'class_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Classes</a></li>
+                  <li><a href="{% url 'school:section_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'section_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Sections</a></li>
+                  <li><a href="{% url 'school:subject_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'subject_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Subjects</a></li>
+                </ul>
+              </li>
+              <li><a href="{% url 'school:student_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'student_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Students</a></li>
+              <li><a href="{% url 'school:staff_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'staff_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Staff</a></li>
+              <li>
+                <button type="button" class="submenu-toggle flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left {% if request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'student_attendance_list' or request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'staff_attendance_list' %}font-medium text-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-school-attendance">
+                  Attendance
+                  <i data-lucide="chevron-down" class="h-3 w-3 opacity-60"></i>
+                </button>
+                <ul id="sub-school-attendance" class="mt-0.5 space-y-0.5 border-l border-border/70 pl-3 ml-2 {% if not request.resolver_match %}hidden{% elif request.resolver_match.url_name != 'student_attendance_list' and request.resolver_match.url_name != 'staff_attendance_list' %}hidden{% endif %}">
+                  <li><a href="{% url 'school:student_attendance_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'student_attendance_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Students</a></li>
+                  <li><a href="{% url 'school:staff_attendance_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'staff_attendance_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Staff</a></li>
+                </ul>
+              </li>
+              <li><a href="{% url 'school:exam_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'exam_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Exams</a></li>
+              <li>
+                <button type="button" class="submenu-toggle flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left {% if request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'fee_category_list' or request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'fee_structure_list' or request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'fee_discount_list' or request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'fee_collection_list' %}font-medium text-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-school-fees">
+                  Fees
+                  <i data-lucide="chevron-down" class="h-3 w-3 opacity-60"></i>
+                </button>
+                <ul id="sub-school-fees" class="mt-0.5 space-y-0.5 border-l border-border/70 pl-3 ml-2 {% if not request.resolver_match %}hidden{% elif request.resolver_match.url_name != 'fee_category_list' and request.resolver_match.url_name != 'fee_structure_list' and request.resolver_match.url_name != 'fee_discount_list' and request.resolver_match.url_name != 'fee_collection_list' %}hidden{% endif %}">
+                  <li><a href="{% url 'school:fee_category_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'fee_category_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Fee categories</a></li>
+                  <li><a href="{% url 'school:fee_structure_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'fee_structure_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Fee structures</a></li>
+                  <li><a href="{% url 'school:fee_discount_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'fee_discount_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Discounts</a></li>
+                  <li><a href="{% url 'school:fee_collection_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.url_name == 'fee_collection_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">Collections</a></li>
+                </ul>
+              </li>
+              <li><a href="{% url 'school:sms_log_list' %}" class="block rounded-lg px-2 py-1.5 {% if request.resolver_match and request.resolver_match.namespace == 'school' and request.resolver_match.url_name == 'sms_log_list' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}">SMS logs</a></li>
+            </ul>
+          </li>
+          {% endif %}
           {% if wnav.purchase %}
           <li>
             <button type="button" class="submenu-toggle flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left {% if request.resolver_match and request.resolver_match.namespace == 'purchase' %}bg-primary/10 font-medium text-primary dark:bg-accent dark:text-accent-foreground{% else %}text-muted-foreground hover:bg-accent hover:text-accent-foreground{% endif %}" data-target="sub-purchase">

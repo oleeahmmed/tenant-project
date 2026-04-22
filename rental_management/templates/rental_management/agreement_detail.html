@@ -1,0 +1,40 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Agreement details{% endblock %}
+{% block page_title %}Rental · Agreement details{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card overflow-hidden">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">{{ object.property.property_number }} · {{ object.rental_tenant.name }}</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">{{ object.get_status_display }} · {{ object.start_date }} – {{ object.end_date }}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a href="{% url 'rental_management:agreement_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+          </a>
+          <a href="{% url 'rental_management:agreement_update' object.pk %}" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">
+            <i data-lucide="pencil" class="h-4 w-4"></i> Edit
+          </a>
+        </div>
+      </div>
+      <div class="grid gap-4 border-t border-border/50 p-5 sm:grid-cols-2">
+        <div class="simple-card rounded-xl border border-border p-4">
+          <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Monthly rent</p>
+          <p class="mt-1 text-lg font-semibold">{{ object.monthly_rent }}</p>
+        </div>
+        {% if object.status == "ACTIVE" %}
+        <div class="simple-card rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:flex sm:flex-col sm:justify-center">
+          <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Terminate agreement</p>
+          <form method="post" action="{% url 'rental_management:agreement_terminate' object.pk %}" class="mt-3">
+            {% csrf_token %}
+            <button type="submit" class="rounded-lg border border-destructive bg-background px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10">Terminate</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

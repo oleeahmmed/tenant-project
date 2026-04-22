@@ -1,8 +1,5 @@
 from django import template
-
-from hrm.tenant_scope import get_hrm_tenant
-
-from auth_tenants.services.nav_visibility import workspace_nav_flags
+from auth_tenants.permissions import get_tenant, get_navigation_flags
 
 register = template.Library()
 
@@ -10,26 +7,30 @@ register = template.Library()
 @register.simple_tag(takes_context=True)
 def workspace_nav(context):
     """
-    Usage: {% workspace_nav as wnav %}
-    Then: {% if wnav.chat %}, {% if wnav.any_workspace %}, {% if wnav.foundation %}, etc.
+    🎯 UNIFIED NAVIGATION FLAGS
+    Usage: {% workspace_nav as nav %}
+    Then: {% if nav.inventory %}, {% if nav.any_workspace %}, etc.
     """
     request = context["request"]
-    tenant = get_hrm_tenant(request)
-    return workspace_nav_flags(request.user, tenant)
+    return get_navigation_flags(request)
 
 
 @register.filter
-def module_enabled(tenant, module_code: str):
+def module_enabled(tenant, module_code):
     """
-    Template-safe module feature check.
+    🎯 SUBSCRIPTION-AWARE MODULE CHECK
+    Usage: {{ tenant|module_enabled:"inventory" }}
     """
-    if tenant is None:
+    if not tenant:
         return False
-    code = (module_code or "").strip().lower()
-    if not code:
-        return False
-    if code in ("auth_tenants", "foundation"):
-        return True
-    row = tenant.module_subscriptions.filter(module_code=code).only("is_enabled").first()
-    return True if row is None else bool(row.is_enabled)
+    return tenant.can_access_module(module_code)
 
+
+@register.simple_tag(takes_context=True)
+def current_tenant(context):
+    """
+    🎯 GET CURRENT TENANT
+    Usage: {% current_tenant as tenant %}
+    """
+    request = context["request"]
+    return get_tenant(request)

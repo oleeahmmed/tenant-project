@@ -1,0 +1,99 @@
+{% extends "auth_tenants/base.html" %}
+{% load static %}
+{% block title %}{% if is_edit %}Edit{% else %}Add{% endif %} property{% endblock %}
+{% block page_title %}Rental · {% if is_edit %}Edit{% else %}Add{% endif %} property{% endblock %}
+{% block extra_head %}
+{{ block.super }}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.default.min.css" rel="stylesheet"/>
+<link href="{% static 'foundation/css/tom_select_inv.css' %}" rel="stylesheet"/>
+{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  {% if messages %}
+  <ul class="rounded-lg border border-border bg-card p-3 text-sm">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="inv-list-shell sm:p-1.5">
+      <div class="inv-list-card overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+          <div>
+            <h2 class="text-lg font-semibold text-foreground">{% if is_edit %}Edit property{% else %}New property{% endif %}</h2>
+            <p class="text-xs text-muted-foreground mt-0.5">Unit details and rent (same layout as inventory documents).</p>
+          </div>
+          <a href="{% url 'rental_management:property_list' %}" class="inline-flex shrink-0 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+          </a>
+        </div>
+
+        <div class="space-y-6 px-5 py-5">
+          {% if form.errors %}
+          <div class="rounded-lg border border-destructive/40 bg-destructive/5 p-4">
+            <h3 class="text-sm font-semibold text-destructive">Could not save. Please fix the following:</h3>
+            <ul class="mt-2 list-disc space-y-1 pl-5 text-xs text-destructive">
+              {% for err in form.non_field_errors %}<li>{{ err }}</li>{% endfor %}
+              {% for field in form %}
+                {% for err in field.errors %}<li>{{ field.label }}: {{ err }}</li>{% endfor %}
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Record details</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-3">
+              <div class="space-y-1">
+                <label for="{{ form.property_type.id_for_label }}" class="text-xs font-medium text-muted-foreground">{{ form.property_type.label }}</label>
+                {{ form.property_type }}{% if form.property_type.errors %}<p class="text-xs text-destructive">{{ form.property_type.errors }}</p>{% endif %}
+              </div>
+              <div class="space-y-1">
+                <label for="{{ form.property_number.id_for_label }}" class="text-xs font-medium text-muted-foreground">{{ form.property_number.label }}</label>
+                {{ form.property_number }}{% if form.property_number.errors %}<p class="text-xs text-destructive">{{ form.property_number.errors }}</p>{% endif %}
+              </div>
+              <div class="space-y-1">
+                <label for="{{ form.floor_number.id_for_label }}" class="text-xs font-medium text-muted-foreground">{{ form.floor_number.label }}</label>
+                {{ form.floor_number }}{% if form.floor_number.errors %}<p class="text-xs text-destructive">{{ form.floor_number.errors }}</p>{% endif %}
+              </div>
+              <div class="space-y-1">
+                <label for="{{ form.status.id_for_label }}" class="text-xs font-medium text-muted-foreground">{{ form.status.label }}</label>
+                {{ form.status }}{% if form.status.errors %}<p class="text-xs text-destructive">{{ form.status.errors }}</p>{% endif %}
+              </div>
+              <div class="space-y-1">
+                <label for="{{ form.size_sqft.id_for_label }}" class="text-xs font-medium text-muted-foreground">{{ form.size_sqft.label }}</label>
+                {{ form.size_sqft }}{% if form.size_sqft.errors %}<p class="text-xs text-destructive">{{ form.size_sqft.errors }}</p>{% endif %}
+              </div>
+              <div class="space-y-1">
+                <label for="{{ form.monthly_rent.id_for_label }}" class="text-xs font-medium text-muted-foreground">{{ form.monthly_rent.label }}</label>
+                {{ form.monthly_rent }}{% if form.monthly_rent.errors %}<p class="text-xs text-destructive">{{ form.monthly_rent.errors }}</p>{% endif %}
+              </div>
+              <div class="space-y-1">
+                <label for="{{ form.bedrooms.id_for_label }}" class="text-xs font-medium text-muted-foreground">{{ form.bedrooms.label }}</label>
+                {{ form.bedrooms }}{% if form.bedrooms.errors %}<p class="text-xs text-destructive">{{ form.bedrooms.errors }}</p>{% endif %}
+              </div>
+              <div class="space-y-1">
+                <label for="{{ form.bathrooms.id_for_label }}" class="text-xs font-medium text-muted-foreground">{{ form.bathrooms.label }}</label>
+                {{ form.bathrooms }}{% if form.bathrooms.errors %}<p class="text-xs text-destructive">{{ form.bathrooms.errors }}</p>{% endif %}
+              </div>
+              <div class="space-y-1 lg:col-span-2">
+                <label for="{{ form.description.id_for_label }}" class="text-xs font-medium text-muted-foreground">{{ form.description.label }}</label>
+                {{ form.description }}{% if form.description.errors %}<p class="text-xs text-destructive">{{ form.description.errors }}</p>{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-end gap-2 border-t border-border bg-muted/15 px-5 py-4">
+          <a href="{% url 'rental_management:property_list' %}" class="rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-accent">Cancel</a>
+          <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90">Save</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script src="{% static 'foundation/js/tom_select_local.js' %}"></script>
+{% endblock %}

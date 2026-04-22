@@ -1,0 +1,99 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Rental Management{% endblock %}
+{% block page_title %}Rental Management{% endblock %}
+
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">Rental Management overview</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">Property, tenant, and payment management in one place.</p>
+        </div>
+      </div>
+      <div class="p-4 md:p-5 space-y-5">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div class="simple-card rounded-xl border border-border p-4">
+            <p class="text-xs text-muted-foreground">Total Properties</p>
+            <p class="text-xl font-semibold">{{ total_properties }}</p>
+          </div>
+          <div class="simple-card rounded-xl border border-border p-4">
+            <p class="text-xs text-muted-foreground">Occupied</p>
+            <p class="text-xl font-semibold">{{ occupied_properties }}</p>
+          </div>
+          <div class="simple-card rounded-xl border border-border p-4">
+            <p class="text-xs text-muted-foreground">Vacant</p>
+            <p class="text-xl font-semibold">{{ vacant_properties }}</p>
+          </div>
+          <div class="simple-card rounded-xl border border-border p-4">
+            <p class="text-xs text-muted-foreground">Total Tenants</p>
+            <p class="text-xl font-semibold">{{ total_tenants }}</p>
+          </div>
+          <div class="simple-card rounded-xl border border-border p-4">
+            <p class="text-xs text-muted-foreground">Due Amount</p>
+            <p class="text-xl font-semibold">{{ due_amount }}</p>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card-actions card-actions--flush">
+          <a href="{% url 'rental_management:property_list' %}" class="card-act card-act--muted card-act--lg">
+            <i data-lucide="building-2" class="h-4 w-4"></i>
+            Properties
+          </a>
+          <a href="{% url 'rental_management:tenant_list' %}" class="card-act card-act--muted card-act--lg">
+            <i data-lucide="users" class="h-4 w-4"></i>
+            Tenants
+          </a>
+          <a href="{% url 'rental_management:agreement_list' %}" class="card-act card-act--muted card-act--lg">
+            <i data-lucide="file-text" class="h-4 w-4"></i>
+            Agreements
+          </a>
+          <a href="{% url 'rental_management:payment_list' %}" class="card-act card-act--muted card-act--lg">
+            <i data-lucide="credit-card" class="h-4 w-4"></i>
+            Payments
+          </a>
+          <a href="{% url 'rental_management:guide' %}" class="card-act card-act--muted card-act--lg">
+            <i data-lucide="help-circle" class="h-4 w-4"></i>
+            Guide
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card">
+      <div class="border-b border-border/80 bg-card px-4 py-4">
+        <h3 class="text-lg font-semibold text-foreground">Recent Activity</h3>
+        <p class="text-sm text-muted-foreground mt-0.5">Latest payments and updates.</p>
+      </div>
+      <div class="p-4 md:p-5">
+        {% if recent_payments %}
+          <div class="space-y-3">
+            {% for payment in recent_payments %}
+              <div class="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-muted/30 transition-colors">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <i data-lucide="check-circle" class="h-5 w-5"></i>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-foreground">{{ payment.agreement.tenant.name }}</p>
+                    <p class="text-xs text-muted-foreground">{{ payment.agreement.property.property_number }} - {{ payment.amount }} BDT</p>
+                  </div>
+                </div>
+                <p class="text-xs text-muted-foreground">{{ payment.payment_date|date:"M d, Y" }}</p>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-sm text-muted-foreground text-center py-8">No recent payments</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

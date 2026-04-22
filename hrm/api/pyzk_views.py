@@ -12,15 +12,15 @@ from hrm.utils import (
     import_users_from_device,
     success_response,
 )
-from hrm.tenant_scope import get_hrm_tenant
+from auth_tenants.permissions import get_tenant
 from hrm.utils.api_utils import get_date_range as get_date_range_util
 
 from .pyzk_serializers import PyZKAttendanceFetchSerializer, PyZKUserFetchSerializer
-from .permissions import IsHrmTenantAdmin
+from auth_tenants.permissions import IsTenantAdmin
 
 
 def _device(request, device_id):
-    t = get_hrm_tenant(request)
+    t = get_tenant(request)
     if t is None:
         from django.http import Http404
 

@@ -1,0 +1,38 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Payment details{% endblock %}
+{% block page_title %}Rental · Payment details{% endblock %}
+{% block content %}
+<div class="w-full min-w-0 max-w-full space-y-5 px-1 py-2 md:px-2 md:py-3">
+  <div class="inv-list-shell sm:p-1.5">
+    <div class="inv-list-card overflow-hidden">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 bg-card px-4 py-4">
+        <div>
+          <h2 class="text-xl font-bold text-foreground">{{ object.receipt_number }}</h2>
+          <p class="text-sm text-muted-foreground mt-0.5">{{ object.payment_date }} · {{ object.get_payment_type_display }}</p>
+        </div>
+        <a href="{% url 'rental_management:payment_list' %}" class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent">
+          <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+        </a>
+      </div>
+      <div class="grid gap-4 border-t border-border/50 p-5 sm:grid-cols-2">
+        <div class="simple-card rounded-xl border border-border p-4">
+          <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tenant</p>
+          <p class="mt-1 text-sm font-medium">{{ object.agreement.rental_tenant.name }}</p>
+        </div>
+        <div class="simple-card rounded-xl border border-border p-4">
+          <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Property</p>
+          <p class="mt-1 text-sm font-medium">{{ object.agreement.property.property_number }}</p>
+        </div>
+        <div class="simple-card rounded-xl border border-border p-4">
+          <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Method</p>
+          <p class="mt-1 text-sm font-medium">{{ object.get_payment_method_display }}</p>
+        </div>
+        <div class="simple-card rounded-xl border border-border p-4">
+          <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Amount</p>
+          <p class="mt-1 text-lg font-semibold">{{ object.amount }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

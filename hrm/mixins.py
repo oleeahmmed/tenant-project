@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import redirect
 
 from .models import Employee
-from .tenant_scope import get_hrm_tenant, user_belongs_to_workspace_tenant
+from auth_tenants.permissions import get_tenant, TenantManager
 
 
 class WorkspaceTenantDashboardMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -13,7 +13,7 @@ class WorkspaceTenantDashboardMixin(LoginRequiredMixin, UserPassesTestMixin):
     """
 
     def dispatch(self, request, *args, **kwargs):
-        request.hrm_tenant = get_hrm_tenant(request)
+        request.hrm_tenant = get_tenant(request)
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
@@ -25,7 +25,7 @@ class WorkspaceTenantDashboardMixin(LoginRequiredMixin, UserPassesTestMixin):
         t = getattr(self.request, "hrm_tenant", None)
         if t is None:
             return False
-        return user_belongs_to_workspace_tenant(u, t)
+        return TenantManager.user_belongs_to_tenant(u, t)
 
     def handle_no_permission(self):
         messages.error(self.request, "No tenant is assigned to your account.")
@@ -70,7 +70,7 @@ class HrmAdminMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.permission_codename_read
 
     def dispatch(self, request, *args, **kwargs):
-        request.hrm_tenant = get_hrm_tenant(request)
+        request.hrm_tenant = get_tenant(request)
         tenant = getattr(request, "hrm_tenant", None)
         if tenant is not None and not tenant.is_module_enabled("hrm"):
             messages.error(request, "HRM module is disabled for this tenant.")
@@ -84,7 +84,7 @@ class HrmAdminMixin(LoginRequiredMixin, UserPassesTestMixin):
             return False
         if u.role == "super_admin":
             return True
-        if not user_belongs_to_workspace_tenant(u, t):
+        if not TenantManager.user_belongs_to_tenant(u, t):
             return False
         if u.role not in ("tenant_admin", "staff"):
             return False
@@ -133,7 +133,7 @@ class EmployeePortalMixin(LoginRequiredMixin, UserPassesTestMixin):
     """
 
     def dispatch(self, request, *args, **kwargs):
-        request.hrm_tenant = get_hrm_tenant(request)
+        request.hrm_tenant = get_tenant(request)
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):

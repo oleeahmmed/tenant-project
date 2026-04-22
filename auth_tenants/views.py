@@ -1,4 +1,37 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.http import JsonResponse
+from auth_tenants.permissions import get_tenant
+
+@login_required
+def subscription_dashboard(request):
+    """🎯 Subscription management dashboard"""
+    tenant = get_tenant(request)
+    if not tenant:
+        messages.error(request, 'No tenant found for your account.')
+        return redirect('/')
+    
+    subscription = tenant.get_subscription()
+    if not subscription:
+        messages.error(request, 'No subscription found. Please contact support.')
+        return redirect('/')
+    
+    context = {
+        'subscription': {
+            'plan_name': subscription.plan.name,
+            'status': subscription.status,
+            'expires_at': subscription.expires_at,
+            'trial_ends_at': subscription.trial_ends_at,
+            'days_remaining': subscription.days_remaining(),
+            'is_trial': subscription.is_trial(),
+            'is_active': subscription.is_active(),
+        },
+        'usage': tenant.get_usage_summary(),
+        'tenant': tenant,
+    }
+    
+    return render(request, 'auth_tenants/subscription_dashboard.html', context), redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -6,7 +39,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from collections import defaultdict
 
-from hrm.tenant_scope import get_hrm_tenant, user_belongs_to_workspace_tenant
+from auth_tenants.permissions import get_tenant, TenantManager
 
 from .models import (
     User,
@@ -19,14 +52,13 @@ from .models import (
     TenantPermissionGrant,
 )
 from .api.utils import send_otp_email, send_invitation_email
-from .services.permission_catalog import sync_default_model_permissions
 
 
 def _get_tenant_or_redirect(request):
     """
     Same tenant resolution as HRM / Foundation (session, user.tenant, employee profile, …).
     """
-    tenant = get_hrm_tenant(request)
+    tenant = get_tenant(request)
     if tenant is not None:
         return tenant
     messages.error(
@@ -42,7 +74,7 @@ def _tenant_mgmt_guard(request):
     For Members / Roles / Invitations: require a resolved tenant and membership.
     Returns ``tenant`` or ``None`` (after setting messages).
     """
-    tenant = get_hrm_tenant(request)
+    tenant = get_tenant(request)
     if tenant is None:
         messages.error(
             request,
@@ -50,7 +82,7 @@ def _tenant_mgmt_guard(request):
             "or ask an admin to link your account to a tenant or employee profile.",
         )
         return None
-    if not user_belongs_to_workspace_tenant(request.user, tenant):
+    if not TenantManager.user_belongs_to_tenant(request.user, tenant):
         messages.error(request, "You do not have access to manage this workspace.")
         return None
     return tenant
@@ -171,7 +203,7 @@ def dashboard_view(request):
     stats = {}
     if user.role == 'super_admin':
         stats['total_tenants'] = Tenant.objects.count()
-    workspace = get_hrm_tenant(request)
+    workspace = get_tenant(request)
     if workspace and user.role in ('super_admin', 'tenant_admin'):
         stats['total_members'] = User.objects.filter(tenant=workspace, role='staff').count()
         stats['total_roles'] = Role.objects.filter(tenant=workspace).count()
@@ -557,7 +589,7 @@ def tenant_access_matrix_view(request, tenant_id):
     }
     always_enabled_modules = {"foundation", "auth_tenants"}
     selected_modules = {code for code, enabled in module_state.items() if enabled}
-    sync_default_model_permissions(selected_modules | always_enabled_modules)
+    # Note: Permission sync handled by unified system
 
     all_codes = [code for code, _ in module_codes]
     permission_qs = Permission.objects.filter(is_active=True).order_by("category", "codename")
@@ -572,7 +604,7 @@ def tenant_access_matrix_view(request, tenant_id):
         selected_perm_ids = {
             int(x) for x in request.POST.getlist("permission_ids") if str(x).isdigit()
         }
-        sync_default_model_permissions(selected_modules | always_enabled_modules)
+        # Note: Permission sync handled by unified system
 
         for code in all_codes:
             row, _ = TenantModuleSubscription.objects.get_or_create(

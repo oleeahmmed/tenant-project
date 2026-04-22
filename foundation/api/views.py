@@ -21,13 +21,13 @@ from foundation.models import (
     UnitOfMeasure,
     Warehouse,
 )
-from hrm.tenant_scope import get_hrm_tenant, user_belongs_to_workspace_tenant
+from auth_tenants.permissions import get_tenant, TenantManager
 from jiraclone.models import JiraProject
 
 
 def _resolve_tenant(request, module_code="foundation", required_permission="foundation.view"):
     """Same workspace scope as Foundation / Inventory dashboards."""
-    t = get_hrm_tenant(request)
+    t = get_tenant(request)
     if t is None or not request.user.is_authenticated:
         return None
     if getattr(request.user, "role", None) == "super_admin":
