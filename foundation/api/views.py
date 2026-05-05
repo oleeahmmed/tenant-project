@@ -22,7 +22,7 @@ from foundation.models import (
     Warehouse,
 )
 from auth_tenants.permissions import get_tenant, TenantManager
-from jiraclone.models import JiraProject
+from hrm.tenant_scope import user_belongs_to_workspace_tenant
 
 
 def _resolve_tenant(request, module_code="foundation", required_permission="foundation.view"):
@@ -158,17 +158,6 @@ class CustomerListView(FoundationSessionAPIView):
         elif not show_all:
             qs = qs.none()
         qs = qs.order_by("name")[:limit]
-        customer_ids = [c.id for c in qs]
-        first_project_by_customer = {}
-        if customer_ids:
-            project_rows = (
-                JiraProject.objects.filter(tenant=tenant, customer_id__in=customer_ids, is_active=True)
-                .only("key", "customer_id")
-                .order_by("customer_id", "key")
-            )
-            for p in project_rows:
-                if p.customer_id not in first_project_by_customer:
-                    first_project_by_customer[p.customer_id] = p.key
         results = [
             {
                 "id": c.id,
@@ -179,7 +168,7 @@ class CustomerListView(FoundationSessionAPIView):
                 "phone": c.phone or "",
                 "city": c.city or "",
                 "country": c.country or "",
-                "first_project_key": first_project_by_customer.get(c.id) or "",
+                "first_project_key": "",
             }
             for c in qs
         ]

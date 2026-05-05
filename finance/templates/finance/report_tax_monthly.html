@@ -1,0 +1,52 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Monthly tax summary{% endblock %}
+{% block page_title %}Finance · Monthly VAT / tax{% endblock %}
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'finance:finance_dashboard' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent"><i data-lucide="arrow-left" class="h-4 w-4"></i></a>
+        <h2 class="text-lg font-semibold">Monthly VAT / tax summary</h2>
+      </div>
+    </div>
+    <div class="p-5 space-y-4">
+      <form method="get" class="flex flex-wrap items-end gap-3">
+        <label class="flex flex-col gap-1 text-xs text-muted-foreground">
+          <span>Calendar year</span>
+          <input type="number" name="year" value="{{ filter_year }}" min="2000" max="2100" class="rounded-lg border border-border bg-background px-3 py-2 text-sm w-32" />
+        </label>
+        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Apply</button>
+        <a href="{% url 'finance:report_tax_monthly' %}" class="rounded-lg border border-border px-4 py-2 text-sm hover:bg-accent">Reset</a>
+      </form>
+      <p class="text-xs text-muted-foreground">Net amounts include subtotal plus shipping (before tax). Tax columns use posted invoice header tax.</p>
+      <div class="ui-table-wrap overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-border bg-muted/40">
+              <th class="px-3 py-2 text-left">Month</th>
+              <th class="px-3 py-2 text-right">AP tax</th>
+              <th class="px-3 py-2 text-right">AR tax</th>
+              <th class="px-3 py-2 text-right">AP net (subtotal+ship)</th>
+              <th class="px-3 py-2 text-right">AR net (subtotal+ship)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            {% for r in rows %}
+            <tr>
+              <td class="px-3 py-2">{{ r.month_label }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ r.ap_tax }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ r.ar_tax }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ r.ap_net }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ r.ar_net }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="px-3 py-8 text-center text-muted-foreground">No posted AP/AR for this year.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

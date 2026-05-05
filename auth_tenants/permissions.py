@@ -91,9 +91,7 @@ class ModuleManager:
                 
                 # Map app to module code
                 module_code = app_label
-                if app_label == 'rental_management':
-                    module_code = 'rental'
-                
+
                 if module_code not in modules:
                     modules[module_code] = []
                 modules[module_code].append(app_label)

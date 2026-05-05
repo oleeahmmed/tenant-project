@@ -17,6 +17,7 @@ from hrm.utils.api_utils import get_date_range as get_date_range_util
 
 from .pyzk_serializers import PyZKAttendanceFetchSerializer, PyZKUserFetchSerializer
 from auth_tenants.permissions import IsTenantAdmin
+from hrm.api.permissions import IsHrmTenantAdmin
 
 
 def _device(request, device_id):

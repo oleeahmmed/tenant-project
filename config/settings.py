@@ -1,5 +1,3 @@
-import base64
-import hashlib
 import os
 from pathlib import Path
 from datetime import timedelta
@@ -10,15 +8,6 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv("DEBUG", "False") == "True"
-
-# Vault: Fernet key for VaultEntry password encryption. Set ENTRY_ENCRYPTION_KEY in .env for production.
-# In DEBUG, if unset, derive a stable key from SECRET_KEY so local dev works without extra env vars.
-_vault_enc = (os.getenv("ENTRY_ENCRYPTION_KEY") or "").strip()
-if not _vault_enc and DEBUG and SECRET_KEY:
-    _vault_enc = base64.urlsafe_b64encode(
-        hashlib.sha256(f"vault-entry-fernet:{SECRET_KEY}".encode()).digest()
-    ).decode()
-ENTRY_ENCRYPTION_KEY = _vault_enc
 
 ALLOWED_HOSTS = ["*"]
 
@@ -78,14 +67,9 @@ LOCAL_APPS = [
     "sales",            # Sales management
     "production",       # Production management
     "pos",              # Point of Sale
-    "rental_management", # Rental management
-    "school",           # School management
-    
+
     # Utility modules
-    "jiraclone",        # Project management
-    "vault",            # Secure storage
     "support",          # Support system
-    "screenhot",        # Screen monitoring
 ]
 
 # Combine all apps (daphne must be first, before staticfiles)
@@ -186,7 +170,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "WA Automotion API",
-    "DESCRIPTION": "Tenant-scoped API for auth, chat, jira clone, screenhot and related modules.",
+    "DESCRIPTION": "Tenant-scoped API for ERP, HRM, chat, notifications, support and related modules.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
@@ -217,7 +201,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 
-# ── SMS Gateway (Rental Management) ───────────────────────────────────────────
+# ── SMS Gateway ───────────────────────────────────────────────────────────────
 SMS_GATEWAY_URL = os.getenv("SMS_GATEWAY_URL", "")
 SMS_API_KEY = os.getenv("SMS_API_KEY", "")
 SMS_SENDER_ID = os.getenv("SMS_SENDER_ID", "")

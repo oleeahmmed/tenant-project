@@ -20,6 +20,11 @@
     </div>
     <form method="post" action="{{ action_url }}" class="p-5 space-y-5" data-simple-formset="{{ formset.prefix|default:'' }}">
       {% csrf_token %}
+      {% if form.non_field_errors %}
+      <div class="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        {% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}
+      </div>
+      {% endif %}
       <div class="rounded-xl border border-border bg-background p-4">
         <h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Header</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

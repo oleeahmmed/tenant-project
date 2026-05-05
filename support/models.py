@@ -43,7 +43,6 @@ class SupportTicket(TenantScopedModel):
         SALES = "sales", "Sales"
         PRODUCTION = "production", "Production"
         HRM = "hrm", "HRM"
-        JIRACLONE = "jiraclone", "Jira / projects"
         CHAT = "chat", "Chat"
         POS = "pos", "POS"
         AUTH = "auth_tenants", "Users & access"

@@ -206,11 +206,17 @@ class StockAdjustment(models.Model):
         return f"{self.adjustment_number} - {self.get_adjustment_type_display()}"
 
     def save(self, *args, **kwargs):
+        old_status = None
+        if self.pk:
+            old_status = StockAdjustment.objects.filter(pk=self.pk).values_list("status", flat=True).first()
         if not self.adjustment_number:
             self.adjustment_number = _next_document_number(
                 self.tenant_id, StockAdjustment, "adjustment_number", "ADJ"
             )
         super().save(*args, **kwargs)
+        from inventory.services.document_save_hooks import schedule_stock_adjustment_posting
+
+        schedule_stock_adjustment_posting(self, old_status=old_status)
 
 
 class StockAdjustmentItem(models.Model):
@@ -340,9 +346,19 @@ class GoodsIssue(models.Model):
         return f"{self.issue_number} - {self.warehouse}"
 
     def save(self, *args, **kwargs):
+        old_status = None
+        old_stock_posted = False
+        if self.pk:
+            row = GoodsIssue.objects.filter(pk=self.pk).values("status", "stock_posted").first()
+            if row:
+                old_status = row["status"]
+                old_stock_posted = row["stock_posted"]
         if not self.issue_number:
             self.issue_number = _next_document_number(self.tenant_id, GoodsIssue, "issue_number", "GI")
         super().save(*args, **kwargs)
+        from inventory.services.document_save_hooks import schedule_goods_issue_posting
+
+        schedule_goods_issue_posting(self, old_status=old_status, old_stock_posted=old_stock_posted)
 
 
 class GoodsIssueItem(models.Model):
@@ -410,11 +426,21 @@ class InventoryTransfer(models.Model):
         return f"{self.transfer_number} - {self.from_warehouse} → {self.to_warehouse}"
 
     def save(self, *args, **kwargs):
+        old_status = None
+        old_stock_posted = False
+        if self.pk:
+            row = InventoryTransfer.objects.filter(pk=self.pk).values("status", "stock_posted").first()
+            if row:
+                old_status = row["status"]
+                old_stock_posted = row["stock_posted"]
         if not self.transfer_number:
             self.transfer_number = _next_document_number(
                 self.tenant_id, InventoryTransfer, "transfer_number", "IT"
             )
         super().save(*args, **kwargs)
+        from inventory.services.document_save_hooks import schedule_inventory_transfer_posting
+
+        schedule_inventory_transfer_posting(self, old_status=old_status, old_stock_posted=old_stock_posted)
 
     def clean(self):
         if self.from_warehouse_id and self.to_warehouse_id and self.from_warehouse_id == self.to_warehouse_id:

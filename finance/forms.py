@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import inlineformset_factory
+from django.forms import BaseInlineFormSet, inlineformset_factory
 from django.urls import reverse_lazy
 
 from foundation.models import Currency, Customer, PaymentMethod, Supplier
@@ -82,6 +82,28 @@ class FiscalPeriodForm(forms.ModelForm):
         if tenant:
             self.fields["fiscal_year"].queryset = FiscalYear.objects.filter(tenant=tenant)
         self.fields["fiscal_year"].widget.attrs["class"] = _ctrl + " inv-ts-local"
+
+
+class CostCenterForm(forms.ModelForm):
+    class Meta:
+        model = CostCenter
+        fields = ["code", "name", "is_active"]
+        widgets = {
+            "code": forms.TextInput(attrs={"class": _ctrl}),
+            "name": forms.TextInput(attrs={"class": _ctrl}),
+            "is_active": forms.CheckboxInput(attrs=_chk),
+        }
+
+
+class ProjectForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ["code", "name", "is_active"]
+        widgets = {
+            "code": forms.TextInput(attrs={"class": _ctrl}),
+            "name": forms.TextInput(attrs={"class": _ctrl}),
+            "is_active": forms.CheckboxInput(attrs=_chk),
+        }
 
 
 class JournalEntryForm(forms.ModelForm):
@@ -185,17 +207,43 @@ class APInvoiceForm(forms.ModelForm):
 class APInvoiceLineForm(forms.ModelForm):
     class Meta:
         model = APInvoiceLine
-        fields = ["line_no", "description", "quantity", "unit_price", "line_total"]
+        fields = ["line_no", "description", "quantity", "unit_price", "line_total", "expense_account"]
         widgets = {
             "line_no": forms.NumberInput(attrs={"class": _ctrl}),
             "description": forms.TextInput(attrs={"class": _ctrl}),
             "quantity": forms.NumberInput(attrs={"class": _ctrl + " fin-line-qty", "step": "any"}),
             "unit_price": forms.NumberInput(attrs={"class": _ctrl + " fin-line-unit-price", "step": "any"}),
             "line_total": forms.NumberInput(attrs={"class": _ctrl + " fin-line-total", "step": "any", "readonly": "readonly"}),
+            "expense_account": forms.Select(attrs={"class": _ctrl + " fin-line-expense"}),
         }
 
+    def __init__(self, *args, tenant=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["expense_account"].required = False
+        if tenant:
+            self.fields["expense_account"].queryset = Account.objects.filter(tenant=tenant, is_active=True, is_postable=True)
+        self.fields["expense_account"].widget.attrs["class"] = _ctrl + " inv-ts-local fin-line-expense"
 
-APInvoiceLineFormSet = inlineformset_factory(APInvoice, APInvoiceLine, form=APInvoiceLineForm, extra=1, can_delete=True)
+
+class TenantInvoiceLineFormSet(BaseInlineFormSet):
+    def __init__(self, *args, tenant=None, **kwargs):
+        self.tenant = tenant
+        super().__init__(*args, **kwargs)
+
+    def get_form_kwargs(self, index):
+        kwargs = super().get_form_kwargs(index)
+        kwargs["tenant"] = self.tenant
+        return kwargs
+
+
+APInvoiceLineFormSet = inlineformset_factory(
+    APInvoice,
+    APInvoiceLine,
+    form=APInvoiceLineForm,
+    formset=TenantInvoiceLineFormSet,
+    extra=1,
+    can_delete=True,
+)
 
 
 class ARInvoiceForm(forms.ModelForm):
@@ -244,17 +292,32 @@ class ARInvoiceForm(forms.ModelForm):
 class ARInvoiceLineForm(forms.ModelForm):
     class Meta:
         model = ARInvoiceLine
-        fields = ["line_no", "description", "quantity", "unit_price", "line_total"]
+        fields = ["line_no", "description", "quantity", "unit_price", "line_total", "revenue_account"]
         widgets = {
             "line_no": forms.NumberInput(attrs={"class": _ctrl}),
             "description": forms.TextInput(attrs={"class": _ctrl}),
             "quantity": forms.NumberInput(attrs={"class": _ctrl + " fin-line-qty", "step": "any"}),
             "unit_price": forms.NumberInput(attrs={"class": _ctrl + " fin-line-unit-price", "step": "any"}),
             "line_total": forms.NumberInput(attrs={"class": _ctrl + " fin-line-total", "step": "any", "readonly": "readonly"}),
+            "revenue_account": forms.Select(attrs={"class": _ctrl}),
         }
 
+    def __init__(self, *args, tenant=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["revenue_account"].required = False
+        if tenant:
+            self.fields["revenue_account"].queryset = Account.objects.filter(tenant=tenant, is_active=True, is_postable=True)
+        self.fields["revenue_account"].widget.attrs["class"] = _ctrl + " inv-ts-local fin-line-revenue"
 
-ARInvoiceLineFormSet = inlineformset_factory(ARInvoice, ARInvoiceLine, form=ARInvoiceLineForm, extra=1, can_delete=True)
+
+ARInvoiceLineFormSet = inlineformset_factory(
+    ARInvoice,
+    ARInvoiceLine,
+    form=ARInvoiceLineForm,
+    formset=TenantInvoiceLineFormSet,
+    extra=1,
+    can_delete=True,
+)
 
 
 class APPaymentForm(forms.ModelForm):

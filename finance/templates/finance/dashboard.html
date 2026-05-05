@@ -27,6 +27,15 @@
           <a href="{% url 'finance:report_profit_loss' %}" class="card-act card-act--muted card-act--lg">Profit &amp; loss</a>
           <a href="{% url 'finance:report_balance_sheet' %}" class="card-act card-act--muted card-act--lg">Balance sheet</a>
         </div>
+        <div class="card-actions card-actions--flush">
+          <a href="{% url 'finance:cost_center_list' %}" class="card-act card-act--muted card-act--lg">Cost centers</a>
+          <a href="{% url 'finance:project_list' %}" class="card-act card-act--muted card-act--lg">Projects</a>
+          <a href="{% url 'finance:report_ap_aging' %}" class="card-act card-act--muted card-act--lg">AP aging</a>
+          <a href="{% url 'finance:report_ar_aging' %}" class="card-act card-act--muted card-act--lg">AR aging</a>
+          <a href="{% url 'finance:report_tax_monthly' %}" class="card-act card-act--muted card-act--lg">Monthly tax</a>
+          <a href="{% url 'finance:report_bank_register' %}" class="card-act card-act--muted card-act--lg">Bank register</a>
+          <a href="{% url 'finance:fiscal_year_close' %}" class="card-act card-act--muted card-act--lg">Close fiscal year</a>
+        </div>
       </div>
     </div>
   </div>

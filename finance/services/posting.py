@@ -1,3 +1,4 @@
+from collections import defaultdict
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -18,6 +19,48 @@ from finance.models import (
     JournalLine,
     LedgerEntry,
 )
+
+
+def _group_ap_expense_by_account(*, invoice: APInvoice):
+    groups = defaultdict(Decimal)
+    for line in invoice.lines.all():
+        amt = line.line_total or Decimal("0")
+        if amt <= 0:
+            continue
+        acc = line.expense_account or invoice.expense_account
+        if not acc:
+            raise ValidationError("Set an expense account on the invoice header or on each line.")
+        groups[acc] += amt
+    ship = invoice.shipping_charge or Decimal("0")
+    if ship > 0:
+        acc = invoice.expense_account
+        if not acc:
+            raise ValidationError("Shipping charges require the header expense account.")
+        groups[acc] += ship
+    if not groups:
+        raise ValidationError("AP invoice needs at least one line with an amount.")
+    return groups
+
+
+def _group_ar_revenue_by_account(*, invoice: ARInvoice):
+    groups = defaultdict(Decimal)
+    for line in invoice.lines.all():
+        amt = line.line_total or Decimal("0")
+        if amt <= 0:
+            continue
+        acc = line.revenue_account or invoice.revenue_account
+        if not acc:
+            raise ValidationError("Set a revenue account on the invoice header or on each line.")
+        groups[acc] += amt
+    ship = invoice.shipping_charge or Decimal("0")
+    if ship > 0:
+        acc = invoice.revenue_account
+        if not acc:
+            raise ValidationError("Shipping charges require the header revenue account.")
+        groups[acc] += ship
+    if not groups:
+        raise ValidationError("AR invoice needs at least one line with an amount.")
+    return groups
 
 
 def _ensure_period_open(journal: JournalEntry):
@@ -161,12 +204,14 @@ def post_ap_invoice(*, invoice: APInvoice, posted_by=None):
     invoice = APInvoice.objects.select_for_update().get(pk=invoice.pk)
     if invoice.status != APInvoice.Status.DRAFT:
         raise ValidationError("Only draft AP invoices can be posted.")
-    if not invoice.expense_account_id or not invoice.ap_account_id:
-        raise ValidationError("Expense and AP accounts are required.")
-    base_amount = invoice.subtotal + invoice.shipping_charge
-    lines = [
-        {"account": invoice.expense_account, "debit": base_amount, "credit": Decimal("0"), "description": f"AP expense {invoice.doc_no}"},
-    ]
+    if not invoice.ap_account_id:
+        raise ValidationError("AP liability account is required.")
+    groups = _group_ap_expense_by_account(invoice=invoice)
+    lines = []
+    for acc, amt in groups.items():
+        lines.append(
+            {"account": acc, "debit": amt, "credit": Decimal("0"), "description": f"AP expense {invoice.doc_no}"}
+        )
     if invoice.tax_amount and invoice.tax_amount > 0 and invoice.tax_account_id:
         lines.append({"account": invoice.tax_account, "debit": invoice.tax_amount, "credit": Decimal("0"), "description": f"AP tax {invoice.doc_no}"})
     lines.append({"account": invoice.ap_account, "debit": Decimal("0"), "credit": invoice.total_amount, "description": f"AP control {invoice.doc_no}"})
@@ -190,13 +235,14 @@ def post_ar_invoice(*, invoice: ARInvoice, posted_by=None):
     invoice = ARInvoice.objects.select_for_update().get(pk=invoice.pk)
     if invoice.status != ARInvoice.Status.DRAFT:
         raise ValidationError("Only draft AR invoices can be posted.")
-    if not invoice.revenue_account_id or not invoice.ar_account_id:
-        raise ValidationError("Revenue and AR accounts are required.")
-    base_amount = invoice.subtotal + invoice.shipping_charge
-    lines = [
-        {"account": invoice.ar_account, "debit": invoice.total_amount, "credit": Decimal("0"), "description": f"AR control {invoice.doc_no}"},
-        {"account": invoice.revenue_account, "debit": Decimal("0"), "credit": base_amount, "description": f"AR revenue {invoice.doc_no}"},
-    ]
+    if not invoice.ar_account_id:
+        raise ValidationError("AR asset account is required.")
+    groups = _group_ar_revenue_by_account(invoice=invoice)
+    lines = [{"account": invoice.ar_account, "debit": invoice.total_amount, "credit": Decimal("0"), "description": f"AR control {invoice.doc_no}"}]
+    for acc, amt in groups.items():
+        lines.append(
+            {"account": acc, "debit": Decimal("0"), "credit": amt, "description": f"AR revenue {invoice.doc_no}"}
+        )
     if invoice.tax_amount and invoice.tax_amount > 0 and invoice.tax_account_id:
         lines.append({"account": invoice.tax_account, "debit": Decimal("0"), "credit": invoice.tax_amount, "description": f"AR tax {invoice.doc_no}"})
     journal = _post_simple_document(

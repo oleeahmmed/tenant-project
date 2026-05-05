@@ -236,6 +236,14 @@ class APInvoiceLine(models.Model):
     quantity = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("1"))
     unit_price = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0"))
     line_total = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0"))
+    expense_account = models.ForeignKey(
+        Account,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="ap_invoice_line_expenses",
+        help_text="Optional; defaults to header expense account when posting.",
+    )
 
 
 class APPayment(FinanceTimestampedModel):
@@ -323,6 +331,14 @@ class ARInvoiceLine(models.Model):
     quantity = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("1"))
     unit_price = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0"))
     line_total = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0"))
+    revenue_account = models.ForeignKey(
+        Account,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="ar_invoice_line_revenue",
+        help_text="Optional; defaults to header revenue account when posting.",
+    )
 
 
 class ARReceipt(FinanceTimestampedModel):

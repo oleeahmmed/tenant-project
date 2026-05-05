@@ -5,7 +5,3 @@ class InventoryConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "inventory"
     verbose_name = "Inventory"
-
-    def ready(self):
-        # Load status-transition signals (posting -> WarehouseStock + StockTransaction).
-        from . import signals  # noqa: F401

@@ -1,5 +1,5 @@
 """
-Core notification API — no imports from chat, jiraclone, or other feature apps.
+Core notification API — no imports from chat or other feature apps.
 """
 
 from __future__ import annotations

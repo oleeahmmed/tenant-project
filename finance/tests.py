@@ -5,7 +5,18 @@ from django.test import TestCase
 from django.utils import timezone
 
 from auth_tenants.models import Tenant
-from finance.models import APInvoice, APPayment, APPaymentAllocation, ARInvoice, ARReceipt, ARReceiptAllocation, Account, FiscalPeriod, FiscalYear
+from finance.models import (
+    APInvoice,
+    APInvoiceLine,
+    APPayment,
+    APPaymentAllocation,
+    ARInvoice,
+    ARReceipt,
+    ARReceiptAllocation,
+    Account,
+    FiscalPeriod,
+    FiscalYear,
+)
 from finance.services.posting import post_ap_invoice, post_ap_payment, post_ar_receipt
 from foundation.models import Customer, Supplier
 
@@ -80,6 +91,16 @@ class FinancePostingTests(TestCase):
             total_amount=Decimal("100"),
             expense_account=self.expense_acc,
             ap_account=self.ap_acc,
+        )
+        APInvoiceLine.objects.create(
+            tenant=self.tenant,
+            invoice=invoice,
+            line_no=1,
+            description="Line",
+            quantity=Decimal("1"),
+            unit_price=Decimal("100"),
+            line_total=Decimal("100"),
+            expense_account=self.expense_acc,
         )
         with self.assertRaises(ValidationError):
             post_ap_invoice(invoice=invoice)

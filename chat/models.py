@@ -1,5 +1,16 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
+
+
+def _notify_chat_members_after_commit(message_id: int) -> None:
+    """Lazy integration with notification app (no signal)."""
+    from django.apps import apps
+
+    if not apps.is_installed("notification"):
+        return
+    from notification.integrations.chat import notify_new_chat_message
+
+    notify_new_chat_message(message_id)
 
 
 class ChatRoom(models.Model):
@@ -84,6 +95,12 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.room_id} · {self.message_type} · {self.created_at}"
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new:
+            transaction.on_commit(lambda mid=self.pk: _notify_chat_members_after_commit(mid))
 
     def preview_line(self, max_len: int = 56) -> str:
         t = self.message_type

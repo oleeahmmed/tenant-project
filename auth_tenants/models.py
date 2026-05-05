@@ -19,16 +19,11 @@ class Permission(models.Model):
         ("purchase", "Purchase"),
         ("sales", "Sales"),
         ("production", "Production"),
-        ("jiraclone", "Jira clone"),
-        ("vault", "Vault"),
         ("chat", "Chat"),
         ("pos", "POS"),
         ("hrm", "HRM"),
         ("recruitment", "Recruitment"),
         ("support", "Support"),
-        ("screenhot", "Screenhot"),
-        ("rental", "Rental Management"),
-        ("school", "School Management"),
         ("notification", "Notifications"),
         ("auth_tenants", "Tenant Auth"),
         ("system", "System"),
@@ -146,14 +141,9 @@ class TenantModuleSubscription(models.Model):
         PURCHASE = "purchase", "Purchase"
         SALES = "sales", "Sales"
         PRODUCTION = "production", "Production"
-        JIRACLONE = "jiraclone", "Jira clone"
-        VAULT = "vault", "Vault"
         CHAT = "chat", "Chat"
         POS = "pos", "POS"
         SUPPORT = "support", "Support"
-        SCREENHOT = "screenhot", "Screenhot"
-        RENTAL = "rental", "Rental Management"
-        SCHOOL = "school", "School Management"
         NOTIFICATION = "notification", "Notifications"
 
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="module_subscriptions")

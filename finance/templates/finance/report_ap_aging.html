@@ -1,0 +1,48 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}AP aging{% endblock %}
+{% block page_title %}Finance · AP aging{% endblock %}
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'finance:finance_dashboard' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent"><i data-lucide="arrow-left" class="h-4 w-4"></i></a>
+        <div>
+          <h2 class="text-lg font-semibold">Accounts payable aging</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">Posted invoices with outstanding balance · As of {{ today }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="p-5">
+      <div class="ui-table-wrap overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-border bg-muted/40">
+              <th class="px-3 py-2 text-left">Supplier</th>
+              <th class="px-3 py-2 text-left">Document</th>
+              <th class="px-3 py-2 text-left">Posting</th>
+              <th class="px-3 py-2 text-left">Due</th>
+              <th class="px-3 py-2 text-right">Days</th>
+              <th class="px-3 py-2 text-right">Outstanding</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            {% for row in rows %}
+            <tr class="hover:bg-muted/30">
+              <td class="px-3 py-2">{{ row.inv.supplier.name }}</td>
+              <td class="px-3 py-2"><a href="{% url 'finance:ap_invoice_detail' row.inv.pk %}" class="text-primary hover:underline font-mono text-xs">{{ row.inv.doc_no }}</a></td>
+              <td class="px-3 py-2">{{ row.inv.posting_date }}</td>
+              <td class="px-3 py-2">{{ row.inv.due_date|default:"—" }}</td>
+              <td class="px-3 py-2 text-right">{{ row.age_days }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ row.outstanding }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="px-3 py-8 text-center text-muted-foreground">No open AP balances.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

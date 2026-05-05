@@ -29,7 +29,7 @@ class Notification(models.Model):
     kind = models.CharField(
         max_length=64,
         db_index=True,
-        help_text="e.g. system.*, chat.message, jiraclone.issue_assigned",
+        help_text="e.g. system.*, chat.message, hrm.leave_approved",
     )
     title = models.CharField(max_length=255)
     body = models.TextField(blank=True)

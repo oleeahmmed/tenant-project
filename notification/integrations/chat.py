@@ -1,30 +1,27 @@
 """
-Chat → notifications. Loaded only if ``chat`` is installed.
+Chat → notifications (no Django signals).
+
+Called from ``chat.models.ChatMessage.save()`` via ``transaction.on_commit`` when
+the ``notification`` app is installed.
 """
+
+from __future__ import annotations
 
 import logging
 
-from django.db.models.signals import post_save
 from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
 
-def connect() -> None:
-    from chat.models import ChatMessage
+def notify_new_chat_message(message_id: int) -> None:
+    """Notify room members (except sender) when a new message exists."""
+    from chat.models import ChatMember, ChatMessage
 
-    post_save.connect(
-        _on_chat_message,
-        sender=ChatMessage,
-        dispatch_uid="notification_chat_post_save",
-    )
-
-
-def _on_chat_message(sender, instance, created, **kwargs):
-    if not created:
+    try:
+        instance = ChatMessage.objects.select_related("room", "sender").get(pk=message_id)
+    except ChatMessage.DoesNotExist:
         return
-
-    from chat.models import ChatMember
 
     from notification.services import notify_users
 

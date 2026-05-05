@@ -125,8 +125,8 @@ class SubscriptionService:
                 'max_storage_gb': 20,
                 'max_api_calls_per_month': 25000,
                 'included_modules': [
-                    'foundation', 'auth_tenants', 'chat', 'hrm', 'inventory', 
-                    'finance', 'purchase', 'sales', 'production', 'pos', 'rental', 'school'
+                    'foundation', 'auth_tenants', 'chat', 'hrm', 'inventory',
+                    'finance', 'purchase', 'sales', 'production', 'pos', 'notification',
                 ]
             },
             {
@@ -138,9 +138,9 @@ class SubscriptionService:
                 'max_storage_gb': 100,
                 'max_api_calls_per_month': 100000,
                 'included_modules': [
-                    'foundation', 'auth_tenants', 'chat', 'hrm', 'inventory', 
-                    'finance', 'purchase', 'sales', 'production', 'pos', 'rental', 
-                    'school', 'jiraclone', 'vault', 'support', 'screenhot', 'recruitment'
+                    'foundation', 'auth_tenants', 'chat', 'notification', 'hrm', 'inventory',
+                    'finance', 'purchase', 'sales', 'production', 'pos',
+                    'support', 'recruitment',
                 ]
             }
         ]

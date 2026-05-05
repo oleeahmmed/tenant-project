@@ -1,0 +1,39 @@
+{% extends "auth_tenants/base.html" %}
+{% block title %}Close fiscal year{% endblock %}
+{% block page_title %}Finance · Close fiscal year{% endblock %}
+{% block content %}
+<div class="w-full px-1 md:px-2 space-y-5">
+  <div class="simple-card rounded-xl border border-border bg-card shadow-card overflow-hidden">
+    <div class="flex items-center justify-between gap-3 border-b border-border bg-muted/20 px-5 py-4">
+      <div class="flex items-center gap-2">
+        <a href="{% url 'finance:fiscal_year_list' %}" class="inline-flex items-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:bg-accent"><i data-lucide="arrow-left" class="h-4 w-4"></i></a>
+        <div>
+          <h2 class="text-lg font-semibold">Close fiscal year</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">Locks the year and all of its periods so nothing further posts into them.</p>
+        </div>
+      </div>
+    </div>
+    <div class="p-5 space-y-6">
+      {% if open_years %}
+      <form method="post" class="space-y-4 max-w-lg">
+        {% csrf_token %}
+        <label class="flex flex-col gap-2 text-sm">
+          <span class="text-muted-foreground">Open fiscal year to close</span>
+          <select name="fiscal_year_id" required class="rounded-lg border border-border bg-background px-3 py-2">
+            {% for fy in open_years %}
+            <option value="{{ fy.id }}">{{ fy.name }} ({{ fy.start_date }} – {{ fy.end_date }})</option>
+            {% endfor %}
+          </select>
+        </label>
+        <p class="text-xs text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
+          This action marks the year closed and sets every period under it to closed. Reversal requires database support—plan year-end before confirming.
+        </p>
+        <button type="submit" class="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90">Close selected year</button>
+      </form>
+      {% else %}
+      <p class="text-sm text-muted-foreground">There are no open fiscal years. Create one under <a href="{% url 'finance:fiscal_year_list' %}" class="text-primary underline">Fiscal years</a> if needed.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

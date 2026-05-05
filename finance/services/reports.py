@@ -1,3 +1,4 @@
+from calendar import month_name
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
@@ -6,7 +7,7 @@ from django.db.models import F
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 
-from finance.models import Account, APInvoice, ARInvoice, Budget, BudgetLine, LedgerEntry
+from finance.models import Account, APInvoice, ARInvoice, BankAccount, Budget, BudgetLine, LedgerEntry
 
 
 def general_ledger(*, tenant, date_from: date | None = None, date_to: date | None = None, account_id: int | None = None):
@@ -144,4 +145,70 @@ def budget_vs_actual(*, tenant, budget_id: int):
             }
         )
     return budget, out
+
+
+def monthly_tax_summary(*, tenant, year: int | None = None):
+    """Posted AP/AR only: VAT/tax and net amounts by calendar month."""
+    ap_qs = APInvoice.objects.filter(tenant=tenant, status=APInvoice.Status.POSTED)
+    ar_qs = ARInvoice.objects.filter(tenant=tenant, status=ARInvoice.Status.POSTED)
+    if year:
+        ap_qs = ap_qs.filter(posting_date__year=year)
+        ar_qs = ar_qs.filter(posting_date__year=year)
+    by_month: dict[int, dict[str, Decimal]] = defaultdict(
+        lambda: {
+            "ap_tax": Decimal("0"),
+            "ar_tax": Decimal("0"),
+            "ap_net": Decimal("0"),
+            "ar_net": Decimal("0"),
+        }
+    )
+    for inv in ap_qs:
+        m = inv.posting_date.month
+        by_month[m]["ap_tax"] += inv.tax_amount or Decimal("0")
+        by_month[m]["ap_net"] += (inv.subtotal or Decimal("0")) + (inv.shipping_charge or Decimal("0"))
+    for inv in ar_qs:
+        m = inv.posting_date.month
+        by_month[m]["ar_tax"] += inv.tax_amount or Decimal("0")
+        by_month[m]["ar_net"] += (inv.subtotal or Decimal("0")) + (inv.shipping_charge or Decimal("0"))
+    rows = []
+    for m in sorted(by_month.keys()):
+        d = by_month[m]
+        rows.append(
+            {
+                "month": m,
+                "month_label": month_name[m],
+                "ap_tax": d["ap_tax"],
+                "ar_tax": d["ar_tax"],
+                "ap_net": d["ap_net"],
+                "ar_net": d["ar_net"],
+            }
+        )
+    return rows
+
+
+def bank_gl_register(*, tenant, bank_account_id: int, date_from: date | None = None, date_to: date | None = None):
+    ba = BankAccount.objects.select_related("gl_account").get(pk=bank_account_id, tenant=tenant)
+    qs = LedgerEntry.objects.filter(tenant=tenant, account_id=ba.gl_account_id).select_related(
+        "journal_entry", "account"
+    )
+    if date_from:
+        qs = qs.filter(posting_date__gte=date_from)
+    if date_to:
+        qs = qs.filter(posting_date__lte=date_to)
+    qs = qs.order_by("posting_date", "id")
+    running = Decimal("0")
+    rows = []
+    for e in qs:
+        running += e.debit - e.credit
+        rows.append(
+            {
+                "posting_date": e.posting_date,
+                "entry_no": e.journal_entry.entry_no,
+                "memo": e.journal_entry.memo or "",
+                "debit": e.debit,
+                "credit": e.credit,
+                "balance": running,
+            }
+        )
+    return ba, rows
 
